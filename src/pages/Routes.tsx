@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Compass, MapPin, Share2, Activity, Copy, Check, X, Twitter, Send, MessageCircle, Info } from 'lucide-react';
+import { ArrowRight, Compass, MapPin, Share2, Activity, Copy, Check, X, Twitter, Send, MessageCircle, Info, Heart } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const routes = [
   {
@@ -152,6 +152,20 @@ function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
 
 export default function Routes() {
   const [activeShare, setActiveShare] = useState<{ id: string; name: string } | null>(null);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    const saved = localStorage.getItem('favorite_routes');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('favorite_routes', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => 
+      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
@@ -222,6 +236,17 @@ export default function Routes() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleFavorite(route.id)}
+                      className={`w-14 h-14 bg-white/[0.02] border rounded-full flex items-center justify-center transition-all ${
+                        favorites.includes(route.id) 
+                          ? 'text-red-500 border-red-500/30 bg-red-500/5' 
+                          : 'text-white/20 border-white/5 hover:text-red-500 hover:border-red-500/30'
+                      }`}
+                      title={favorites.includes(route.id) ? "Remover dos favoritos" : "Salvar rota"}
+                    >
+                      <Heart size={20} fill={favorites.includes(route.id) ? "currentColor" : "none"} />
+                    </button>
                     <button
                       onClick={() => setActiveShare({ id: route.id, name: route.name })}
                       className="w-14 h-14 bg-white/[0.02] border border-white/5 rounded-full flex items-center justify-center text-white/20 hover:text-[#ff641d] hover:border-[#ff641d]/30 transition-all"

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft } from 'lucide-react';
+import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 
 const posts = [
@@ -122,19 +122,53 @@ export default function Blog() {
             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
           />
 
-          <div className="mt-20 pt-12 border-t border-white/5 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#ff641d] flex items-center justify-center font-display font-black text-white text-xs">
-                TR
+          <div className="mt-20 pt-12 border-t border-white/5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#ff641d] flex items-center justify-center font-display font-black text-white text-xs">
+                  TR
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-white uppercase tracking-widest">{selectedPost.author}</div>
+                  <div className="text-[8px] font-mono text-white/40 uppercase tracking-widest mt-1">Field Intelligence Unit</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[10px] font-mono text-white uppercase tracking-widest">{selectedPost.author}</div>
-                <div className="text-[8px] font-mono text-white/40 uppercase tracking-widest mt-1">Field Intelligence Unit</div>
+
+              <div className="flex items-center gap-4">
+                <span className="text-[9px] font-mono text-white/20 uppercase tracking-[0.2em]">Compartilhar:</span>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => {
+                      const url = `https://wa.me/?text=${encodeURIComponent(`${selectedPost.title} - Rota Livre Hub: ${window.location.href}`)}`;
+                      window.open(url, '_blank');
+                    }}
+                    className="p-3 rounded-full bg-white/5 hover:bg-[#25D366]/10 hover:text-[#25D366] transition-all border border-white/5"
+                    title="Compartilhar no WhatsApp"
+                  >
+                    <MessageCircle size={18} />
+                  </button>
+                  <a 
+                    href="https://instagram.com/trilhas_erodas" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-full bg-white/5 hover:bg-[#E4405F]/10 hover:text-[#E4405F] transition-all border border-white/5"
+                    title="Seguir no Instagram"
+                  >
+                    <Instagram size={18} />
+                  </a>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Link copiado!');
+                    }}
+                    className="p-3 rounded-full bg-white/5 hover:bg-[#ff641d]/10 hover:text-[#ff641d] transition-all border border-white/5"
+                    title="Copiar Link"
+                  >
+                    <Copy size={18} />
+                  </button>
+                </div>
               </div>
             </div>
-            <button className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-white/60">
-              <Share2 size={20} />
-            </button>
           </div>
         </article>
       </div>
