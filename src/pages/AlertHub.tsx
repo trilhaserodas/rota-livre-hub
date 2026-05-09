@@ -284,7 +284,7 @@ export default function AlertHub() {
                     // {insight.category}
                   </div>
                   <Link 
-                    to={`/blog?id=${insight.id === 'IN-01' ? '5' : ''}`}
+                    to={`/blog?id=${insight.id === 'IN-01' ? '5' : insight.id === 'IN-02' ? '1' : ''}`}
                     className="block group/insight"
                   >
                     <h5 className="text-xs font-display font-bold text-white uppercase tracking-wide mb-2 group-hover/insight:text-[#ff641d] transition-colors">

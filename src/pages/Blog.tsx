@@ -102,13 +102,59 @@ const posts = [
   },
   {
     id: 1,
-    title: 'DOCUMENTAÇÃO PARA TRAVESSIA TRANSBORDE',
-    excerpt: 'Manual tático sobre aduanas, seguros de responsabilidade civil e protocolos de entrada em zonas de fronteira.',
+    title: 'DOCUMENTAÇÃO: FRONTEIRAS AMÉRICA DO SUL',
+    excerpt: 'Manual tático sobre RG, passaporte, comprovantes de vacina e protocolos de entrada em zonas de fronteira em 2026.',
     category: 'LOGÍSTICA',
-    author: 'RT_EXPLORER',
-    date: '12.10.25',
-    image: 'https://images.unsplash.com/photo-1541625602330-2277a4c4b282?auto=format&fit=crop&q=80&w=600',
-    content: '<p>Conteúdo em fase de digitalização...</p>'
+    author: 'TR_COMMUNITY',
+    date: '09.05.26',
+    image: 'https://i.ibb.co/qMN3Xmmd/Documenta-o-para-cicloviajante.png',
+    content: `
+      <h2>1. Documento de identidade válido</h2>
+      <p>Brasileiros conseguem entrar em diversos países da América do Sul apenas com RG em bom estado ou Passaporte válido. <strong>Atenção:</strong> CNH normalmente NÃO substitui documento internacional em imigração.</p>
+      <p>Idealmente, seu documento deve ter sido emitido há menos de 10 anos, estar com foto reconhecível e sem nenhum rasgo ou dano estrutural.</p>
+
+      <h2>2. Países que aceitam apenas RG</h2>
+      <p>Argentina, Chile, Uruguai, Paraguai, Bolívia, Peru, Colômbia. Em geral, brasileiros conseguem entrar apenas com RG em países do Mercosul e associados. As regras podem mudar com o tempo, por isso consulte informações oficiais antes da viagem.</p>
+
+      <h2>3. Passaporte: Quando vale a pena</h2>
+      <p>Mesmo onde o RG é aceito, viajantes experientes preferem o Passaporte. Ele facilita a imigração, reduz problemas, agiliza carimbos e melhora a identificação internacional. Em viagens longas, o passaporte traz mais segurança.</p>
+
+      <h2>4. Comprovante de vacinação</h2>
+      <p>Alguns países podem exigir vacina contra febre amarela (Certificado Internacional), principalmente em áreas tropicais, fronteiras amazônicas ou regiões específicas. Verifique exigências sanitárias atualizadas.</p>
+
+      <h2>5. Seguro viagem pode ser obrigatório</h2>
+      <p>Alguns destinos podem solicitar seguro médico internacional com cobertura específica. Mesmo quando não obrigatório, é altamente recomendado para expedições longas, cobrindo internações e evacuação.</p>
+
+      <h2>6. Documentos da bicicleta</h2>
+      <p>Em viagens de bike, leve a nota fiscal (se possível), fotos da bike e o número do quadro anotado. Isso ajuda em fiscalizações, seguros e transporte internacional.</p>
+
+      <h2>7. Atenção às fronteiras remotas</h2>
+      <p>Nem toda fronteira funciona 24 horas. Algumas possuem horários reduzidos ou fechamento climático. Pesquise funcionamento, exigências e condições da estrada antes de chegar.</p>
+
+      <h2>8. Dinheiro e câmbio</h2>
+      <p>Nem todas as fronteiras possuem caixas eletrônicos. Leve dinheiro emergencial, cartão internacional e uma pequena reserva em dólar para evitar ficar preso em regiões isoladas.</p>
+
+      <h2>9. Internet pode desaparecer completamente</h2>
+      <p>Em algumas travessias, o sinal desaparece. Baixe mapas offline, documentos digitais e traduções antes de sair. Apps offline fazem enorme diferença.</p>
+
+      <h2>10. Organização salva expedições</h2>
+      <p>A maioria dos problemas em fronteiras acontece por desorganização ou falta de informação. Quem viaja preparado cruza fronteiras com muito menos estresse.</p>
+
+      <div class="bg-[#ff641d]/10 p-8 rounded-2xl border-white/5 my-12">
+        <h4 class="text-white font-display font-black uppercase tracking-widest mb-6">Checklist rápido antes da travessia</h4>
+        <ul class="text-[11px] font-mono uppercase tracking-widest space-y-3">
+          <li>[ ] RG atualizado ou passaporte válido</li>
+          <li>[ ] Documentos protegidos contra chuva</li>
+          <li>[ ] Comprovantes digitais salvos offline</li>
+          <li>[ ] Seguro viagem e vacinação conferida</li>
+          <li>[ ] Dinheiro reserva e mapa offline</li>
+        </ul>
+      </div>
+
+      <p class="text-white/40 italic">Cruzar uma fronteira pedalando é mais do que mudar de país. É sentir que o mapa deixa de ser imagem... e vira estrada.</p>
+
+      <p>Projeto desenvolvido pela comunidade Trilhas e Rodas.<br/>Instagram: @trilhas_erodas</p>
+    `
   },
   {
     id: 2,
