@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { 
   AlertTriangle, 
   Globe, 
@@ -282,12 +283,17 @@ export default function AlertHub() {
                   <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.2em] mb-2">
                     // {insight.category}
                   </div>
-                  <h5 className="text-xs font-display font-bold text-white uppercase tracking-wide mb-2">
-                    {insight.title}
-                  </h5>
-                  <p className="text-[10px] text-white/40 leading-relaxed font-sans italic">
-                    "{insight.content}"
-                  </p>
+                  <Link 
+                    to={`/blog?id=${insight.id === 'IN-01' ? '5' : ''}`}
+                    className="block group/insight"
+                  >
+                    <h5 className="text-xs font-display font-bold text-white uppercase tracking-wide mb-2 group-hover/insight:text-[#ff641d] transition-colors">
+                      {insight.title}
+                    </h5>
+                    <p className="text-[10px] text-white/40 leading-relaxed font-sans italic">
+                      "{insight.content}"
+                    </p>
+                  </Link>
                 </div>
               ))}
             </div>

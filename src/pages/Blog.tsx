@@ -1,9 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check } from 'lucide-react';
 import SEO from '@/src/components/SEO';
+import { useSearchParams } from 'react-router-dom';
 
 const posts = [
+  {
+    id: 5,
+    title: 'CHECKLIST DE INVERNO: EXPEDIÇÕES EM CLIMA FRIO',
+    excerpt: 'Pedalar no frio extremo exige preparação inteligente. Guia tático de equipamentos, camadas e mecânica para enfrentar temperaturas negativas com segurança.',
+    category: 'EXPEDIÇÃO',
+    author: 'TR_COMMUNITY',
+    date: '09.05.26',
+    image: 'https://images.unsplash.com/photo-1453306458620-5bbef13a5bca?auto=format&fit=crop&q=80&w=800',
+    content: `
+      <h2>1. Lubrificação correta faz diferença real</h2>
+      <p>Um dos erros mais comuns de aventureiros iniciantes no frio é continuar usando lubrificantes de cera em temperaturas negativas. Lubrificantes de cera normalmente perdem eficiência abaixo de 0°C porque endurecem mais rápido, perdem fluidez e aumentam o atrito da transmissão.</p>
+      <p><strong>Recomendação:</strong> Para viagens frias, use <strong>óleo sintético úmido</strong>. Esse tipo de lubrificante resiste melhor à umidade, suporta neve e chuva gelada e mantém a corrente protegida.</p>
+
+      <h2>2. Proteja as mãos corretamente</h2>
+      <p>Mãos congeladas significam perda de reflexo e dificuldade para frear. O ideal é trabalhar em camadas:</p>
+      <ul>
+        <li><strong>Camada interna:</strong> Luva térmica fina.</li>
+        <li><strong>Camada externa:</strong> Luva impermeável corta-vento.</li>
+      </ul>
+      <p>Evite algodão. Quando molha, ele rouba calor rapidamente.</p>
+
+      <h2>3. Sistema de roupas em camadas</h2>
+      <p>O segredo do inverno NÃO é usar uma roupa gigante, mas usar camadas inteligentes:</p>
+      <ul>
+        <li><strong>Camada base (Base layer):</strong> Responsável por retirar suor da pele. Use tecido térmico sintético ou lã merino.</li>
+        <li><strong>Camada intermediária:</strong> Mantém o calor corporal. Use fleece, softshell ou isolamento leve.</li>
+        <li><strong>Camada externa:</strong> Proteção contra vento, neve e chuva. Use uma jaqueta impermeável respirável.</li>
+      </ul>
+
+      <h2>4. Cuidados com freios e cabos</h2>
+      <p>Temperaturas negativas podem endurecer cabos e congelar conduítes. Revise seus freios antes da viagem, troque cabos antigos e aplique lubrificação adequada. Freios hidráulicos normalmente performam melhor no frio intenso.</p>
+
+      <h2>5. Pneus certos evitam acidentes</h2>
+      <p>Em regiões geladas, pressão muito alta reduz a aderência. Reduza ligeiramente a pressão, use pneus mais largos se possível e priorize aderência ao invés de velocidade. Em neve extrema, pneus com cravos podem ser necessários.</p>
+
+      <h2>6. Água congelando durante a rota</h2>
+      <p>Em clima extremo, mangueiras de hidratação e garrafas podem congelar. Carregue garrafas invertidas, use capas térmicas e evite deixar a água exposta ao vento.</p>
+
+      <h2>7. Bateria acaba muito mais rápido no frio</h2>
+      <p>O frio intenso reduz drasticamente a autonomia de eletrônicos. Mantenha celular, GPS e powerbanks próximos ao corpo, dentro de bolsos internos e protegidos do vento.</p>
+
+      <h2>8. Alimentação muda no frio</h2>
+      <p>O corpo consome mais energia para manter a temperatura. Leve alimentos energéticos, snacks rápidos e bebidas quentes sempre que possível. O gasto calórico é significativamente maior.</p>
+
+      <h2>9. Nunca subestime o vento frio</h2>
+      <p>O vento pode transformar uma temperatura suportável em sensação térmica perigosa, especialmente em descidas longas ou regiões abertas. Proteção contra o vento é tão vital quanto isolamento térmico.</p>
+
+      <h2>10. O inverno pune o improviso</h2>
+      <p>No frio extremo, o ambiente cobra rápido. Planejamento, revisão mecânica e equipamentos adequados viram itens de sobrevivência, não luxo.</p>
+
+      <div class="bg-[#ff641d]/10 p-6 border-l-4 border-[#ff641d] my-8">
+        <p class="text-white font-bold mb-2 italic">"O inverno recompensa quem respeita a natureza e se prepara estrategicamente."</p>
+      </div>
+
+      <p>Projeto desenvolvido pela comunidade Trilhas e Rodas.<br/>Instagram: @trilhas_erodas</p>
+    `
+  },
   {
     id: 4,
     title: 'COMO VIAJAR DE AVIÃO COM BICICLETA SEM DOR DE CABEÇA',
@@ -75,7 +133,29 @@ const posts = [
 ];
 
 export default function Blog() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedPost, setSelectedPost] = useState<typeof posts[0] | null>(null);
+
+  useEffect(() => {
+    const postId = searchParams.get('id');
+    if (postId) {
+      const post = posts.find(p => p.id === parseInt(postId));
+      if (post) {
+        setSelectedPost(post);
+      }
+    }
+  }, [searchParams]);
+
+  const handleBack = () => {
+    setSelectedPost(null);
+    setSearchParams({});
+  };
+
+  const handleSelectPost = (post: typeof posts[0]) => {
+    setSelectedPost(post);
+    setSearchParams({ id: post.id.toString() });
+    window.scrollTo(0, 0);
+  };
 
   if (selectedPost) {
     return (
@@ -86,7 +166,7 @@ export default function Blog() {
         />
         
         <button 
-          onClick={() => setSelectedPost(null)}
+          onClick={handleBack}
           className="flex items-center gap-2 text-[10px] font-mono text-[#ff641d] mb-12 hover:gap-4 transition-all uppercase tracking-widest"
         >
           <ChevronLeft size={16} /> Voltar para o Arquivo
@@ -248,7 +328,7 @@ export default function Blog() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
             className="group flex flex-col cursor-pointer"
-            onClick={() => setSelectedPost(post)}
+            onClick={() => handleSelectPost(post)}
           >
             <div className="dashboard-card h-full p-0 overflow-hidden border-white/[0.03] flex flex-col">
                 <div className="relative aspect-[16/10] overflow-hidden">
