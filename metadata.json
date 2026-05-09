@@ -1,0 +1,6 @@
+{
+  "name": "Rota Livre LATAM",
+  "description": "O hub definitivo para viajantes na América Latina. Ferramentas, mapas e rotas para cicloturistas, mochileiros e aventureiros.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
