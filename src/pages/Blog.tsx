@@ -1,8 +1,47 @@
-import { motion } from 'motion/react';
-import { Calendar, User, Search, ArrowRight, Share2 } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 
 const posts = [
+  {
+    id: 4,
+    title: 'COMO VIAJAR DE AVIÃO COM BICICLETA SEM DOR DE CABEÇA',
+    excerpt: 'Guia definitivo para cicloturistas: regras, embalagens, proteção de componentes e checklist para despachar a bike com segurança.',
+    category: 'LOGÍSTICA',
+    author: 'TR_COMMUNITY',
+    date: '09.05.26',
+    image: 'https://i.ibb.co/ycFWcS9D/viajar-de-bike-o-avi-o.png',
+    content: `
+      <h2>1. Verifique as regras da companhia aérea</h2>
+      <p>Cada companhia possui regras diferentes para peso permitido, tamanho da embalagem e taxas extras. Antes da viagem, leia as políticas atualizadas no site oficial. Algumas empresas tratam bicicleta como “equipamento esportivo”, outras como “bagagem especial”.</p>
+
+      <h2>2. Escolha a embalagem correta</h2>
+      <ul>
+        <li><strong>Caixa de papelão:</strong> Barata, fácil de encontrar em bicicletarias e oferece boa proteção básica.</li>
+        <li><strong>Mala rígida (Mala-bike):</strong> Maior segurança, ideal para viagens frequentes, porém mais cara e pesada.</li>
+        <li><strong>Soft Bag:</strong> Leve e prática, excelente para quem já tem habilidade em desmontar a bike parcial ou totalmente.</li>
+      </ul>
+
+      <h2>3. O que você precisa desmontar</h2>
+      <p>Na maioria dos voos será necessário: retirar a roda dianteira, alinhar ou remover o guidão, baixar o canote e remover os pedais. <strong>Dica de ouro:</strong> Use pneus dobráveis se possível. Se usar comuns, a recomendação padrão é esvaziá-los parcialmente.</p>
+
+      <h2>4. Proteja as partes frágeis</h2>
+      <p>As áreas mais sensíveis são: câmbio traseiro, discos de freio, quadro, suspensão e coroas. Use espuma, papelão reforçado e plástico bolha. Pequenos cuidados evitam grandes prejuízos.</p>
+
+      <h2>5. Protocolo de Aeroporto</h2>
+      <p>Bagagens especiais exigem balcão específico e inspeção adicional. Chegue com pelo menos 3 horas de antecedência para voos internacionais e 2 horas para nacionais.</p>
+
+      <h2>6. Documentação Fotográfica</h2>
+      <p>Fotografe o quadro, rodas, embalagem e etiquetas antes do embarque. Isso é fundamental caso ocorra algum dano ou extravio.</p>
+
+      <div class="bg-[#ff641d]/10 p-6 border-l-4 border-[#ff641d] my-8">
+        <p class="text-white font-bold mb-2 italic">"A estrada não termina no aeroporto. Ela só muda de direção."</p>
+      </div>
+
+      <p>Projeto desenvolvido pela comunidade Trilhas e Rodas.<br/>Instagram: @trilhas_erodas</p>
+    `
+  },
   {
     id: 1,
     title: 'DOCUMENTAÇÃO PARA TRAVESSIA TRANSBORDE',
@@ -10,7 +49,8 @@ const posts = [
     category: 'LOGÍSTICA',
     author: 'RT_EXPLORER',
     date: '12.10.25',
-    image: 'https://images.unsplash.com/photo-1541625602330-2277a4c4b282?auto=format&fit=crop&q=80&w=600'
+    image: 'https://images.unsplash.com/photo-1541625602330-2277a4c4b282?auto=format&fit=crop&q=80&w=600',
+    content: '<p>Conteúdo em fase de digitalização...</p>'
   },
   {
     id: 2,
@@ -19,7 +59,8 @@ const posts = [
     category: 'GEAR_INTEL',
     author: 'LM_GEAR',
     date: '05.10.25',
-    image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&q=80&w=600'
+    image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&q=80&w=600',
+    content: '<p>Conteúdo em fase de digitalização...</p>'
   },
   {
     id: 3,
@@ -28,11 +69,78 @@ const posts = [
     category: 'FIELD_OPS',
     author: 'CC_MECHANIC',
     date: '28.09.25',
-    image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=600'
+    image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=600',
+    content: '<p>Conteúdo em fase de digitalização...</p>'
   }
 ];
 
 export default function Blog() {
+  const [selectedPost, setSelectedPost] = useState<typeof posts[0] | null>(null);
+
+  if (selectedPost) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10 antialiased">
+        <SEO 
+          title={`${selectedPost.title} - Rota Livre Hub`} 
+          description={selectedPost.excerpt}
+        />
+        
+        <button 
+          onClick={() => setSelectedPost(null)}
+          className="flex items-center gap-2 text-[10px] font-mono text-[#ff641d] mb-12 hover:gap-4 transition-all uppercase tracking-widest"
+        >
+          <ChevronLeft size={16} /> Voltar para o Arquivo
+        </button>
+
+        <article className="prose prose-invert prose-orange max-w-none">
+          <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-6 uppercase">
+            {selectedPost.category} // {selectedPost.id.toString().padStart(4, '0')}
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-display font-black uppercase tracking-tighter mb-8 text-[#F8FAFC]">
+            {selectedPost.title}
+          </h1>
+
+          <div className="flex items-center gap-6 text-[10px] font-mono text-white/20 uppercase tracking-[0.2em] mb-12 border-b border-white/5 pb-8">
+            <span className="flex items-center gap-2"><Calendar size={12} /> {selectedPost.date}</span>
+            <span className="flex items-center gap-2"><User size={12} /> {selectedPost.author}</span>
+          </div>
+
+          <div className="aspect-video w-full rounded-2xl overflow-hidden mb-12 border border-white/5">
+            <img 
+              src={selectedPost.image} 
+              alt={selectedPost.title}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+
+          <div 
+            className="text-white/60 leading-relaxed space-y-6 text-base italic-content"
+            style={{ 
+              fontFamily: 'system-ui, -apple-system, sans-serif'
+            }}
+            dangerouslySetInnerHTML={{ __html: selectedPost.content }}
+          />
+
+          <div className="mt-20 pt-12 border-t border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#ff641d] flex items-center justify-center font-display font-black text-white text-xs">
+                TR
+              </div>
+              <div>
+                <div className="text-[10px] font-mono text-white uppercase tracking-widest">{selectedPost.author}</div>
+                <div className="text-[8px] font-mono text-white/40 uppercase tracking-widest mt-1">Field Intelligence Unit</div>
+              </div>
+            </div>
+            <button className="p-3 rounded-full bg-white/5 hover:bg-white/10 transition-colors text-white/60">
+              <Share2 size={20} />
+            </button>
+          </div>
+        </article>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
@@ -69,7 +177,8 @@ export default function Blog() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="group flex flex-col"
+            className="group flex flex-col cursor-pointer"
+            onClick={() => setSelectedPost(post)}
           >
             <div className="dashboard-card h-full p-0 overflow-hidden border-white/[0.03] flex flex-col">
                 <div className="relative aspect-[16/10] overflow-hidden">
@@ -101,10 +210,16 @@ export default function Blog() {
                   </p>
 
                   <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
-                    <button className="flex items-center gap-3 text-[9px] font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d] group-hover:gap-5 transition-all">
+                    <div className="flex items-center gap-3 text-[9px] font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d] group-hover:gap-5 transition-all">
                       ACCESS_INTEL <ArrowRight size={14} />
-                    </button>
-                    <button className="text-white/10 hover:text-white transition-colors">
+                    </div>
+                    <button 
+                      className="text-white/10 hover:text-white transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // share logic
+                      }}
+                    >
                       <Share2 size={14} />
                     </button>
                   </div>
@@ -141,3 +256,4 @@ export default function Blog() {
     </div>
   );
 }
+
