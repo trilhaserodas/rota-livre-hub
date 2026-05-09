@@ -15,7 +15,7 @@ const checklist = [
   'Remover pedais e fixar ao quadro ou protegê-los.',
   'Desmontar o guidão e fixar lateralmente com plástico bolha.',
   'Proteger o câmbio traseiro (recomenda-se remover e fixar no quadro).',
-  'Utilizar caixa de papelão rígida ou mala-bike homologada.',
+  'Utilizar caixa de papelão rígida, mala-bike (case) ou bike bag para transporte.',
   'Identificar a embalagem com contatos e "Frágil".',
 ];
 

@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight } from 'lucide-react';
+import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 
 const navItems = [
   { name: 'Início', path: '/', icon: Compass },
-  { name: 'Sobre', path: '/sobre', icon: Compass },
+  { name: 'Hub Alerta', path: '/alert-hub', icon: Bell },
+  { name: 'Rotas', path: '/rotas', icon: Compass },
+  { name: 'Mapa', path: '/mapa', icon: MapIcon },
   { name: 'Moedas', path: '/conversor', icon: Coins },
   { name: 'Fusos', path: '/horarios', icon: Clock },
-  { name: 'Mapa', path: '/mapa', icon: MapIcon },
-  { name: 'Rotas', path: '/rotas', icon: Compass },
-  { name: 'Calculadoras', path: '/calculadoras', icon: Calculator },
   { name: 'Blog', path: '/blog', icon: BookOpen },
 ];
 
@@ -155,10 +154,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div>
             <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff641d] mb-8">Sistemas</h4>
             <div className="flex flex-col gap-4 text-xs font-semibold uppercase tracking-widest text-[#F8FAFC]/30">
+              <Link to="/alert-hub" className="hover:text-white transition-colors">Alert_Hub</Link>
               <Link to="/conversor" className="hover:text-white transition-colors">Currency_Hub</Link>
               <Link to="/horarios" className="hover:text-white transition-colors">Time_Zones</Link>
               <Link to="/mapa" className="hover:text-white transition-colors">Live_Maps</Link>
               <Link to="/calculadoras" className="hover:text-white transition-colors">Ops_Calcs</Link>
+              <Link to="/rotas" className="hover:text-white transition-colors">Global_Routes</Link>
+              <Link to="/aviao" className="hover:text-white transition-colors">Air_Protocol</Link>
             </div>
           </div>
 

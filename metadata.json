@@ -1,6 +1,6 @@
 {
   "name": "Rota Livre Hub",
-  "description": "O hub definitivo para viajantes na América Latina. Ferramentas, mapas e rotas para cicloturistas, mochileiros e aventureiros.",
+  "description": "O hub definitivo para viajantes na América Latina. Monitoramento tático no HUB ALERTA, mapas e rotas estratégicas para cicloturistas e aventureiros.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": []
 }

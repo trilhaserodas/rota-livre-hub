@@ -20,11 +20,11 @@ const posts = [
       <ul>
         <li><strong>Caixa de papelão:</strong> Barata, fácil de encontrar em bicicletarias e oferece boa proteção básica.</li>
         <li><strong>Mala rígida (Mala-bike):</strong> Maior segurança, ideal para viagens frequentes, porém mais cara e pesada.</li>
-        <li><strong>Soft Bag:</strong> Leve e prática, excelente para quem já tem habilidade em desmontar a bike parcial ou totalmente.</li>
+        <li><strong>Bike bag para transporte:</strong> Leve e prática, excelente para quem já tem habilidade em desmontar a bike parcial ou totalmente.</li>
       </ul>
 
       <h2>3. O que você precisa desmontar</h2>
-      <p>Na maioria dos voos será necessário: retirar a roda dianteira, alinhar ou remover o guidão, baixar o canote e remover os pedais. <strong>Dica de ouro:</strong> Use pneus dobráveis se possível. Se usar comuns, a recomendação padrão é esvaziá-los parcialmente.</p>
+      <p>Na maioria dos voos será necessário: retirar a roda dianteira, alinhar o guidão no sentido do quadro (ou removê-lo completamente), recolher o canote e remover os pedais. <strong>Dica de ouro:</strong> Atualmente existem pneus dobráveis que facilitam muito o transporte; para pneus comuns, a recomendação padrão das aéreas é esvaziá-los parcialmente para evitar problemas de pressão no porão.</p>
 
       <h2>4. Proteja as partes frágeis</h2>
       <p>As áreas mais sensíveis são: câmbio traseiro, discos de freio, quadro, suspensão e coroas. Use espuma, papelão reforçado e plástico bolha. Pequenos cuidados evitam grandes prejuízos.</p>

@@ -12,6 +12,7 @@ import Clock from './pages/Clock';
 import Map from './pages/Map';
 import Calculators from './pages/Calculators';
 import Blog from './pages/Blog';
+import AlertHub from './pages/AlertHub';
 import RoutesPage from './pages/Routes';
 import About from './pages/About';
 import AirTravel from './pages/AirTravel';
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/calculadoras" element={<Calculators />} />
             <Route path="/rotas" element={<RoutesPage />} />
             <Route path="/aviao" element={<AirTravel />} />
+            <Route path="/alert-hub" element={<AlertHub />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/privacidade" element={<Privacy />} />
