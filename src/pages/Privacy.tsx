@@ -6,7 +6,7 @@ export default function Privacy() {
   return (
     <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Política de Privacidade - Rota Livre LATAM" 
+        title="Política de Privacidade - Rota Livre Hub" 
         description="Entenda como tratamos seus dados e garantimos sua segurança digital enquanto você explora a América Latina."
       />
 
@@ -27,7 +27,7 @@ export default function Privacy() {
             <h2 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d]">01. DISPOSIÇÕES_GERAIS</h2>
           </div>
           <p className="text-sm text-white/40 leading-relaxed font-medium">
-            A sua privacidade é importante para o Rota Livre LATAM. Esta página explica de forma simples como coletamos, utilizamos e protegemos informações durante a navegação em nossa plataforma.
+            A sua privacidade é importante para o Rota Livre Hub. Esta página explica de forma simples como coletamos, utilizamos e protegemos informações durante a navegação em nossa plataforma.
           </p>
         </div>
 
@@ -76,7 +76,7 @@ export default function Privacy() {
             </div>
             <div className="space-y-6">
               <p className="text-sm text-white/40 leading-relaxed font-medium">
-                O Rota Livre LATAM utiliza serviços de publicidade do Google Adsense. O Google pode utilizar cookies para exibir anúncios relevantes com base em visitas anteriores.
+                O Rota Livre Hub utiliza serviços de publicidade do Google Adsense. O Google pode utilizar cookies para exibir anúncios relevantes com base em visitas anteriores.
               </p>
               <a 
                 href="https://policies.google.com/technologies/ads" 

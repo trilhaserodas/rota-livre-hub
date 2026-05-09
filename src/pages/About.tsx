@@ -6,7 +6,7 @@ export default function About() {
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Sobre o Rota Livre LATAM - Nossa Missão" 
+        title="Sobre o Rota Livre Hub - Nossa Missão" 
         description="Conheça a história e o propósito por trás do hub definitivo para viajantes e aventureiros da América Latina."
       />
 
@@ -49,7 +49,7 @@ export default function About() {
               NOSSA SOLUÇÃO
             </h2>
             <p className="text-sm text-white/40 leading-relaxed font-medium">
-              O Rota Livre LATAM reúne essas utilidades em um único lugar, de forma rápida, gratuita e acessível. 
+              O Rota Livre Hub reúne essas utilidades em um único lugar, de forma rápida, gratuita e acessível. 
               Criamos um hub moderno e leve, focado em utilidade real para quem explora o território latino-americano.
             </p>
           </div>
@@ -101,7 +101,7 @@ export default function About() {
             VIAGEM SEM COMPLICAÇÃO
           </h2>
           <p className="text-[13px] text-white/40 uppercase tracking-[0.2em] max-w-2xl mx-auto leading-relaxed font-medium">
-            O Rota Livre LATAM acredita que viajar não precisa ser complicado. 
+            O Rota Livre Hub acredita que viajar não precisa ser complicado. 
             A tecnologia deve ajudar quem está na estrada — não atrapalhar. 
             Estamos construindo uma plataforma feita para aventureiros reais, com foco em utilidade, liberdade e comunidade.
           </p>

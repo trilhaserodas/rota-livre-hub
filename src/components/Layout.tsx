@@ -174,7 +174,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         
         <div className="max-w-7xl mx-auto px-6 mt-24 pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <p className="text-[8px] text-white/10 uppercase font-mono tracking-[0.4em]">
-            © {new Date().getFullYear()} RL.LATAM // ALL_SYSTEMS_GO
+            © {new Date().getFullYear()} RL.HUB // ALL_SYSTEMS_GO
           </p>
           <div className="flex items-center gap-3">
             <span className="w-1.5 h-1.5 rounded-full bg-[#ff641d] animate-pulse"></span>

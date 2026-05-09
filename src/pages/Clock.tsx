@@ -29,14 +29,14 @@ export default function Clock() {
   return (
     <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Fusos Horários LATAM - Horário Oficial América Latina" 
+        title="Fusos Horários Hub - Horário Oficial América Latina" 
         description="Consulte o horário oficial em tempo real de todos os países da América Latina para planejar suas ligações e viagens."
       />
 
       <section className="pt-12 mb-12">
         <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-4 uppercase">CORE_MODULE // CHRONO_LINK</div>
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black uppercase tracking-tighter mb-4 text-[#F8FAFC]">
-          TIME_ZONES<span className="text-[#ff641d]">.</span>LATAM
+          TIME_ZONES<span className="text-[#ff641d]">.</span>HUB
         </h1>
         <p className="text-[#F8FAFC]/40 text-sm font-medium max-w-xl">
           Sincronização continental. Monitore o tempo real através dos meridianos da América do Sul e Central.

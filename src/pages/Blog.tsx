@@ -36,7 +36,7 @@ export default function Blog() {
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Intel & Relatos - Rota Livre LATAM" 
+        title="Intel & Relatos - Rota Livre Hub" 
         description="Fronteiras, mecânica, equipamentos e diários de bordo técnicos para viajantes da América Latina."
       />
 

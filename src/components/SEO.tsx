@@ -10,14 +10,14 @@ interface SEOProps {
 }
 
 export default function SEO({
-  title = 'Rota Livre LATAM - Hub de Utilidade Pública para Viajantes',
+  title = 'Rota Livre Hub - Hub de Utilidade Pública para Viajantes',
   description = 'Ferramentas gratuitas para cicloturistas, mochileiros e aventureiros na América Latina. Conversor de moedas, mapa colaborativo, fusos horários e mais.',
   canonical,
   ogType = 'website',
-  ogImage = 'https://rotalivrelatam.com/og-image.jpg',
-  twitterHandle = '@rotalivrelatam',
+  ogImage = 'https://rotalivrehub.com/og-image.jpg',
+  twitterHandle = '@rotalivrehub',
 }: SEOProps) {
-  const fullTitle = title.includes('Rota Livre') ? title : `${title} | Rota Livre LATAM`;
+  const fullTitle = title.includes('Rota Livre') ? title : `${title} | Rota Livre Hub`;
 
   return (
     <Helmet>
@@ -43,12 +43,12 @@ export default function SEO({
         {JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-          name: 'Rota Livre LATAM',
-          url: 'https://rotalivrelatam.com',
+          name: 'Rota Livre Hub',
+          url: 'https://rotalivrehub.com',
           description: description,
           potentialAction: {
             '@type': 'SearchAction',
-            target: 'https://rotalivrelatam.com/search?q={search_term_string}',
+            target: 'https://rotalivrehub.com/search?q={search_term_string}',
             'query-input': 'required name=search_term_string',
           },
         })}

@@ -126,14 +126,14 @@ export default function AdventureMap() {
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Mapa Colaborativo LATAM - Pontos de Apoio e Rotas" 
+        title="Mapa Colaborativo Hub - Pontos de Apoio e Rotas" 
         description="Explore o mapa interativo com pontos de apoio, mecânicas, campings e rotas recomendadas por quem vive a estrada usando Leaflet."
       />
 
       <section className="pt-12 mb-12">
         <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-4 uppercase">CORE_MODULE // GEOSPATIAL_INTEL</div>
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black uppercase tracking-tighter mb-4 text-[#F8FAFC]">
-          LIVE_MAPS<span className="text-[#ff641d]">.</span>LATAM
+          LIVE_MAPS<span className="text-[#ff641d]">.</span>HUB
         </h1>
         <p className="text-[#F8FAFC]/40 text-sm font-medium max-w-xl">
           Visualização tática de dados colaborativos. Mapeamento continental de infraestrutura para logística de travessia via OpenStreetMap.

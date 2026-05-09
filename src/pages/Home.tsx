@@ -8,7 +8,7 @@ import { cn } from '@/src/lib/utils';
 const tools = [
   { 
     id: 'conversor', 
-    name: 'Conversor LATAM', 
+    name: 'Conversor Hub', 
     description: 'Câmbio em tempo real entre moedas da América Latina: ARS, BRL, CLP, COP, PEN, PYG.', 
     path: '/conversor', 
     icon: Coins, 
@@ -17,7 +17,7 @@ const tools = [
   { 
     id: 'horarios', 
     name: 'Relógio Mundial', 
-    description: 'Fusos horários de toda a LATAM com horários de nascer e pôr do sol para aventureiros.', 
+    description: 'Fusos horários de toda a América Latina com horários de nascer e pôr do sol para aventureiros.', 
     path: '/horarios', 
     icon: Clock, 
     color: 'bg-blue-500/20 text-blue-500' 
@@ -73,7 +73,7 @@ export default function Home() {
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0">
         <div className="absolute top-1/4 left-1/4 text-[8px] font-mono whitespace-nowrap rotate-90">SYS_COORDS / -34.6037, -58.3816</div>
-        <div className="absolute bottom-1/4 right-1/4 text-[8px] font-mono whitespace-nowrap -rotate-90">LATAM_GRID_8829-X</div>
+        <div className="absolute bottom-1/4 right-1/4 text-[8px] font-mono whitespace-nowrap -rotate-90">HUB_GRID_8829-X</div>
       </div>
 
       {/* Hero Section */}
@@ -90,7 +90,7 @@ export default function Home() {
           </div>
           
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black leading-[0.9] tracking-tighter mb-4 text-[#F8FAFC] max-w-4xl uppercase">
-            ROTA LIVRE<span className="text-[#ff641d]">.</span>LATAM
+            ROTA LIVRE<span className="text-[#ff641d]">.</span>HUB
           </h1>
           
           <p className="text-lg font-medium text-[#F8FAFC]/60 tracking-tight mb-8">

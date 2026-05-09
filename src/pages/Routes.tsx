@@ -56,7 +56,7 @@ interface ShareModalProps {
 
 function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = `rotalivrelatam.com/rotas/${routeId}`;
+  const shareUrl = `rotalivrehub.com/rotas/${routeId}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -65,9 +65,9 @@ function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
   };
 
   const socialShares = [
-    { name: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=Confira esta rota no Rota Livre LATAM: ${routeName} em ${shareUrl}` },
+    { name: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=Confira esta rota no Rota Livre Hub: ${routeName} em ${shareUrl}` },
     { name: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${shareUrl}&text=Confira esta rota: ${routeName}` },
-    { name: 'Twitter', icon: Twitter, url: `https://twitter.com/intent/tweet?text=Explorando a rota ${routeName} no @RotaLivreLATAM!&url=${shareUrl}` },
+    { name: 'Twitter', icon: Twitter, url: `https://twitter.com/intent/tweet?text=Explorando a rota ${routeName} no @RotaLivreHub!&url=${shareUrl}` },
   ];
 
   return (
@@ -156,7 +156,7 @@ export default function Routes() {
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Rotas Eternas LATAM - Atlas do Aventureiro" 
+        title="Rotas Eternas Hub - Atlas do Aventureiro" 
         description="Guias detalhados das travessias mais icônicas da América Latina. Logística, mapas e pontos críticos."
       />
 

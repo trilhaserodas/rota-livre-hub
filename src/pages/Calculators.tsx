@@ -10,7 +10,7 @@ export default function Calculators() {
   return (
     <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Calculadoras de Viagem LATAM - Logística de Estrada" 
+        title="Calculadoras de Viagem Hub - Logística de Estrada" 
         description="Ferramentas essenciais para planejar sua autonomia de combustível, peso de carga e conversões técnicas."
       />
 

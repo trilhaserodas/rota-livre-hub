@@ -6,8 +6,8 @@ export default function Terms() {
   return (
     <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Termos de Uso - Rota Livre LATAM" 
-        description="Leia os termos e condições de uso da plataforma Rota Livre LATAM. Transparência e responsabilidade na estrada."
+        title="Termos de Uso - Rota Livre Hub" 
+        description="Leia os termos e condições de uso da plataforma Rota Livre Hub. Transparência e responsabilidade na estrada."
       />
 
       <section className="pt-12 mb-16">
@@ -27,7 +27,7 @@ export default function Terms() {
             <h2 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d]">01. OBJETO_DO_PROJETO</h2>
           </div>
           <p className="text-sm text-white/40 leading-relaxed font-medium">
-            O Rota Livre LATAM é uma plataforma gratuita de utilidade pública voltada para viajantes, aventureiros e exploradores da América Latina. O objetivo é oferecer um hub de ferramentas táticas, mapas colaborativos e informações essenciais para a jornada.
+            O Rota Livre Hub é uma plataforma gratuita de utilidade pública voltada para viajantes, aventureiros e exploradores da América Latina. O objetivo é oferecer um hub de ferramentas táticas, mapas colaborativos e informações essenciais para a jornada.
           </p>
         </div>
 

@@ -35,14 +35,14 @@ export default function Converter() {
   return (
     <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
-        title="Conversor de Moedas LATAM - Câmbio em Tempo Real" 
+        title="Conversor de Moedas Hub - Câmbio em Tempo Real" 
         description="Converta Real, Dólar, Peso Argentino, Peso Chileno e outras moedas da América Latina com taxas atualizadas."
       />
 
       <section className="pt-12 mb-12">
         <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-4 uppercase">CORE_MODULE // FINANCE_HUB</div>
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black uppercase tracking-tighter mb-4 text-[#F8FAFC]">
-          CONVERSOR<span className="text-[#ff641d]">.</span>LATAM
+          CONVERSOR<span className="text-[#ff641d]">.</span>HUB
         </h1>
         <p className="text-[#F8FAFC]/40 text-sm font-medium max-w-xl">
           Câmbio simplificado para viajantes. Tarifas de referência para planejamento de orçamento na estrada.
