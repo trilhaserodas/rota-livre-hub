@@ -14,6 +14,7 @@ import Calculators from './pages/Calculators';
 import Blog from './pages/Blog';
 import RoutesPage from './pages/Routes';
 import About from './pages/About';
+import AirTravel from './pages/AirTravel';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/mapa" element={<Map />} />
             <Route path="/calculadoras" element={<Calculators />} />
             <Route path="/rotas" element={<RoutesPage />} />
+            <Route path="/aviao" element={<AirTravel />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/privacidade" element={<Privacy />} />

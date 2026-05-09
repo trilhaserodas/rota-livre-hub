@@ -1,11 +1,19 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Search, Coins, Clock, Map as MapIcon, Calculator, BookOpen, ArrowUpRight, Bike, Compass, Tent, Car, MapPin, Instagram } from 'lucide-react';
+import { Search, Coins, Clock, Map as MapIcon, Calculator, BookOpen, ArrowUpRight, Bike, Compass, Tent, Car, MapPin, Instagram, Plane } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '@/src/components/SEO';
 import { cn } from '@/src/lib/utils';
 
 const tools = [
+  { 
+    id: 'aviao', 
+    name: 'Logística Aérea', 
+    description: 'Guia de transporte de bike, taxas das aéreas e regras de bagagem para aventureiros.', 
+    path: '/aviao', 
+    icon: Plane, 
+    color: 'bg-cyan-500/20 text-cyan-500' 
+  },
   { 
     id: 'conversor', 
     name: 'Conversor Hub', 
