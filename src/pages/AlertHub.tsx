@@ -23,6 +23,8 @@ import {
   Cloud
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
+import ReportModal from '@/src/components/ReportModal';
+import CommunityReports from '@/src/components/CommunityReports';
 
 // Componente de Clima em Tempo Real
 function WeatherMonitor() {
@@ -198,6 +200,7 @@ const PRIORITY_THEMES = {
 export default function AlertHub() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const filteredAlerts = useMemo(() => {
     return ALERTS.filter(alert => {
@@ -377,7 +380,7 @@ export default function AlertHub() {
 
           {/* Quick Stats / Global Status */}
           <div className="dashboard-card p-8 border-white/[0.03]">
-             <h4 className="text-[10px] font-mono text-white/20 uppercase tracking-[0.4em] mb-6">Status_Global</h4>
+             <h4 className="text-[10px] font-mono text-white/40 uppercase tracking-[0.4em] mb-6">Status_Global</h4>
              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                    <span className="text-[9px] font-mono text-white/40">ALERTAS_ATIVOS</span>
@@ -400,6 +403,9 @@ export default function AlertHub() {
              </div>
           </div>
 
+          {/* Community Reports Feed */}
+          <CommunityReports />
+
           {/* Contribution Prompt */}
           <div className="p-8 rounded-3xl bg-gradient-to-br from-[#ff641d]/20 to-transparent border border-[#ff641d]/10 relative overflow-hidden group">
             <div className="relative z-10">
@@ -407,7 +413,10 @@ export default function AlertHub() {
               <p className="text-[10px] text-white/60 font-mono uppercase tracking-widest leading-relaxed mb-6">
                 Encontrou uma interdição ou mudança de regra na estrada? Reporte para a comunidade.
               </p>
-              <button className="px-5 py-2.5 bg-white text-black font-display font-black text-[10px] uppercase tracking-tighter hover:bg-[#ff641d] hover:text-white transition-all rounded-full shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+              <button 
+                onClick={() => setIsReportModalOpen(true)}
+                className="px-5 py-2.5 bg-white text-black font-display font-black text-[10px] uppercase tracking-tighter hover:bg-[#ff641d] hover:text-white transition-all rounded-full shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+              >
                 Enviar Reporte Tático
               </button>
             </div>
@@ -415,6 +424,8 @@ export default function AlertHub() {
               <Globe size={120} />
             </div>
           </div>
+
+          <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} />
 
         </div>
       </div>

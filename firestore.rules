@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll(['userName', 'content', 'createdAt']) &&
+             data.keys().size() <= 10 &&
+             data.userName is string && data.userName.size() <= 100 &&
+             data.content is string && data.content.size() <= 1000 &&
+             data.createdAt == request.time;
+    }
+
+    // Reports collection
+    match /reports/{reportId} {
+      allow list: if true;
+      allow get: if true;
+      allow create: if isValidReport(incoming());
+      // No updates or deletes by public users
+      allow update, delete: if false;
+    }
+  }
+}
