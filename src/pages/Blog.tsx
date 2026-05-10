@@ -179,6 +179,16 @@ const posts = [
       
       <p>A diferença entre um cicloviajante que volta para casa com histórias incríveis e outro que perde dias esperando ajuda está em três coisas: <strong>conhecimento, preparação e criatividade</strong>. Este guia entrega as três.</p>
 
+      <h2>Para quem é esse guia?</h2>
+      <p>Este manual foi desenhado estrategicamente para:</p>
+      <ul>
+        <li><strong>Iniciantes no cicloturismo</strong> que sentem o peso da incerteza técnica.</li>
+        <li><strong>Aventureiros solo</strong> que precisam ser sua própria equipe de apoio em locais remotos.</li>
+        <li><strong>Mochileiros independentes</strong> que buscam minimizar custos com manutenção profissional.</li>
+        <li><strong>Expedições de longa duração</strong> onde o desgaste do equipamento é uma certeza matemática.</li>
+        <li><strong>Quem busca autonomia total</strong> para cruzar continentes com segurança.</li>
+      </ul>
+
       <h2>1. A Mentalidade Correta Antes da Chave Allen</h2>
       <p>A maioria dos ciclistas amadores tem medo desproporcional da mecânica. Mas a verdade é mais simples e mais poderosa: <strong>a mecânica de campo é improvisação guiada por lógica.</strong> Você não precisa entender a bicicleta como um engenheiro mecânico. Você precisa entender o suficiente para manter as rodas girando até o próximo ponto de apoio.</p>
 
@@ -219,6 +229,34 @@ const posts = [
         </table>
       </div>
 
+      <h2>KIT ESSENCIAL DE SOBREVIVÊNCIA MECÂNICA</h2>
+      <p>O que você leva no alforje define se sua viagem continua ou termina em um resgate caro. Aqui está uma extração tática do que é vital:</p>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8">
+        <div class="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-[#ff641d]/30 transition-colors">
+          <p class="text-[#ff641d] font-display font-black text-xs mb-2 uppercase tracking-tighter">🔧 MULTITERMINAL</p>
+          <p class="text-[10px] font-mono m-0 text-white/60 leading-relaxed uppercase">Allen 4, 5, 6mm + Philips/Fenda. A base de qualquer ajuste.</p>
+        </div>
+        <div class="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-[#ff641d]/30 transition-colors">
+          <p class="text-[#ff641d] font-display font-black text-xs mb-2 uppercase tracking-tighter">⛓️ EXTRACTOR_01</p>
+          <p class="text-[10px] font-mono m-0 text-white/60 leading-relaxed uppercase">Desmontador de corrente. Sem ele, uma corrente partida é o fim da linha.</p>
+        </div>
+        <div class="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-[#ff641d]/30 transition-colors">
+          <p class="text-[#ff641d] font-display font-black text-xs mb-2 uppercase tracking-tighter">🩹 PROTOCOLO_REPARO</p>
+          <p class="text-[10px] font-mono m-0 text-white/60 leading-relaxed uppercase">Cola de contato + remendos de câmara reciclada para furos críticos.</p>
+        </div>
+        <div class="bg-white/5 p-5 rounded-2xl border border-white/10 hover:border-[#ff641d]/30 transition-colors">
+          <p class="text-[#ff641d] font-display font-black text-xs mb-2 uppercase tracking-tighter">🌯 ARMOR_TAPE</p>
+          <p class="text-[10px] font-mono m-0 text-white/60 leading-relaxed uppercase">Silver tape. Para fixar o impossível e imobilizar o que quebrou.</p>
+        </div>
+      </div>
+
+      <div class="text-center mb-12">
+        <a href="https://pay.hotmart.com/V96985428S" target="_blank" class="text-[9px] font-mono text-[#ff641d] hover:text-white transition-colors border-b border-[#ff641d]/30 pb-1 uppercase tracking-[0.4em]">
+          [ CHECKLIST MAIOR NO EBOOK ]
+        </a>
+      </div>
+
       <h2>3. O Mais Comum: Pneu Furado</h2>
       <p>Protocolo de ataque: Pare em local seguro, remova a roda, encontre o furo e remende. <strong>Dica de ouro:</strong> Sempre passe o dedo lentamente por dentro do pneu para encontrar o espinho que causou o furo. Se não remover a causa, você vai furar de novo em 500 metros.</p>
 
@@ -237,15 +275,6 @@ const posts = [
       <div class="border-l-2 border-white/10 pl-6 my-10 italic text-white/40">
         "O improviso inteligente é o que separa um aventureiro de um turista em apuros."
       </div>
-
-      <h2>5. O Kit de Manutenção Vital</h2>
-      <p>Seu kit de campo deve ser leve e focado. Priorize:</p>
-      <ul>
-        <li>Multiferramenta com chaves Allen (4, 5, 6mm).</li>
-        <li>Câmara de ar reserva e remendos rápidos.</li>
-        <li>Desmontador de corrente.</li>
-        <li>Fita isolante e silver tape (envolva no guidão para economizar espaço).</li>
-      </ul>
 
       <div class="bg-gradient-to-br from-[#ff641d] to-[#ff844d] p-10 rounded-[2rem] my-16 text-center shadow-[0_0_50px_rgba(255,100,29,0.3)]">
         <div class="bg-white/20 inline-block px-4 py-1 rounded-full text-[8px] font-mono text-white uppercase tracking-widest mb-6 border border-white/30">Destaque da Comunidade</div>
@@ -547,4 +576,3 @@ export default function Blog() {
     </div>
   );
 }
-
