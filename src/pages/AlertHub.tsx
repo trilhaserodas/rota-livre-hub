@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Fragment } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { 
@@ -25,6 +25,7 @@ import {
 import SEO from '@/src/components/SEO';
 import ReportModal from '@/src/components/ReportModal';
 import CommunityReports from '@/src/components/CommunityReports';
+import AdSense from '@/src/components/AdSense';
 
 // Componente de Clima em Tempo Real
 function WeatherMonitor() {
@@ -276,52 +277,56 @@ export default function AlertHub() {
           {/* Alerts List */}
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
-              {filteredAlerts.map((alert) => (
-                <motion.div
-                  key={alert.id}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="dashboard-card group p-6 border-white/[0.03] hover:border-white/10 transition-all cursor-pointer overflow-hidden relative"
-                >
-                  {/* Priority Indicator Line */}
-                  <div className={`absolute top-0 left-0 w-1 h-full ${PRIORITY_THEMES[alert.priority].bg.replace('bg-', 'bg-opacity-100 bg-')}`} />
-                  
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-4 mb-4">
-                        <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded ${PRIORITY_THEMES[alert.priority].bg} ${PRIORITY_THEMES[alert.priority].color} uppercase tracking-widest`}>
-                          {alert.priority}
-                        </span>
-                        <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest flex items-center gap-2">
-                          <Clock size={10} /> {alert.date}
-                        </span>
-                        <span className="text-[9px] font-mono text-[#ff641d]/60 uppercase tracking-widest">
-                           {alert.category}
-                        </span>
+              {filteredAlerts.map((alert, index) => (
+                <Fragment key={alert.id}>
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="dashboard-card group p-6 border-white/[0.03] hover:border-white/10 transition-all cursor-pointer overflow-hidden relative"
+                  >
+                    {/* Priority Indicator Line */}
+                    <div className={`absolute top-0 left-0 w-1 h-full ${PRIORITY_THEMES[alert.priority].bg.replace('bg-', 'bg-opacity-100 bg-')}`} />
+                    
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-4">
+                          <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded ${PRIORITY_THEMES[alert.priority].bg} ${PRIORITY_THEMES[alert.priority].color} uppercase tracking-widest`}>
+                            {alert.priority}
+                          </span>
+                          <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest flex items-center gap-2">
+                            <Clock size={10} /> {alert.date}
+                          </span>
+                          <span className="text-[9px] font-mono text-[#ff641d]/60 uppercase tracking-widest">
+                             {alert.category}
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-xl font-display font-black text-white uppercase tracking-tight mb-3 group-hover:text-[#ff641d] transition-colors">
+                          {alert.title}
+                        </h3>
+                        
+                        <p className="text-white/40 text-xs leading-relaxed font-sans mb-4 max-w-xl">
+                          {alert.summary}
+                        </p>
+  
+                        <div className="flex items-center gap-4 text-[10px] font-mono text-white/60 uppercase tracking-widest">
+                          <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#ff641d]" /> {alert.region}</span>
+                          <span className="text-white/10">|</span>
+                          <span className="text-white/30">{alert.country}</span>
+                        </div>
                       </div>
-                      
-                      <h3 className="text-xl font-display font-black text-white uppercase tracking-tight mb-3 group-hover:text-[#ff641d] transition-colors">
-                        {alert.title}
-                      </h3>
-                      
-                      <p className="text-white/40 text-xs leading-relaxed font-sans mb-4 max-w-xl">
-                        {alert.summary}
-                      </p>
-
-                      <div className="flex items-center gap-4 text-[10px] font-mono text-white/60 uppercase tracking-widest">
-                        <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#ff641d]" /> {alert.region}</span>
-                        <span className="text-white/10">|</span>
-                        <span className="text-white/30">{alert.country}</span>
-                      </div>
+  
+                      <button className="flex items-center gap-2 self-end md:self-center text-[10px] font-mono font-bold text-white/20 group-hover:text-white transition-all uppercase tracking-[0.2em]">
+                        Ver Detalhes <ChevronRight size={14} className="text-[#ff641d]" />
+                      </button>
                     </div>
-
-                    <button className="flex items-center gap-2 self-end md:self-center text-[10px] font-mono font-bold text-white/20 group-hover:text-white transition-all uppercase tracking-[0.2em]">
-                      Ver Detalhes <ChevronRight size={14} className="text-[#ff641d]" />
-                    </button>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                  {index === 1 && (
+                    <AdSense slot="alert_list_inline_ad" className="min-h-[100px] border-none bg-transparent" />
+                  )}
+                </Fragment>
               ))}
             </AnimatePresence>
 
@@ -402,6 +407,8 @@ export default function AlertHub() {
                 </div>
              </div>
           </div>
+
+          <AdSense slot="sidebar_ad" />
 
           {/* Community Reports Feed */}
           <CommunityReports />

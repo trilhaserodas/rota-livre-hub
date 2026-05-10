@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { useSearchParams } from 'react-router-dom';
+import AdSense from '@/src/components/AdSense';
 
 const posts = [
   {
@@ -418,6 +419,9 @@ export default function Blog() {
             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
           />
 
+          {/* Post Bottom Ad */}
+          <AdSense slot="post_bottom_ad" className="mb-12" />
+
           <div className="mt-24 pt-12 border-t border-white/5">
             <div className="flex flex-col gap-12">
               {/* Author Info */}
@@ -538,60 +542,66 @@ export default function Blog() {
       {/* Post Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {posts.map((post, index) => (
-          <motion.article
-            key={post.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="group flex flex-col cursor-pointer"
-            onClick={() => handleSelectPost(post)}
-          >
-            <div className="dashboard-card h-full p-0 overflow-hidden border-white/[0.03] flex flex-col">
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <img 
-                    src={post.image} 
-                    alt={post.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[0.8] group-hover:grayscale-0"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-[#ff641d] text-[8px] font-mono font-bold uppercase tracking-widest text-white">
-                      {post.category}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-8 flex flex-col flex-grow">
-                  <div className="flex items-center gap-6 text-[8px] font-mono text-white/20 uppercase tracking-[0.2em] mb-6">
-                    <span className="flex items-center gap-2 border-r border-white/5 pr-4"><Calendar size={10} /> {post.date}</span>
-                    <span className="flex items-center gap-2"><User size={10} /> {post.author}</span>
-                  </div>
-
-                  <h3 className="text-xl font-display font-black tracking-tighter mb-4 text-[#F8FAFC] group-hover:text-[#ff641d] transition-colors leading-tight">
-                    {post.title}
-                  </h3>
-                  
-                  <p className="text-[10px] text-white/30 leading-relaxed font-medium mb-8 flex-grow">
-                    {post.excerpt}
-                  </p>
-
-                  <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
-                    <div className="flex items-center gap-3 text-[9px] font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d] group-hover:gap-5 transition-all">
-                      ACCESS_INTEL <ArrowRight size={14} />
+          <Fragment key={post.id}>
+            <motion.article
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group flex flex-col cursor-pointer"
+              onClick={() => handleSelectPost(post)}
+            >
+              <div className="dashboard-card h-full p-0 overflow-hidden border-white/[0.03] flex flex-col">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[0.8] group-hover:grayscale-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="px-3 py-1 bg-[#ff641d] text-[8px] font-mono font-bold uppercase tracking-widest text-white">
+                        {post.category}
+                      </span>
                     </div>
-                    <button 
-                      className="text-white/10 hover:text-white transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // share logic
-                      }}
-                    >
-                      <Share2 size={14} />
-                    </button>
                   </div>
-                </div>
-            </div>
-          </motion.article>
+
+                  <div className="p-8 flex flex-col flex-grow">
+                    <div className="flex items-center gap-6 text-[8px] font-mono text-white/20 uppercase tracking-[0.2em] mb-6">
+                      <span className="flex items-center gap-2 border-r border-white/5 pr-4"><Calendar size={10} /> {post.date}</span>
+                      <span className="flex items-center gap-2"><User size={10} /> {post.author}</span>
+                    </div>
+
+                    <h3 className="text-xl font-display font-black tracking-tighter mb-4 text-[#F8FAFC] group-hover:text-[#ff641d] transition-colors leading-tight">
+                      {post.title}
+                    </h3>
+                    
+                    <p className="text-[10px] text-white/30 leading-relaxed font-medium mb-8 flex-grow">
+                      {post.excerpt}
+                    </p>
+
+                    <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
+                      <div className="flex items-center gap-3 text-[9px] font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d] group-hover:gap-5 transition-all">
+                        ACCESS_INTEL <ArrowRight size={14} />
+                      </div>
+                      <button 
+                        className="text-white/10 hover:text-white transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // share logic
+                        }}
+                      >
+                        <Share2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+              </div>
+            </motion.article>
+            {(index + 1) % 3 === 0 && (
+              <div className="md:col-span-3">
+                <AdSense slot="grid_wide_ad" className="min-h-[120px]" />
+              </div>
+            )}
+          </Fragment>
         ))}
       </div>
 
