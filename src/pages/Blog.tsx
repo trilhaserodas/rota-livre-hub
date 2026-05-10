@@ -276,22 +276,68 @@ const posts = [
         "O improviso inteligente é o que separa um aventureiro de um turista em apuros."
       </div>
 
-      <div class="bg-gradient-to-br from-[#ff641d] to-[#ff844d] p-10 rounded-[2rem] my-16 text-center shadow-[0_0_50px_rgba(255,100,29,0.3)]">
-        <div class="bg-white/20 inline-block px-4 py-1 rounded-full text-[8px] font-mono text-white uppercase tracking-widest mb-6 border border-white/30">Destaque da Comunidade</div>
-        <h2 class="text-2xl font-display font-black text-white uppercase tracking-tighter mb-4 !mt-0 !pt-0 !border-none text-center">Guia Completo do Cicloviajante</h2>
-        <p class="text-white/90 text-sm font-medium leading-relaxed mb-8 max-w-lg mx-auto">Tudo o que você precisa para dominar a estrada: mecânica, planejamento de rotas, acampamento e sobrevivência tática na América Latina.</p>
+      <div class="relative group my-20 antialiased">
+        <div class="absolute -inset-1 bg-gradient-to-r from-[#ff641d]/50 to-[#ff844d]/50 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-1000"></div>
         
-        <ul class="text-[10px] font-mono text-white/80 uppercase tracking-widest space-y-3 mb-10 inline-block text-left">
-          <li class="flex items-center gap-3"><span class="text-white">✓</span> Mecânica e Improvisos Avançados</li>
-          <li class="flex items-center gap-3"><span class="text-white">✓</span> Planejamento sem Internet</li>
-          <li class="flex items-center gap-3"><span class="text-white">✓</span> Sobrevivência e Acampamento</li>
-        </ul>
+        <div class="relative bg-[#0A0A0B] border border-white/5 rounded-[2.5rem] overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 items-stretch">
+            
+            <div class="lg:col-span-7 p-10 lg:p-16 flex flex-col justify-center">
+              <div class="text-[8px] font-mono tracking-[0.5em] text-[#ff641d] mb-6 uppercase opacity-80">Recurso_Estrategico // Intel_Field</div>
+              <h3 class="text-3xl lg:text-4xl font-display font-black text-white uppercase tracking-tighter leading-none mb-6 mt-0 border-none pt-0">
+                Guia Completo do <br/> <span class="text-[#ff641d]">Ciclo Viajante</span>
+              </h3>
+              
+              <p class="text-xs text-white/50 font-medium leading-relaxed mb-10 max-w-md uppercase tracking-wider">
+                Um material criado para aventureiros que querem viajar com mais autonomia, segurança e preparação real para estrada.
+              </p>
 
-        <div class="flex flex-col items-center gap-4">
-          <a href="https://pay.hotmart.com/V96985428S" target="_blank" class="w-full sm:w-auto px-12 py-5 bg-black text-white font-display font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-all rounded-2xl shadow-xl">
-            ADQUIRIR ACESSO IMEDIATO
-          </a>
-          <span class="text-[9px] font-mono text-white/40 uppercase tracking-widest italic">Acesso via Hotmart // 100% Digital</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 mb-12">
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> improvisos reais de estrada
+                </div>
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> checklists completos
+                </div>
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> acampamento selvagem
+                </div>
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> manutenção emergencial
+                </div>
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> segurança em expedições
+                </div>
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> equipamentos essenciais
+                </div>
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> planejamento de viagem
+                </div>
+                <div class="flex items-center gap-3 text-[9px] font-mono text-white/40 uppercase tracking-widest">
+                  <span class="text-[#ff641d] font-bold">»</span> soluções para perrengues
+                </div>
+              </div>
+
+              <div class="flex">
+                <a href="https://pay.hotmart.com/V96985428S" target="_blank" class="group/btn relative inline-flex items-center justify-center px-10 py-5 bg-[#ff641d] text-white font-display font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#ff844d] transition-all rounded-2xl shadow-[0_15px_40px_rgba(255,100,29,0.2)]">
+                  ACESSAR O GUIA COMPLETO
+                  <span class="ml-3 group-hover/btn:translate-x-1 transition-transform">→</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 relative min-h-[400px] lg:min-h-full overflow-hidden bg-gradient-to-br from-[#ff641d]/5 to-transparent">
+               <div class="absolute inset-0 flex items-center justify-center p-8 lg:p-12">
+                <img 
+                  src="https://i.ibb.co/1VjVgZ3/Divulga-ebook-ML-Contra-Capa.png" 
+                  alt="Guia Completo do Ciclo Viajante" 
+                  class="w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform rotate-3 group-hover:rotate-0 transition-transform duration-1000 scale-110"
+                />
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
 
