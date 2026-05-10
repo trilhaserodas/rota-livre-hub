@@ -169,12 +169,107 @@ const posts = [
   {
     id: 3,
     title: 'MANUTENÇÃO DE CAMPO: REPAROS CRÍTICOS',
-    excerpt: 'Protocolos de emergência para falhas mecânicas em isolamento geográfico. O que levar no kit de intervenção.',
+    excerpt: 'Protocolos de emergência para falhas mecânicas em isolamento geográfico. Guia completo sobre pneus, correntes e ferramentas vitais.',
     category: 'FIELD_OPS',
-    author: 'CC_MECHANIC',
-    date: '28.09.25',
+    author: 'TR_COMMUNITY',
+    date: '10.05.26',
     image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=600',
-    content: '<p>Conteúdo em fase de digitalização...</p>'
+    content: `
+      <p>Imagine isso: você está pedalando por uma estrada de terra no interior, o sol no topo da cabeça, nenhum sinal de celular, o próximo vilarejo a 40 quilômetros. E então — <strong>o barulho seco. A corrente quebra.</strong> O que você faz?</p>
+      
+      <p>A diferença entre um cicloviajante que volta para casa com histórias incríveis e outro que perde dias esperando ajuda está em três coisas: <strong>conhecimento, preparação e criatividade</strong>. Este guia entrega as três.</p>
+
+      <h2>1. A Mentalidade Correta Antes da Chave Allen</h2>
+      <p>A maioria dos ciclistas amadores tem medo desproporcional da mecânica. Mas a verdade é mais simples e mais poderosa: <strong>a mecânica de campo é improvisação guiada por lógica.</strong> Você não precisa entender a bicicleta como um engenheiro mecânico. Você precisa entender o suficiente para manter as rodas girando até o próximo ponto de apoio.</p>
+
+      <div class="bg-[#ff641d]/10 p-6 border-l-4 border-[#ff641d] my-8">
+        <p class="text-[10px] font-mono text-[#ff641d] uppercase tracking-widest mb-2">// Princípio Fundamental</p>
+        <p class="text-white font-bold italic">"Todo reparo de campo tem o mesmo objetivo: não perfeição, mas continuidade."</p>
+      </div>
+
+      <h2>2. Diagnóstico Rápido: Como Identificar o Problema</h2>
+      <p>Antes de desmontar qualquer coisa, diagnostique. Ouvir a bicicleta é uma habilidade real. Sons diferentes indicam problemas diferentes:</p>
+      
+      <div class="overflow-x-auto my-8">
+        <table class="w-full text-[10px] font-mono uppercase tracking-widest border-collapse">
+          <thead>
+            <tr class="border-b border-white/10 text-[#ff641d]">
+              <th class="py-3 text-left">Som / Sintoma</th>
+              <th class="py-3 text-left">Problema Provável</th>
+              <th class="py-3 text-left">Urgência</th>
+            </tr>
+          </thead>
+          <tbody class="text-white/60">
+            <tr class="border-b border-white/5">
+              <td class="py-3">Clique ritmado</td>
+              <td class="py-3">Pedivela solto / Sujeira</td>
+              <td class="py-3">Média</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3">Barulho seco + Perda tração</td>
+              <td class="py-3">Corrente quebrada</td>
+              <td class="py-3">Alta</td>
+            </tr>
+            <tr class="border-b border-white/5">
+              <td class="py-3">Pneu mole progressivo</td>
+              <td class="py-3">Furo lento</td>
+              <td class="py-3">Média</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>3. O Mais Comum: Pneu Furado</h2>
+      <p>Protocolo de ataque: Pare em local seguro, remova a roda, encontre o furo e remende. <strong>Dica de ouro:</strong> Sempre passe o dedo lentamente por dentro do pneu para encontrar o espinho que causou o furo. Se não remover a causa, você vai furar de novo em 500 metros.</p>
+
+      <div class="dashboard-card bg-[#ff641d]/20 border-[#ff641d]/50 p-8 my-12 text-center">
+        <div class="text-[10px] font-mono text-[#ff641d] mb-4 uppercase tracking-[0.4em]">Intel_Database // Premium_Content</div>
+        <h3 class="text-xl font-display font-black text-white uppercase mb-4">QUER O GUIA TÁTICO COMPLETO?</h3>
+        <p class="text-xs text-white/60 font-mono uppercase leading-relaxed mb-6">O "Guia Completo do Cicloviajante" cobre técnicas de improviso avançadas, tiras antifuro de couro e checklists de expedição que economizam tempo e dinheiro.</p>
+        <a href="https://pay.hotmart.com/V96985428S" target="_blank" class="inline-block px-8 py-3 bg-[#ff641d] text-white font-display font-black text-[10px] uppercase tracking-widest hover:bg-[#ff844d] transition-all rounded-full">
+          Quero o Guia Completo
+        </a>
+      </div>
+
+      <h2>4. Corrente Quebrada: Fim da Jornada?</h2>
+      <p>A ferramenta essencial aqui é o <strong>desmontador de corrente</strong>. Com ele, você remove o elo danificado e reconecta os restantes. A corrente ficará um elo mais curta, então evite combinações de marchas extremas (como maior-maior) até poder trocar a corrente por completo.</p>
+
+      <div class="border-l-2 border-white/10 pl-6 my-10 italic text-white/40">
+        "O improviso inteligente é o que separa um aventureiro de um turista em apuros."
+      </div>
+
+      <h2>5. O Kit de Manutenção Vital</h2>
+      <p>Seu kit de campo deve ser leve e focado. Priorize:</p>
+      <ul>
+        <li>Multiferramenta com chaves Allen (4, 5, 6mm).</li>
+        <li>Câmara de ar reserva e remendos rápidos.</li>
+        <li>Desmontador de corrente.</li>
+        <li>Fita isolante e silver tape (envolva no guidão para economizar espaço).</li>
+      </ul>
+
+      <div class="bg-gradient-to-br from-[#ff641d] to-[#ff844d] p-10 rounded-[2rem] my-16 text-center shadow-[0_0_50px_rgba(255,100,29,0.3)]">
+        <div class="bg-white/20 inline-block px-4 py-1 rounded-full text-[8px] font-mono text-white uppercase tracking-widest mb-6 border border-white/30">Destaque da Comunidade</div>
+        <h2 class="text-2xl font-display font-black text-white uppercase tracking-tighter mb-4 !mt-0 !pt-0 !border-none text-center">Guia Completo do Cicloviajante</h2>
+        <p class="text-white/90 text-sm font-medium leading-relaxed mb-8 max-w-lg mx-auto">Tudo o que você precisa para dominar a estrada: mecânica, planejamento de rotas, acampamento e sobrevivência tática na América Latina.</p>
+        
+        <ul class="text-[10px] font-mono text-white/80 uppercase tracking-widest space-y-3 mb-10 inline-block text-left">
+          <li class="flex items-center gap-3"><span class="text-white">✓</span> Mecânica e Improvisos Avançados</li>
+          <li class="flex items-center gap-3"><span class="text-white">✓</span> Planejamento sem Internet</li>
+          <li class="flex items-center gap-3"><span class="text-white">✓</span> Sobrevivência e Acampamento</li>
+        </ul>
+
+        <div class="flex flex-col items-center gap-4">
+          <a href="https://pay.hotmart.com/V96985428S" target="_blank" class="w-full sm:w-auto px-12 py-5 bg-black text-white font-display font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-all rounded-2xl shadow-xl">
+            ADQUIRIR ACESSO IMEDIATO
+          </a>
+          <span class="text-[9px] font-mono text-white/40 uppercase tracking-widest italic">Acesso via Hotmart // 100% Digital</span>
+        </div>
+      </div>
+
+      <p class="text-white/40 italic">A estrada ensina o que o manual não consegue. Mas para aprender, você precisa estar nela. Prepare-se.</p>
+
+      <p>Projeto desenvolvido pela comunidade Trilhas e Rodas.<br/>Instagram: @trilhas_erodas</p>
+    `
   }
 ];
 
