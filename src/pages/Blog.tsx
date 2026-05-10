@@ -541,9 +541,10 @@ export default function Blog() {
 
       {/* Post Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {posts.map((post, index) => (
-          <Fragment key={post.id}>
+        {posts.flatMap((post, index) => {
+          const items = [
             <motion.article
+              key={post.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -596,13 +597,18 @@ export default function Blog() {
                   </div>
               </div>
             </motion.article>
-            {(index + 1) % 3 === 0 && (
-              <div className="md:col-span-3">
+          ];
+
+          if ((index + 1) % 3 === 0) {
+            items.push(
+              <div key={`ad-grid-${index}`} className="md:col-span-3">
                 <AdSense slot="grid_wide_ad" className="min-h-[120px]" />
               </div>
-            )}
-          </Fragment>
-        ))}
+            );
+          }
+
+          return items;
+        })}
       </div>
 
       {/* Ops Center / Sub Block */}

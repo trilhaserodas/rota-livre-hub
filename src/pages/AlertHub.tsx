@@ -277,9 +277,10 @@ export default function AlertHub() {
           {/* Alerts List */}
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
-              {filteredAlerts.map((alert, index) => (
-                <Fragment key={alert.id}>
+              {filteredAlerts.flatMap((alert, index) => {
+                const items = [
                   <motion.div
+                    key={alert.id}
                     layout
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -323,11 +324,22 @@ export default function AlertHub() {
                       </button>
                     </div>
                   </motion.div>
-                  {index === 1 && (
-                    <AdSense slot="alert_list_inline_ad" className="min-h-[100px] border-none bg-transparent" />
-                  )}
-                </Fragment>
-              ))}
+                ];
+
+                if (index === 1) {
+                  items.push(
+                    <motion.div 
+                      key="alert-list-ad"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <AdSense slot="alert_list_inline_ad" className="min-h-[100px] border-none bg-transparent" />
+                    </motion.div>
+                  );
+                }
+
+                return items;
+              })}
             </AnimatePresence>
 
             {filteredAlerts.length === 0 && (
