@@ -105,6 +105,9 @@ interface Alert {
   region: string;
   category: string;
   country: string;
+  causes: string[];
+  safetyBrief: string[];
+  lastUpdate: string;
 }
 
 interface Insight {
@@ -123,7 +126,18 @@ const ALERTS: Alert[] = [
     date: '09.05.26',
     region: 'Patagônia Chilena',
     category: 'CLIMÁTICO',
-    country: 'Chile'
+    country: 'Chile',
+    causes: [
+      'Anomalia térmica no Oceano Pacífico (El Niño)',
+      'Saturação do solo por chuvas persistentes',
+      'Geologia instável em trechos de rípio'
+    ],
+    safetyBrief: [
+      'Evite pedalar durante tempestades elétricas',
+      'Reduza a pressão dos pneus para maior tração no rípio úmido',
+      'Mantenha contato via satélite ativado em zonas de sombra'
+    ],
+    lastUpdate: '10.05.26 - 18h45'
   },
   {
     id: 'AL-002',
@@ -133,7 +147,17 @@ const ALERTS: Alert[] = [
     date: '08.05.26',
     region: 'Andes Centrais',
     category: 'FRONTEIRAS',
-    country: 'Argentina/Chile'
+    country: 'Argentina/Chile',
+    causes: [
+      'Início da temporada de degelo',
+      'Novas diretivas de segurança binacional'
+    ],
+    safetyBrief: [
+      'Porte certificado internacional de vacinação',
+      'Contrate seguro com cláusula de evacuação aérea',
+      'Inicie a subida antes das 08:00 AM para evitar ventos de tarde'
+    ],
+    lastUpdate: '09.05.26 - 09h12'
   },
   {
     id: 'AL-003',
@@ -143,7 +167,17 @@ const ALERTS: Alert[] = [
     date: '07.05.26',
     region: 'Minas Gerais',
     category: 'ESTRADAS',
-    country: 'Brasil'
+    country: 'Brasil',
+    causes: [
+      'Desgaste estrutural acelerado por excesso de carga',
+      'Obras de restauração do patrimônio histórico'
+    ],
+    safetyBrief: [
+      'Desvio não recomendado para bicicletas de estrada com pneus finos',
+      'Abastecimento de água limitado no trecho alternativo',
+      'Sinalização precária no desvio; use GPS offline'
+    ],
+    lastUpdate: '11.05.26 - 07h00'
   },
   {
     id: 'AL-004',
@@ -153,7 +187,17 @@ const ALERTS: Alert[] = [
     date: '05.05.26',
     region: 'Global',
     category: 'TRANSPORTE',
-    country: 'International'
+    country: 'International',
+    causes: [
+      'Novos protocolos da IATA para segurança de voo',
+      'Histórico de incidentes térmicos com baterias de alta densidade'
+    ],
+    safetyBrief: [
+      'Verifique a etiqueta de Wh na sua bateria antes do check-in',
+      'Proteja os terminais com fita isolante',
+      'Declare o equipamento no balcão de bagagens especiais'
+    ],
+    lastUpdate: '06.05.26 - 14h20'
   }
 ];
 
@@ -202,6 +246,7 @@ export default function AlertHub() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
 
   const filteredAlerts = useMemo(() => {
     return ALERTS.filter(alert => {
@@ -278,6 +323,7 @@ export default function AlertHub() {
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
               {filteredAlerts.flatMap((alert, index) => {
+                const isExpanded = expandedAlertId === alert.id;
                 const items = [
                   <motion.div
                     key={alert.id}
@@ -285,7 +331,8 @@ export default function AlertHub() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="dashboard-card group p-6 border-white/[0.03] hover:border-white/10 transition-all cursor-pointer overflow-hidden relative"
+                    className={`dashboard-card group p-6 border-white/[0.03] hover:border-white/10 transition-all cursor-pointer overflow-hidden relative ${isExpanded ? 'border-[#ff641d]/30 bg-[#ff641d]/[0.02]' : ''}`}
+                    onClick={() => setExpandedAlertId(isExpanded ? null : alert.id)}
                   >
                     {/* Priority Indicator Line */}
                     <div className={`absolute top-0 left-0 w-1 h-full ${PRIORITY_THEMES[alert.priority].bg.replace('bg-', 'bg-opacity-100 bg-')}`} />
@@ -304,7 +351,7 @@ export default function AlertHub() {
                           </span>
                         </div>
                         
-                        <h3 className="text-xl font-display font-black text-white uppercase tracking-tight mb-3 group-hover:text-[#ff641d] transition-colors">
+                        <h3 className="text-xl font-display font-black text-white uppercase tracking-tight mb-3 group-hover:text-[#ff641d] transition-colors leading-tight">
                           {alert.title}
                         </h3>
                         
@@ -317,11 +364,59 @@ export default function AlertHub() {
                           <span className="text-white/10">|</span>
                           <span className="text-white/30">{alert.country}</span>
                         </div>
+
+                        {/* Expanded Info */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pt-8 mt-8 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                  <div className="text-[9px] font-mono text-[#ff641d] uppercase tracking-[0.3em] mb-4 font-bold flex items-center gap-2">
+                                    <div className="w-4 h-[1px] bg-[#ff641d]" /> CAUSAS_PROVÁVEIS
+                                  </div>
+                                  <ul className="space-y-2">
+                                    {alert.causes.map((cause, i) => (
+                                      <li key={i} className="text-[10px] text-white/60 font-mono uppercase tracking-widest flex items-start gap-2">
+                                        <span className="text-[#ff641d]">•</span> {cause}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div>
+                                  <div className="text-[9px] font-mono text-[#ff641d] uppercase tracking-[0.3em] mb-4 font-bold flex items-center gap-2">
+                                    <div className="w-4 h-[1px] bg-[#ff641d]" /> RECOMENDAÇÕES_SAFETY
+                                  </div>
+                                  <ul className="space-y-2">
+                                    {alert.safetyBrief.map((item, i) => (
+                                      <li key={i} className="text-[10px] text-white/60 font-mono uppercase tracking-widest flex items-start gap-2">
+                                        <span className="text-[#ff641d]">•</span> {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div className="md:col-span-2 pt-4 border-t border-white/5 flex items-center justify-between">
+                                  <div className="text-[8px] font-mono text-white/20 uppercase tracking-[0.2em]">
+                                    Protocolo: TR-SEC-{alert.id}
+                                  </div>
+                                  <div className="text-[9px] font-mono text-white/40 uppercase tracking-widest italic">
+                                    Última Atualização: <span className="text-[#ff641d]/60">{alert.lastUpdate}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
   
-                      <button className="flex items-center gap-2 self-end md:self-center text-[10px] font-mono font-bold text-white/20 group-hover:text-white transition-all uppercase tracking-[0.2em]">
-                        Ver Detalhes <ChevronRight size={14} className="text-[#ff641d]" />
-                      </button>
+                      <div className={`mt-4 md:mt-0 flex items-center gap-2 self-end md:self-center text-[10px] font-mono font-bold transition-all uppercase tracking-[0.2em] ${isExpanded ? 'text-white' : 'text-white/20 group-hover:text-white'}`}>
+                        {isExpanded ? 'FECHAR' : 'DETALHES'} 
+                        <ChevronRight size={14} className={`text-[#ff641d] transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
+                      </div>
                     </div>
                   </motion.div>
                 ];
