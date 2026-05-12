@@ -201,7 +201,7 @@ export default function Routes() {
             className="group"
           >
             <div className="dashboard-card p-0 border-white/[0.03] overflow-hidden flex flex-col h-full bg-none bg-transparent">
-              <div className="relative aspect-[16/10] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
+              <Link to={`/rotas/${route.id}`} className="relative aspect-[16/10] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700 block">
                 <img 
                   src={route.image} 
                   alt={route.name}
@@ -222,7 +222,7 @@ export default function Routes() {
                      LVL: {route.difficulty}
                    </div>
                 </div>
-              </div>
+              </Link>
 
               <div className="p-8 flex flex-col flex-grow bg-[#0b0c0d]">
                 <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-6">

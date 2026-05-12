@@ -14,6 +14,7 @@ import Calculators from './pages/Calculators';
 import Blog from './pages/Blog';
 import AlertHub from './pages/AlertHub';
 import RoutesPage from './pages/Routes';
+import CarreteraAustral from './pages/CarreteraAustral';
 import About from './pages/About';
 import AirTravel from './pages/AirTravel';
 import Privacy from './pages/Privacy';
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/mapa" element={<Map />} />
             <Route path="/calculadoras" element={<Calculators />} />
             <Route path="/rotas" element={<RoutesPage />} />
+            <Route path="/rotas/carretera-austral" element={<CarreteraAustral />} />
             <Route path="/aviao" element={<AirTravel />} />
             <Route path="/alert-hub" element={<AlertHub />} />
             <Route path="/blog" element={<Blog />} />
