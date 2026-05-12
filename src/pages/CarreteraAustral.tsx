@@ -213,6 +213,71 @@ export default function CarreteraAustral() {
         </div>
       </article>
 
+      {/* Related Routes Section */}
+      <section className="mt-40 border-t border-white/5 pt-20">
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-4 uppercase">LOG_PROTOCOL // RELATED_TRAILS</div>
+            <h2 className="text-3xl font-display font-black uppercase tracking-tighter text-[#F8FAFC]">
+              CONTINUAR<span className="text-[#ff641d]">.</span>A_EXPLORAÇÃO
+            </h2>
+          </div>
+        </div>
+
+        <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar">
+          {[
+            {
+              id: 'ruta-40',
+              name: 'RUTA_40',
+              country: 'ARGENTINA',
+              difficulty: 'EXTREMO',
+              image: 'https://images.unsplash.com/photo-1498677231914-50deb6ba421a?auto=format&fit=crop&q=80&w=800'
+            },
+            {
+              id: 'transamazonica',
+              name: 'TRANSAMAZÔNICA',
+              country: 'BRASIL',
+              difficulty: 'CRÍTICO',
+              image: 'https://images.unsplash.com/photo-1502484433149-bc9197c3664c?auto=format&fit=crop&q=80&w=800'
+            },
+            {
+              id: 'circuito-huayhuash',
+              name: 'HUAYHUASH_CIRCUIT',
+              country: 'PERU',
+              difficulty: 'ALTO_ALTITUDE',
+              image: 'https://images.unsplash.com/photo-1544198305-e0d02447990c?auto=format&fit=crop&q=80&w=800'
+            }
+          ].map((route) => (
+            <motion.div
+              key={route.id}
+              whileHover={{ y: -5 }}
+              className="flex-shrink-0 w-[300px] snap-start"
+            >
+              <Link to={`/rotas/${route.id}`} className="block group">
+                <div className="aspect-[16/10] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700 mb-6 border border-white/5 bg-white/[0.02]">
+                  <img 
+                    src={route.image} 
+                    alt={route.name}
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-[#ff641d] text-[9px] font-mono font-bold uppercase tracking-widest">
+                    <MapPin size={10} /> {route.country}
+                  </div>
+                  <h3 className="text-xl font-display font-black text-[#F8FAFC] uppercase tracking-tighter group-hover:text-[#ff641d] transition-colors">
+                    {route.name}
+                  </h3>
+                  <div className="text-[10px] text-white/20 font-mono uppercase tracking-widest">
+                    LVL: {route.difficulty}
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
       <footer className="mt-24 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-8">
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-6">
            <button 

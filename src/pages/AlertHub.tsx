@@ -230,15 +230,15 @@ const INSIGHTS: Insight[] = [
 
 const CATEGORIES = [
   { id: 'all', label: 'TODOS', icon: Globe },
-  { id: 'CLIMÁTICO', label: 'CLIMA', icon: Wind },
+  { id: 'CLIMÁTICO', label: 'CLIMÁTICO', icon: Wind },
   { id: 'FRONTEIRAS', label: 'FRONTEIRAS', icon: MapIcon },
   { id: 'ESTRADAS', label: 'ESTRADAS', icon: MapPin },
   { id: 'TRANSPORTE', label: 'TRANSPORTE', icon: Plane },
   { id: 'SEGURANÇA', label: 'SEGURANÇA', icon: ShieldCheck },
   { id: 'MOCHILÃO', label: 'MOCHILÃO', icon: Backpack },
-  { id: 'CICLOTURISMO', label: 'CICLO', icon: Bike },
+  { id: 'CICLOTURISMO', label: 'CICLOTURISMO', icon: Bike },
   { id: 'OVERLAND', label: 'OVERLAND', icon: Truck },
-  { id: 'EQUIPAMENTO', label: 'GEAR', icon: Wrench },
+  { id: 'EQUIPAMENTO', label: 'EQUIPAMENTO', icon: Wrench },
 ];
 
 function SafetyGuidelines() {
