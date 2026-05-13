@@ -19,7 +19,7 @@ export interface LocationPoint {
   name: string;
   lat: number;
   lng: number;
-  category: 'tourism' | 'camping' | 'secure' | 'repair' | 'hostel' | 'water' | 'viewpoint' | 'dangerous' | 'bike_route' | 'moto_route';
+  category: 'camping' | 'water' | 'repair' | 'danger' | 'safe_point' | 'fuel' | 'policing' | 'hostel' | 'viewpoint' | 'bike_route' | 'moto_route';
   description: string;
   image?: string;
 }

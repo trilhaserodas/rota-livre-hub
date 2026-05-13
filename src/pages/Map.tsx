@@ -1,7 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl as LeafletZoomControl } from 'react-leaflet';
 import L from 'leaflet';
-import { Search, Filter, Tent, MapPin, Hammer, Coffee, Droplets, Camera, AlertTriangle, ShieldCheck, Layers, ArrowUpRight, Bike, Triangle, Plus, Minus } from 'lucide-react';
+import { 
+  Search, Filter, Tent, MapPin, Hammer, Coffee, Droplets, 
+  Camera, AlertTriangle, ShieldCheck, Layers, ArrowUpRight, 
+  Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
+  LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon
+} from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { cn } from '@/src/lib/utils';
 import { LocationPoint } from '@/src/types';
@@ -18,124 +23,170 @@ L.Icon.Default.mergeOptions({
 const initialPoints: LocationPoint[] = [
   { 
     id: '1', 
-    name: 'Camping Lago General Carrera', 
-    lat: -46.545, 
-    lng: -72.040, 
+    name: 'Camping El Chorro - Villa O\'Higgins', 
+    lat: -48.465, 
+    lng: -72.560, 
     category: 'camping', 
-    description: 'Beira de lago com vista para as Capillas de Mármol. Grátis e seguro.',
+    description: 'Camping rústico próximo ao início da travessia para El Chaltén. Água quente solar.',
     image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&q=80&w=400'
   },
   { 
     id: '2', 
-    name: 'Oficina do Jorge - Bike', 
-    lat: -34.603, 
-    lng: -58.381, 
+    name: 'Mecânico Don Luis - Coyhaique', 
+    lat: -45.568, 
+    lng: -72.067, 
     category: 'repair', 
-    description: 'Especialista em cicloturismo. Tem todas as ferramentas e peças raras.',
+    description: 'Mecânica 4x4 e motos. Conhecido por salvar motorhomes na Carretera Austral.',
     image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=400'
   },
   { 
     id: '3', 
-    name: 'Mirante Fitz Roy', 
-    lat: -49.271, 
-    lng: -73.043, 
-    category: 'viewpoint', 
-    description: 'O melhor ponto para fotos ao amanhecer.' 
+    name: 'Posto Remoto Bajo Caracoles', 
+    lat: -47.441, 
+    lng: -70.925, 
+    category: 'fuel', 
+    description: 'Único ponto de abastecimento em centenas de km na Ruta 40. INDISPENSÁVEL.',
+    image: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&q=80&w=400'
   },
   { 
     id: '4', 
-    name: 'Ponto de Água Potável - Atacama', 
-    lat: -22.908, 
-    lng: -68.199, 
+    name: 'Vertente de Água Degelo - Fitz Roy', 
+    lat: -49.271, 
+    lng: -72.943, 
     category: 'water', 
-    description: 'Torneira pública de água filtrada. Vital para quem cruza o deserto.' 
+    description: 'Água pura diretamente do glaciar. Ponto seguro para reabastecimento de garrafas.' 
   },
   { 
     id: '5', 
-    name: 'Hostel Los Mochileros', 
-    lat: -15.840, 
-    lng: -70.021, 
-    category: 'hostel', 
-    description: 'Preço justo e garagem para motos/bikes.',
-    image: 'https://images.unsplash.com/photo-1555854817-2b22464d13af?auto=format&fit=crop&q=80&w=400'
+    name: 'Ponto Seguro - Aduana Paso Roballos', 
+    lat: -47.165, 
+    lng: -71.868, 
+    category: 'policing', 
+    description: 'Posto de fronteira remoto. Documentação obrigatória e zona de fiscalização.',
   },
   { 
     id: '6', 
-    name: 'Trecho Perigoso - Ruta 40', 
-    lat: -48.231, 
-    lng: -70.449, 
-    category: 'dangerous', 
-    description: 'Trecho com rípio muito solto e ventos laterais de 100km/h.' 
+    name: 'ZONA_CRÍTICA: Ventos de 120km/h', 
+    lat: -50.230, 
+    lng: -70.920, 
+    category: 'danger', 
+    description: 'Zona de perigo extremo para motos e bicicletas. Rípio solto e rajadas laterais constantes.' 
   },
   {
     id: '7',
-    name: 'Ciclovia dos Glaciares',
-    lat: -50.338,
-    lng: -72.261,
-    category: 'bike_route',
-    description: 'Trajeto exclusivo para bicicletas margeando o Lago Argentino.',
-    image: 'https://images.unsplash.com/photo-1541625602330-2277a4c4b282?auto=format&fit=crop&q=80&w=400'
+    name: 'Refúgio de Montanha - Cochamo',
+    lat: -41.405,
+    lng: -72.245,
+    category: 'safe_point',
+    description: 'Shelter comunitário para situações de clima extremo. Gratuito.',
   },
   {
     id: '8',
-    name: 'Passo de Jama - Moto Route',
-    lat: -23.235,
-    lng: -67.065,
-    category: 'moto_route',
-    description: 'Travessia mítica entre Argentina e Chile. Altitude de 4800m.',
-    image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=400'
+    name: 'Garagem MotoTravel - Santiago',
+    lat: -33.437,
+    lng: -70.634,
+    category: 'repair',
+    description: 'Oficina especializada em BMW e KTM. Peças originais para expedições.',
   }
 ];
 
 const categories = [
-  { id: 'all', name: 'Todos', icon: Filter },
+  { id: 'all', name: 'Todos', icon: Globe, color: '#ff641d' },
   { id: 'camping', name: 'Camping', icon: Tent, color: '#10b981' },
-  { id: 'repair', name: 'Oficinas', icon: Hammer, color: '#ef4444' },
-  { id: 'hostel', name: 'Hostels', icon: Coffee, color: '#8b5cf6' },
   { id: 'water', name: 'Água', icon: Droplets, color: '#0ea5e9' },
-  { id: 'viewpoint', name: 'Mirantes', icon: MapPin, color: '#ec4899' },
-  { id: 'dangerous', name: 'Perigo', icon: AlertTriangle, color: '#64748b' },
-  { id: 'bike_route', name: 'Rota Bike', icon: Bike, color: '#ff641d' },
-  { id: 'moto_route', name: 'Rota Moto', icon: Triangle, color: '#ff641d' },
+  { id: 'repair', name: 'Oficina', icon: Hammer, color: '#f59e0b' },
+  { id: 'danger', name: 'Perigo', icon: AlertTriangle, color: '#ef4444' },
+  { id: 'safe_point', name: 'Seguro', icon: ShieldCheck, color: '#10b981' },
+  { id: 'fuel', name: 'Combustível', icon: Fuel, color: '#ec4899' },
+  { id: 'policing', name: 'Fiscalização', icon: Shield, color: '#6366f1' },
 ];
 
-function createCustomIcon(color: string) {
+function createCustomIcon(color: string, glow: boolean = true) {
   return L.divIcon({
     className: 'custom-div-icon',
-    html: `<div class="w-5 h-5 bg-[#ff641d] rounded-full border-4 border-[#0b0c0d] shadow-[0_0_15px_rgba(255,100,29,0.6)]"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    html: `
+      <div class="relative flex items-center justify-center">
+        <div class="w-4 h-4 bg-[${color}] rounded-full border-2 border-[#0b0c0d] relative z-10 ${glow ? 'shadow-[0_0_15px_' + color + ']' : ''}"></div>
+        ${glow ? `<div class="absolute w-6 h-6 bg-[${color}] opacity-20 rounded-full animate-ping"></div>` : ''}
+      </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
 }
 
-const customIcon = createCustomIcon('#ff641d');
+function userLocationIcon() {
+  return L.divIcon({
+    className: 'user-location-icon',
+    html: `
+      <div class="relative">
+        <div class="w-5 h-5 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_10px_rgba(59,130,246,0.8)] relative z-10"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-blue-500 opacity-20 rounded-full animate-pulse"></div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+}
 
-function ZoomControl() {
+// Controller for map actions (fly to, bounds, etc)
+function MapController({ center, zoom, userLocation }: { center?: [number, number], zoom?: number, userLocation?: [number, number] }) {
   const map = useMap();
   
-  return (
-    <div className="absolute top-1/2 -translate-y-1/2 right-6 z-[1000] flex flex-col gap-2">
-      <button 
-        onClick={() => map.zoomIn()}
-        title="Zoom In"
-        className="w-10 h-10 bg-black/60 backdrop-blur-md border border-white/10 rounded-sm flex items-center justify-center text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all shadow-xl group"
-      >
-        <Plus size={20} className="group-hover:scale-110 transition-transform" />
-      </button>
-      <button 
-        onClick={() => map.zoomOut()}
-        title="Zoom Out"
-        className="w-10 h-10 bg-black/60 backdrop-blur-md border border-white/10 rounded-sm flex items-center justify-center text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all shadow-xl group"
-      >
-        <Minus size={20} className="group-hover:scale-110 transition-transform" />
-      </button>
-    </div>
-  );
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, zoom || map.getZoom());
+    }
+  }, [center, zoom, map]);
+
+  return null;
 }
 
 export default function AdventureMap() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([-34.603, -58.381]);
+  const [mapZoom, setMapZoom] = useState(4);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Auto-location
+  const handleLocateUser = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([latitude, longitude]);
+          setMapCenter([latitude, longitude]);
+          setMapZoom(12);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+        }
+      );
+    }
+  }, []);
+
+  // Search logic (Nominatim)
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchQuery) return;
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setMapCenter([parseFloat(lat), parseFloat(lon)]);
+        setMapZoom(12);
+      }
+    } catch (err) {
+      console.error("Search failed:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const filteredPoints = useMemo(() => {
     return initialPoints.filter(p => {
@@ -147,127 +198,228 @@ export default function AdventureMap() {
   }, [selectedCategory, searchQuery]);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 pb-24 relative z-10 overflow-hidden">
       <SEO 
-        title="Mapa Colaborativo Hub - Pontos de Apoio e Rotas" 
-        description="Explore o mapa interativo com pontos de apoio, mecânicas, campings e rotas recomendadas por quem vive a estrada usando Leaflet."
+        title="Tactical Atlas — Mapa Operacional da Estrada" 
+        description="Mapeamento tático de infraestrutura, pontos de apoio e zonas de perigo na América Latina. Experiência GPS premium por Leaflet."
       />
 
-      <section className="pt-12 mb-12">
-        <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-4 uppercase">CORE_MODULE // GEOSPATIAL_INTEL</div>
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-black uppercase tracking-tighter mb-4 text-[#F8FAFC]">
-          LIVE_MAPS<span className="text-[#ff641d]">.</span>HUB
-        </h1>
-        <p className="text-[#F8FAFC]/40 text-sm font-medium max-w-xl">
-          Visualização tática de dados colaborativos. Mapeamento continental de infraestrutura para logística de travessia via OpenStreetMap.
-        </p>
-      </section>
-
-      {/* Map Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-20 min-h-[700px]">
-        <div className="lg:col-span-1 space-y-4">
-           <div className="dashboard-card p-8 border-white/[0.03]">
-             <h3 className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d] mb-8">BUSCAR_PONTO</h3>
-             <div className="relative mb-10">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="ID_OU_LOCAL..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-sm h-12 pl-12 pr-4 text-[10px] font-mono tracking-widest focus:outline-none focus:border-[#ff641d]/30 transition-all text-[#F8FAFC]"
-                />
-             </div>
-
-             <h3 className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d] mb-8">FILTROS_OPERAÇÃO</h3>
-             <div className="flex flex-col gap-3">
-               {categories.map(cat => (
-                 <button
-                   key={cat.id}
-                   onClick={() => setSelectedCategory(cat.id)}
-                   className={cn(
-                     "flex items-center justify-between px-4 py-3 rounded-sm border text-[9px] font-mono font-bold uppercase tracking-widest transition-all",
-                     selectedCategory === cat.id 
-                       ? "bg-[#ff641d] text-white border-[#ff641d]" 
-                       : "bg-white/[0.02] border-white/5 text-[#F8FAFC]/30 hover:border-white/10"
-                   )}
-                 >
-                   <div className="flex items-center gap-3">
-                      <cat.icon size={14} />
-                      {cat.name}
-                   </div>
-                   {selectedCategory === cat.id && <ArrowUpRight size={12} />}
-                 </button>
-               ))}
-             </div>
-           </div>
-        </div>
-
-        <div className="lg:col-span-3">
-          <div className="dashboard-card h-[700px] border-white/[0.03] overflow-hidden relative">
-            <MapContainer 
-              center={[-34.603, -58.381] as [number, number]} 
-              zoom={4} 
-              style={{ width: '100%', height: '100%', background: '#0b0c0d' }}
-            >
-              <ZoomControl />
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              />
-              {filteredPoints.map(p => (
-                <Marker 
-                  key={p.id} 
-                  position={[p.lat, p.lng]} 
-                  icon={customIcon}
-                >
-                  <Popup className="custom-popup">
-                    <div className="p-1 min-w-[200px] bg-[#0b0c0d] text-[#F8FAFC]">
-                      {p.image && (
-                        <div className="mb-4 -mx-1 -mt-1 h-32 overflow-hidden rounded-t-sm">
-                          <img 
-                            src={p.image} 
-                            alt={p.name} 
-                            className="w-full h-full object-cover grayscale-[0.5] hover:grayscale-0 transition-all"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-                      )}
-                      <h4 className="font-display font-black uppercase text-xs mb-2 tracking-tighter leading-tight">{p.name}</h4>
-                      <p className="text-[10px] text-white/40 mb-4 leading-relaxed">{p.description}</p>
-                      
-                      <div className="flex flex-col gap-2">
-                        <div className="text-[8px] font-mono text-white/20 uppercase tracking-widest">
-                          LOC: {p.lat.toFixed(3)}, {p.lng.toFixed(3)}
-                        </div>
-                        <button className="w-full mt-2 py-2 bg-[#ff641d] text-white text-[9px] font-mono font-bold uppercase tracking-[0.2em] hover:bg-[#ff641d]/80 transition-all">
-                          VER_ROTA_INTEL
-                        </button>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-
-            {/* Custom UI Elements on Map */}
-            <div className="absolute top-6 right-6 z-[1000] flex flex-col gap-2">
-               <div className="p-3 bg-black/60 backdrop-blur-md border border-white/5 rounded-sm">
-                  <Layers size={16} className="text-[#ff641d]" />
-               </div>
+      {/* GPS Header HUD */}
+      <section className="pt-8 mb-8 border-l-2 border-[#ff641d] pl-6 relative">
+        <div className="absolute top-0 -left-[5px] w-[9px] h-[9px] bg-[#ff641d] rotate-45" />
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <div className="text-[9px] font-mono tracking-[0.5em] text-[#ff641d] mb-3 uppercase flex items-center gap-2">
+              <CompassIcon size={12} className="animate-spin-slow" /> SYSTEM_STATUS: ONLINE_GEO_LINKED
+            </div>
+            <h1 className="text-4xl sm:text-6xl font-display font-black uppercase tracking-tighter text-[#F8FAFC]">
+              TACTICAL<span className="text-[#ff641d]">.</span>ATLAS
+            </h1>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="text-[10px] font-mono text-white/20 uppercase tracking-widest text-right">
+              LAT: {mapCenter[0].toFixed(4)}° / LNG: {mapCenter[1].toFixed(4)}°
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-mono text-[#ff641d]/60 uppercase tracking-widest">
+              <div className="w-2 h-2 rounded-full bg-[#ff641d] animate-pulse" /> SAT_ACTIVE_LINK_PRIMARY
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Main Map Interface */}
+      <div className="relative h-[calc(100vh-320px)] min-h-[600px] border border-white/5 rounded-sm overflow-hidden bg-[#0b0c0d]">
+        {/* HUD: Top Search Bar */}
+        <div className="absolute top-6 left-6 right-6 z-[1000] pointer-events-none">
+          <div className="max-w-xl mx-auto flex gap-2 pointer-events-auto">
+            <form onSubmit={handleSearch} className="flex-1 relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={16} />
+              <input 
+                type="text" 
+                placeholder="BUSCAR_COORD_OU_LOCAL..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-black/80 backdrop-blur-md border border-white/10 rounded-sm h-12 pl-12 pr-4 text-[10px] font-mono tracking-widest focus:outline-none focus:border-[#ff641d]/40 transition-all text-[#F8FAFC] shadow-2xl"
+              />
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />
+                </div>
+              )}
+            </form>
+            <button 
+              onClick={handleLocateUser}
+              className="w-12 h-12 bg-black/80 backdrop-blur-md border border-white/10 rounded-sm flex items-center justify-center text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all shadow-2xl group"
+            >
+              <LocateFixed size={20} className="group-active:scale-95 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* HUD: Left Sidebar Categories (Mobile Toggleable) */}
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 z-[1000] hidden lg:flex flex-col gap-2">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={cn(
+                "p-3 h-12 w-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+                selectedCategory === cat.id 
+                  ? "bg-[#ff641d] border-[#ff641d] text-white" 
+                  : "bg-black/60 border-white/10 text-white/40 hover:border-[#ff641d]/40"
+              )}
+              title={cat.name}
+            >
+              <cat.icon size={18} />
+              <div className="absolute left-full ml-4 px-3 py-1.5 bg-[#0b0c0d] text-white text-[8px] font-mono uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 pointer-events-none transition-all translate-x-[-10px] group-hover:translate-x-0 border border-white/5 whitespace-nowrap">
+                {cat.name}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* HUD: Right Metrics Dashboard */}
+        <div className="absolute right-6 top-6 z-[900] hidden lg:block">
+           <div className="p-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-sm w-48 space-y-4">
+              <div>
+                <div className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em] mb-1">ZOOM_INDEX</div>
+                <div className="text-sm font-mono text-white flex items-baseline gap-1">
+                   {mapZoom.toFixed(1)} <span className="text-[9px] text-[#ff641d]">MAG</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em] mb-1">POINTS_LOADED</div>
+                <div className="text-sm font-mono text-white">{filteredPoints.length} / {initialPoints.length}</div>
+              </div>
+              <div className="pt-4 border-t border-white/5">
+                 <div className="flex items-center justify-between text-[8px] font-mono text-white/40 uppercase tracking-widest">
+                    <span>SIG_STRENGTH</span>
+                    <span className="text-green-500">98%</span>
+                 </div>
+                 <div className="h-1 bg-white/[0.05] mt-2 overflow-hidden rounded-full">
+                    <div className="h-full bg-green-500 w-[98%]" />
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* HUD: Bottom Info Bar */}
+        <div className="absolute bottom-6 left-6 z-[1000] flex items-center gap-4">
+           <div className="px-4 py-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-sm flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <div className="text-[9px] font-mono text-white uppercase tracking-widest">
+                 AUTO_SYNCING_DATA_CORES
+              </div>
+           </div>
+        </div>
+
+        <MapContainer 
+          center={mapCenter} 
+          zoom={mapZoom} 
+          style={{ width: '100%', height: '100%', background: '#0b0c0d' }}
+          zoomControl={false}
+          className="z-0"
+        >
+          <LeafletZoomControl position="bottomright" />
+          <MapController center={mapCenter} zoom={mapZoom} />
+          
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+
+          {userLocation && (
+            <Marker position={userLocation} icon={userLocationIcon()}>
+              <Popup>
+                <div className="p-2 text-center">
+                  <div className="text-[10px] font-mono text-[#ff641d] uppercase font-bold mb-1">SUA_POSIÇÃO</div>
+                  <div className="text-[8px] font-mono text-white/40">MARCADOR_TEMPO_REAL</div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {filteredPoints.map(p => {
+            const cat = categories.find(c => c.id === p.category) || categories[0];
+            return (
+              <Marker 
+                key={p.id} 
+                position={[p.lat, p.lng]} 
+                icon={createCustomIcon(cat.color, p.category === 'danger')}
+              >
+                <Popup className="custom-popup">
+                  <div className="p-1 min-w-[240px] bg-[#0b0c0d] text-[#F8FAFC]">
+                    {p.image ? (
+                      <div className="mb-4 -mx-1 -mt-1 h-36 overflow-hidden rounded-t-sm">
+                        <img 
+                          src={p.image} 
+                          alt={p.name} 
+                          className="w-full h-full object-cover grayscale-[0.5] hover:grayscale-0 transition-all duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-2 bg-[#ff641d]/20 -mx-1 -mt-1 mb-4" />
+                    )}
+                    
+                    <div className="px-3 pb-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="p-1.5 rounded-sm bg-white/5 text-[#ff641d]">
+                          <cat.icon size={12} />
+                        </div>
+                        <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.2em]">{p.category}</span>
+                      </div>
+                      
+                      <h4 className="font-display font-black uppercase text-sm mb-2 tracking-tighter leading-tight text-[#F8FAFC]">{p.name}</h4>
+                      <p className="text-[9px] text-white/40 mb-4 leading-relaxed font-mono uppercase">{p.description}</p>
+                      
+                      <div className="pt-3 border-t border-white/5 flex flex-col gap-3">
+                        <div className="text-[8px] font-mono text-white/20 uppercase tracking-widest flex items-center justify-between">
+                          <span>COORDENADAS</span>
+                          <span>{p.lat.toFixed(4)}, {p.lng.toFixed(4)}</span>
+                        </div>
+                        <button className="w-full h-8 bg-[#ff641d] text-white text-[9px] font-mono font-bold uppercase tracking-[0.2em] hover:bg-white hover:text-[#ff641d] transition-all flex items-center justify-center gap-2">
+                          <Navigation size={10} /> LOCK_LOCATION
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MapContainer>
       </div>
 
-      <div className="dashboard-card p-10 border-white/[0.03]">
-        <div className="flex items-center gap-4 mb-8">
-          <Layers size={20} className="text-[#ff641d]" />
-          <h3 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d]">OPS_INTEL: PROTOCOLO_DADOS</h3>
-        </div>
-        <p className="text-xs text-[#F8FAFC]/30 leading-relaxed font-medium">
-          O mapa é mantido pela própria comunidade e utiliza a infraestrutura aberta do OpenStreetMap com camadas Dark Matter da CartoDB para máxima legibilidade tática.
-        </p>
+      {/* Footer Tactical HUD */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+         <div className="dashboard-card p-6 border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
+            <div className="flex items-center gap-3 mb-4">
+               <Globe size={16} className="text-[#ff641d]" />
+               <h3 className="text-[9px] font-mono font-black uppercase tracking-[0.3em] text-[#ff641d]">DATA_CORE // OSM</h3>
+            </div>
+            <p className="text-[9px] text-white/30 font-mono uppercase tracking-widest leading-relaxed">
+               Processamento vetorial de alta precisão via OpenStreetMap Data Layers.
+            </p>
+         </div>
+         <div className="dashboard-card p-6 border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
+            <div className="flex items-center gap-3 mb-4">
+               <Shield size={16} className="text-[#ff641d]" />
+               <h3 className="text-[9px] font-mono font-black uppercase tracking-[0.3em] text-[#ff641d]">SECURITY_LAYER</h3>
+            </div>
+            <p className="text-[9px] text-white/30 font-mono uppercase tracking-widest leading-relaxed">
+               Identificação autônoma de zonas de perigo e pontos de apoio validados.
+            </p>
+         </div>
+         <div className="dashboard-card p-6 border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
+            <div className="flex items-center gap-3 mb-4">
+               <Zap size={16} className="text-[#ff641d]" />
+               <h3 className="text-[9px] font-mono font-black uppercase tracking-[0.3em] text-[#ff641d]">OPERATIONAL_SYNC</h3>
+            </div>
+            <p className="text-[9px] text-white/30 font-mono uppercase tracking-widest leading-relaxed">
+               Log de atividade em tempo real para aventureiros independentes.
+            </p>
+         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
@@ -277,22 +429,37 @@ export default function AdventureMap() {
         .leaflet-popup-content-wrapper {
           background: #0b0c0d !important;
           color: #F8FAFC !important;
-          border-radius: 4px !important;
+          border-radius: 2px !important;
           border: 1px solid rgba(255,255,255,0.05) !important;
           padding: 0 !important;
         }
         .leaflet-popup-content {
           margin: 0 !important;
-          width: 220px !important;
+          width: 250px !important;
         }
         .leaflet-popup-tip {
           background: #0b0c0d !important;
           border: 1px solid rgba(255,255,255,0.05) !important;
         }
         .custom-popup .leaflet-popup-content-wrapper {
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .animate-spin-slow {
+          animation: spin 8s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}} />
     </div>
   );
 }
+
