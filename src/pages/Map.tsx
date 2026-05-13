@@ -400,11 +400,56 @@ const initialPoints: LocationPoint[] = [
     lng: -55.9822,
     category: 'fuel',
     description: 'Operação crítica na BR-230. Verifique estoque antes de prosseguir.',
+  },
+  {
+    id: 'route-1',
+    name: 'Carretera Austral - Início Septentrional',
+    lat: -41.4689,
+    lng: -72.9411,
+    category: 'bike_route',
+    description: 'A rota mais cênica da Patagônia Chilena. Início da travessia épica para ciclistas.',
+    image: 'https://images.unsplash.com/photo-1541625602330-2277a4c4b282?auto=format&fit=crop&q=80&w=400'
+  },
+  {
+    id: 'route-2',
+    name: 'Estrada Real - Caminho Velho',
+    lat: -20.385,
+    lng: -43.503,
+    category: 'bike_route',
+    description: 'Cicloturismo histórico entre Ouro Preto e Paraty. Trechos técnicos de rípio.',
+  },
+  {
+    id: 'route-3',
+    name: 'Ruta 40 - Trecho Ventos Patagônicos',
+    lat: -49.333,
+    lng: -72.883,
+    category: 'moto_route',
+    description: 'Desafio para motociclistas: asfalto infinito e ventos de 100km/h.',
+    image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=400'
+  },
+  {
+    id: 'route-4',
+    name: 'Transamazônica (BR-230) - Leste-Oeste',
+    lat: -5.3607,
+    lng: -49.1245,
+    category: 'overland',
+    description: 'Expedição 4x4. Lama, poeira e resistência total na Amazônia.',
+  },
+  {
+    id: 'route-5',
+    name: 'Ciclovia Rio Pinheiros - Hub Urbano',
+    lat: -23.591,
+    lng: -46.723,
+    category: 'bike_route',
+    description: 'Melhor infraestrutura cicloviária de SP. Conexão entre polos de aventura.',
   }
 ];
 
 const categories = [
   { id: 'all', name: 'Todos', icon: Globe, color: '#ff641d' },
+  { id: 'bike_route', name: 'Bike', icon: Bike, color: '#10b981' },
+  { id: 'moto_route', name: 'Moto', icon: Triangle, color: '#ff641d' },
+  { id: 'overland', name: 'Overland', icon: CompassIcon, color: '#f59e0b' },
   { id: 'camping', name: 'Camping', icon: Tent, color: '#ff641d' },
   { id: 'hostel', name: 'Hostels', icon: Coffee, color: '#ff9d00' },
   { id: 'water', name: 'Água', icon: Droplets, color: '#00d4ff' },
@@ -660,7 +705,7 @@ export default function AdventureMap() {
               <Marker 
                 key={p.id} 
                 position={[p.lat, p.lng]} 
-                icon={createCustomIcon(cat.color, p.category === 'danger' || p.category === 'hostel' || p.category === 'camping' || p.category === 'fuel')}
+                icon={createCustomIcon(cat.color, p.category === 'danger' || p.category === 'hostel' || p.category === 'camping' || p.category === 'fuel' || p.category === 'bike_route' || p.category === 'moto_route' || p.category === 'overland')}
               >
                 <Popup className="custom-popup">
                   <div className="p-1 min-w-[240px] bg-[#0b0c0d] text-[#F8FAFC]">

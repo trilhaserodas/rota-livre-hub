@@ -1,5 +1,8 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Compass, MapPin, Share2, Activity, Copy, Check, X, Twitter, Send, MessageCircle, Info, Heart } from 'lucide-react';
+import { 
+  ArrowRight, Compass, MapPin, Share2, Activity, Copy, Check, X, 
+  Twitter, Send, MessageCircle, Info, Heart, Bike, Triangle 
+} from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -10,7 +13,8 @@ const routes = [
     name: 'CARRETERA_AUSTRAL',
     country: 'CHILE',
     km: '1.240',
-    type: 'BIKE / MOTO',
+    types: ['bike', 'moto'],
+    displayType: 'BIKE / MOTO',
     difficulty: 'MÉDIO_ALTO',
     description: 'A rota mais cênica da Patagônia Chilena, cruzando glaciares e florestas temperadas.',
     image: 'https://images.unsplash.com/photo-1518104593124-ac2e82a5eb9d?auto=format&fit=crop&q=80&w=800'
@@ -20,7 +24,8 @@ const routes = [
     name: 'RUTA_40',
     country: 'ARGENTINA',
     km: '5.194',
-    type: 'MOTO / OVERLAND',
+    types: ['moto', 'overland'],
+    displayType: 'MOTO / OVERLAND',
     difficulty: 'EXTREMO',
     description: 'De La Quiaca a Ushuaia, a lendária espinha dorsal dos Andes Argentinos.',
     image: 'https://images.unsplash.com/photo-1498677231914-50deb6ba421a?auto=format&fit=crop&q=80&w=800'
@@ -30,9 +35,10 @@ const routes = [
     name: 'TRANSAMAZÔNICA',
     country: 'BRASIL',
     km: '4.260',
-    type: 'AVENTURA_BRURA',
+    types: ['overland', 'moto'],
+    displayType: 'OVERLAND / MOTO',
     difficulty: 'CRÍTICO',
-    description: 'O maior desafio da América do Sul. Poeira, lama e a imensidão da floresta.',
+    description: 'O maior desafio da América do Sul. Poeira, lama e a imensidão da floresta amazônica.',
     image: 'https://images.unsplash.com/photo-1502484433149-bc9197c3664c?auto=format&fit=crop&q=80&w=800'
   },
   {
@@ -40,11 +46,41 @@ const routes = [
     name: 'HUAYHUASH_CIRCUIT',
     country: 'PERU',
     km: '130',
-    type: 'TREKKING / MTB',
+    types: ['bike'],
+    displayType: 'MTB / TREKKING',
     difficulty: 'ALTO_ALTITUDE',
     description: 'Considerada uma das rotas de montanha mais bonitas do mundo em altas altitudes.',
     image: 'https://images.unsplash.com/photo-1544198305-e0d02447990c?auto=format&fit=crop&q=80&w=800'
   },
+  {
+    id: 'transmantiqueira',
+    name: 'TRANSMANTIQUEIRA',
+    country: 'BRASIL',
+    km: '1.200',
+    types: ['bike'],
+    displayType: 'MTB_EXPEDITION',
+    difficulty: 'ALTO',
+    description: 'Atravessa a Serra da Mantiqueira por trilhas e estradas de terra históricas.',
+    image: 'https://images.unsplash.com/photo-1541625602330-2277a4c4b282?auto=format&fit=crop&q=80&w=800'
+  },
+  {
+    id: 'lagunas-route',
+    name: 'LAGUNAS_ROUTE',
+    country: 'BOLIVIA',
+    km: '450',
+    types: ['overland', 'moto', 'bike'],
+    displayType: 'OVERLAND / ADVENTURE',
+    difficulty: 'EXTREMO',
+    description: 'Entre o Salar de Uyuni e San Pedro de Atacama. Deserto e lagunas coloridas a 4500m.',
+    image: 'https://images.unsplash.com/photo-1463123081488-789f99849c48?auto=format&fit=crop&q=80&w=800'
+  }
+];
+
+const filterOptions = [
+  { id: 'all', name: 'TODOS_OS_DADOS', icon: Activity },
+  { id: 'bike', name: 'CICLO_EXPEDIÇÃO', icon: Bike }, 
+  { id: 'moto', name: 'MOTO_TRAVESSIA', icon: Triangle },
+  { id: 'overland', name: 'OVERLAND_OPS', icon: Compass },
 ];
 
 interface ShareModalProps {
@@ -152,6 +188,7 @@ function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
 
 export default function Routes() {
   const [activeShare, setActiveShare] = useState<{ id: string; name: string } | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [favorites, setFavorites] = useState<string[]>(() => {
     const saved = localStorage.getItem('favorite_routes');
     return saved ? JSON.parse(saved) : [];
@@ -181,7 +218,7 @@ export default function Routes() {
         routeName={activeShare?.name || ''}
       />
 
-      <section className="pt-12 mb-20 text-left">
+      <section className="pt-12 mb-12 text-left">
         <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-4 uppercase">NAVIGATION_MODULE // CONTINENTAL_TRAILS</div>
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-display font-black uppercase tracking-tighter mb-4 text-[#F8FAFC]">
           ROTAS<span className="text-[#ff641d]">.</span>ETERNAS
@@ -191,8 +228,28 @@ export default function Routes() {
         </p>
       </section>
 
+      {/* Tactic Filter HUD */}
+      <div className="flex flex-wrap gap-3 mb-20">
+        {filterOptions.map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => setSelectedFilter(opt.id)}
+            className={`px-6 py-3 border rounded-sm flex items-center gap-3 transition-all ${
+              selectedFilter === opt.id
+                ? 'bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_20px_rgba(255,100,29,0.3)]'
+                : 'bg-white/[0.02] border-white/5 text-white/40 hover:border-white/20'
+            }`}
+          >
+            <opt.icon size={14} className={selectedFilter === opt.id ? 'animate-pulse' : ''} />
+            <span className="text-[9px] font-mono font-bold uppercase tracking-widest">{opt.name}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {routes.map((route, index) => (
+        {routes
+          .filter(r => selectedFilter === 'all' || r.types.includes(selectedFilter))
+          .map((route, index) => (
           <motion.div
             key={route.id}
             initial={{ opacity: 0, y: 30 }}
@@ -212,7 +269,7 @@ export default function Routes() {
                 <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                    <div>
                       <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-[#ff641d] text-white text-[8px] font-mono font-bold uppercase tracking-widest mb-3">
-                        {route.type}
+                        {route.displayType}
                       </div>
                       <h3 className="text-3xl sm:text-4xl font-display font-black uppercase tracking-tighter text-[#F8FAFC]">
                         {route.name}
