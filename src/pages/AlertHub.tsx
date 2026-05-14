@@ -100,6 +100,14 @@ function WeatherMonitor() {
           <div className="text-xs font-mono text-white">{weather.main.humidity}%</div>
         </div>
       </div>
+
+      <Link 
+        to="/alert-hub/clima"
+        className="mt-6 flex items-center justify-center gap-2 py-2 bg-[#ff641d]/5 hover:bg-[#ff641d]/10 border border-[#ff641d]/10 text-[9px] font-mono font-bold text-[#ff641d] uppercase tracking-widest rounded-lg transition-all group"
+      >
+        Acessar Painel Ops Completo
+        <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
+      </Link>
     </div>
   );
 }
@@ -673,9 +681,16 @@ export default function AlertHub() {
                     Painel Admin
                   </Link>
                 )}
+                <Link 
+                  to="/alert-hub/clima"
+                  className="px-4 py-2 bg-[#ff641d]/10 hover:bg-[#ff641d] border border-[#ff641d]/20 text-[#ff641d] hover:text-white text-[9px] font-mono font-bold uppercase tracking-widest transition-all rounded-lg flex items-center gap-2 group"
+                >
+                  <Cloud size={12} className="group-hover:animate-bounce" />
+                  Climático
+                </Link>
                 <button 
                   onClick={() => setIsReportModalOpen(true)}
-                  className="px-4 py-2 bg-[#ff641d]/10 hover:bg-[#ff641d] border border-[#ff641d]/20 text-[#ff641d] hover:text-white text-[9px] font-mono font-bold uppercase tracking-widest transition-all rounded-lg flex items-center gap-2 group"
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white text-[9px] font-mono font-bold uppercase tracking-widest transition-all rounded-lg flex items-center gap-2 group"
                 >
                   <Zap size={12} className="group-hover:animate-pulse" />
                   Sinalizar Agora

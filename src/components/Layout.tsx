@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield } from 'lucide-react';
+import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { auth } from '@/src/lib/firebase';
@@ -11,6 +11,7 @@ const ADMIN_EMAIL = "trilhaserodas@gmail.com";
 const navItems = [
   { name: 'Início', path: '/', icon: Compass },
   { name: 'Hub Alerta', path: '/alert-hub', icon: Bell },
+  { name: 'Clima', path: '/alert-hub/clima', icon: Wind },
   { name: 'Rotas', path: '/rotas', icon: Compass },
   { name: 'Mapa', path: '/mapa', icon: MapIcon },
   { name: 'Moedas', path: '/conversor', icon: Coins },
