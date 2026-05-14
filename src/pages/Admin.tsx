@@ -16,12 +16,14 @@ import {
   Loader2
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { cn } from '@/src/lib/utils';
 
 const ADMIN_EMAIL = "trilhaserodas@gmail.com";
 
 interface Report {
   id: string;
   userName: string;
+  userEmail?: string;
   content: string;
   category: string;
   location?: string;
@@ -171,12 +173,22 @@ export default function Admin() {
                       <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40">
                         <User size={14} />
                       </div>
-                      <div className="text-[11px] font-mono font-bold text-white uppercase tracking-widest">{report.userName}</div>
+                      <div className="flex flex-col">
+                        <div className="text-[11px] font-mono font-bold text-white uppercase tracking-widest">{report.userName}</div>
+                        {report.userEmail && <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest">{report.userEmail}</div>}
+                      </div>
                     </div>
 
-                    <div className="relative mb-6">
-                      <div className="absolute -left-3 top-0 w-[1px] h-full bg-white/10" />
-                      <p className="text-sm text-white/70 leading-relaxed pl-6 italic">
+                    <div className={cn(
+                      "relative mb-6 rounded-lg p-6",
+                      report.category === 'CONTACT_PARTNERSHIP' ? "bg-[#ff641d]/5 border border-[#ff641d]/20" : "bg-white/[0.02]"
+                    )}>
+                      {report.category === 'CONTACT_PARTNERSHIP' && (
+                        <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.3em] font-black mb-2 flex items-center gap-2">
+                           <ShieldCheck size={10} /> MENSAGEM_DE_CONTATO
+                        </div>
+                      )}
+                      <p className="text-sm text-white/70 leading-relaxed italic">
                         "{report.content}"
                       </p>
                     </div>

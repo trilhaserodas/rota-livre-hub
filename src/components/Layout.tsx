@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind } from 'lucide-react';
+import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
-import { auth } from '@/src/lib/firebase';
+import { auth, db } from '@/src/lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import RadarIA from './RadarIA';
 
 const ADMIN_EMAIL = "trilhaserodas@gmail.com";
@@ -26,7 +27,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [partnershipMsg, setPartnershipMsg] = useState("");
+  const [sendLoading, setSendLoading] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState(false);
   const location = useLocation();
+
+  const handleSendPartnership = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!partnershipMsg.trim()) return;
+    
+    setSendLoading(true);
+    try {
+      await addDoc(collection(db, 'reports'), {
+        content: partnershipMsg,
+        category: 'CONTACT_PARTNERSHIP',
+        userName: user?.displayName || 'Visitante Anonimo',
+        userEmail: user?.email || 'N/A',
+        status: 'PENDING',
+        createdAt: serverTimestamp()
+      });
+      setSendSuccess(true);
+      setPartnershipMsg("");
+      setTimeout(() => setSendSuccess(false), 5000);
+    } catch (err) {
+      console.error("Erro ao enviar mensagem:", err);
+      alert("Houve um erro ao enviar sua mensagem. Tente novamente.");
+    } finally {
+      setSendLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -285,24 +314,61 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff641d] mb-8">Sistemas</h4>
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff641d] mb-8">Sistemas // Legal</h4>
             <div className="flex flex-col gap-4 text-xs font-semibold uppercase tracking-widest text-[#F8FAFC]/30">
               <Link to="/alert-hub" className="hover:text-white transition-colors">Alert_Hub</Link>
               <Link to="/conversor" className="hover:text-white transition-colors">Currency_Hub</Link>
               <Link to="/horarios" className="hover:text-white transition-colors">Time_Zones</Link>
               <Link to="/mapa" className="hover:text-white transition-colors">Live_Maps</Link>
-              <Link to="/calculadoras" className="hover:text-white transition-colors">Ops_Calcs</Link>
               <Link to="/rotas" className="hover:text-white transition-colors">Global_Routes</Link>
-              <Link to="/aviao" className="hover:text-white transition-colors">Air_Protocol</Link>
+              <div className="h-[1px] bg-white/5 my-2" />
+              <Link to="/privacidade" className="hover:text-white transition-colors text-[10px]">Privacy_Protocol</Link>
+              <Link to="/termos" className="hover:text-white transition-colors text-[10px]">Service_Terms</Link>
+              <Link to="/sobre" className="hover:text-white transition-colors text-[10px]">Mission_Log</Link>
             </div>
           </div>
 
           <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff641d] mb-8">Legal</h4>
-            <div className="flex flex-col gap-4 text-xs font-semibold uppercase tracking-widest text-[#F8FAFC]/30">
-              <Link to="/privacidade" className="hover:text-white transition-colors">Privacy_Protocol</Link>
-              <Link to="/termos" className="hover:text-white transition-colors">Service_Terms</Link>
-              <Link to="/sobre" className="hover:text-white transition-colors">Mission_Log</Link>
+            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff641d] mb-8">Conectar</h4>
+            <div className="space-y-8">
+              <div>
+                <h5 className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Mail size={10} /> Fale_Conosco
+                </h5>
+                <a href="mailto:trilhaserodas@gmail.com" className="text-xs font-semibold text-[#F8FAFC]/50 hover:text-[#ff641d] transition-colors break-all">
+                  trilhaserodas@gmail.com
+                </a>
+              </div>
+
+              <div>
+                <h5 className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Send size={10} /> Parcerias
+                </h5>
+                <form onSubmit={handleSendPartnership} className="space-y-2">
+                  <textarea 
+                    value={partnershipMsg}
+                    onChange={(e) => setPartnershipMsg(e.target.value)}
+                    placeholder="DEIXE SUA MENSAGEM..."
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-sm p-3 text-[10px] font-mono text-white focus:outline-none focus:border-[#ff641d]/30 h-20 resize-none placeholder:text-white/10"
+                  />
+                  <button 
+                    disabled={sendLoading || !partnershipMsg.trim()}
+                    type="submit"
+                    className="w-full py-2 bg-[#ff641d]/10 border border-[#ff641d]/20 text-[#ff641d] text-[9px] font-mono font-bold uppercase tracking-[0.2em] hover:bg-[#ff641d] hover:text-white transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+                  >
+                    {sendLoading ? <Loader2 size={12} className="animate-spin" /> : 'ENVIAR_ORDEM'}
+                  </button>
+                  {sendSuccess && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-[8px] font-mono text-green-500 uppercase tracking-widest flex items-center gap-1 mt-2"
+                    >
+                      <CheckCircle size={10} /> MENSAGEM_ENVIADA_COM_SUCESSO
+                    </motion.div>
+                  )}
+                </form>
+              </div>
             </div>
           </div>
         </div>
