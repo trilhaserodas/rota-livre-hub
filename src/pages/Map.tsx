@@ -1,16 +1,23 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl as LeafletZoomControl } from 'react-leaflet';
+import { 
+  MapContainer, TileLayer, Marker, Popup, useMap, 
+  ZoomControl as LeafletZoomControl, Polyline, useMapEvents 
+} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.heat';
 import { 
   Search, Filter, Tent, MapPin, Hammer, Coffee, Droplets, 
   Camera, AlertTriangle, ShieldCheck, Layers, ArrowUpRight, 
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
-  LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon
+  LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
+  Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { cn } from '@/src/lib/utils';
 import { LocationPoint } from '@/src/types';
+import { db, auth } from '@/src/lib/firebase';
+import { doc, setDoc, onSnapshot, serverTimestamp, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useSearchParams } from 'react-router-dom';
 
 // Fix for default marker icons in Leaflet with React
 // @ts-ignore
@@ -631,6 +638,17 @@ function MapController({ center, zoom, userLocation }: { center?: [number, numbe
   return null;
 }
 
+function MapEventsHandler({ onMapClick, active }: { onMapClick: (latlng: L.LatLng) => void, active: boolean }) {
+  useMapEvents({
+    click: (e) => {
+      if (active) {
+        onMapClick(e.latlng);
+      }
+    }
+  });
+  return null;
+}
+
 function HeatmapLayer({ points, active }: { points: LocationPoint[], active: boolean }) {
   const map = useMap();
   
@@ -657,6 +675,7 @@ function HeatmapLayer({ points, active }: { points: LocationPoint[], active: boo
 }
 
 export default function AdventureMap() {
+  const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -665,7 +684,95 @@ export default function AdventureMap() {
   const [isSearching, setIsSearching] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
 
-  // Auto-location
+  // Route Tracing State
+  const [isTracing, setIsTracing] = useState(false);
+  const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
+  const [distanceUnit, setDistanceUnit] = useState<'km' | 'mi'>('km');
+
+  // GPS Sharing State
+  const [isSharing, setIsSharing] = useState(false);
+  const [trackingId, setTrackingId] = useState<string | null>(null);
+  const [remoteUserLocation, setRemoteUserLocation] = useState<[number, number] | null>(null);
+  const [remoteUserName, setRemoteUserName] = useState<string | null>(null);
+
+  // Distance Calculation
+  const totalDistance = useMemo(() => {
+    if (routePoints.length < 2) return 0;
+    let dist = 0;
+    for (let i = 0; i < routePoints.length - 1; i++) {
+        const p1 = L.latLng(routePoints[i]);
+        const p2 = L.latLng(routePoints[i+1]);
+        dist += p1.distanceTo(p2);
+    }
+    const km = dist / 1000;
+    return distanceUnit === 'km' ? km : km * 0.621371;
+  }, [routePoints, distanceUnit]);
+
+  // Load shared session if present in URL
+  useEffect(() => {
+    const session = searchParams.get('session');
+    if (session) {
+      const unsub = onSnapshot(doc(db, 'trackingSessions', session), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.active) {
+            setRemoteUserLocation([data.lat, data.lng]);
+            setRemoteUserName(data.userName || 'Adventure Explorer');
+            // Center on remote user if first time
+            if (!remoteUserLocation) {
+              setMapCenter([data.lat, data.lng]);
+              setMapZoom(12);
+            }
+          } else {
+            setRemoteUserLocation(null);
+          }
+        }
+      });
+      return () => unsub();
+    }
+  }, [searchParams]);
+
+  // Real-time sharing logic
+  useEffect(() => {
+    let watchId: number | null = null;
+    
+    if (isSharing && auth.currentUser) {
+      const startSharing = async () => {
+        const id = auth.currentUser?.uid || Math.random().toString(36).substr(2, 9);
+        setTrackingId(id);
+        
+        watchId = navigator.geolocation.watchPosition((pos) => {
+          const { latitude, longitude } = pos.coords;
+          setUserLocation([latitude, longitude]);
+          
+          setDoc(doc(db, 'trackingSessions', id), {
+            userId: auth.currentUser?.uid,
+            userName: auth.currentUser?.displayName || 'Explorer',
+            lat: latitude,
+            lng: longitude,
+            updatedAt: serverTimestamp(),
+            active: true
+          }, { merge: true });
+        }, (err) => console.error(err), { enableHighAccuracy: true });
+      };
+      
+      startSharing();
+    } else if (!isSharing && trackingId) {
+      updateDoc(doc(db, 'trackingSessions', trackingId), { active: false });
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    }
+
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [isSharing]);
+
+  const handleMapClick = (latlng: L.LatLng) => {
+    if (isTracing) {
+      setRoutePoints(prev => [...prev, [latlng.lat, latlng.lng]]);
+    }
+  };
+
   const handleLocateUser = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -675,9 +782,7 @@ export default function AdventureMap() {
           setMapCenter([latitude, longitude]);
           setMapZoom(12);
         },
-        (error) => {
-          console.error("Geolocation error:", error);
-        }
+        (error) => console.error("Geolocation error:", error)
       );
     }
   }, []);
@@ -807,7 +912,120 @@ export default function AdventureMap() {
               HEATMAP_OPS
             </div>
           </button>
+
+          <div className="w-12 h-[1px] bg-white/5 my-2" />
+
+          <button
+            onClick={() => setIsTracing(!isTracing)}
+            className={cn(
+              "p-3 h-12 w-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+              isTracing 
+                ? "bg-[#ff641d] border-[#ff641d] text-white" 
+                : "bg-black/60 border-white/10 text-white/40 hover:border-[#ff641d]/40"
+            )}
+            title="Traçar Rota"
+          >
+            <Ruler size={18} />
+            <div className="absolute left-full ml-4 px-3 py-1.5 bg-[#0b0c0d] text-white text-[8px] font-mono uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 pointer-events-none transition-all translate-x-[-10px] group-hover:translate-x-0 border border-white/5 whitespace-nowrap">
+              TRACE_ROUTE
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              if (!auth.currentUser) {
+                alert("Necessário autenticação para compartilhar localização real.");
+                return;
+              }
+              setIsSharing(!isSharing);
+            }}
+            className={cn(
+              "p-3 h-12 w-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+              isSharing 
+                ? "bg-blue-500 border-blue-500 text-white" 
+                : "bg-black/60 border-white/10 text-white/40 hover:border-blue-500/40"
+            )}
+            title="Partilhar GPS"
+          >
+            <Radio size={18} className={isSharing ? "animate-pulse" : ""} />
+            <div className="absolute left-full ml-4 px-3 py-1.5 bg-[#0b0c0d] text-white text-[8px] font-mono uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 pointer-events-none transition-all translate-x-[-10px] group-hover:translate-x-0 border border-white/5 whitespace-nowrap">
+              LIVE_SHARING
+            </div>
+          </button>
         </div>
+
+        {/* HUD: Route Info floating panel */}
+        {(isTracing || routePoints.length > 0) && (
+          <div className="absolute left-24 bottom-24 z-[1000] animate-in slide-in-from-left duration-500">
+            <div className="p-4 bg-black/80 backdrop-blur-md border-l-2 border-[#ff641d] border-y border-r border-white/5 shadow-2xl min-w-[200px]">
+              <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.3em] mb-3 flex items-center justify-between">
+                <span>ROUTING_MODULE</span>
+                <button onClick={() => setRoutePoints([])} className="text-white/20 hover:text-red-500 transition-colors">
+                  <Trash2 size={10} />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="text-[10px] font-mono text-white/20 uppercase tracking-widest mb-1">TOTAL_DISTANCE</div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-display font-black text-white">{totalDistance.toFixed(2)}</span>
+                    <button 
+                      onClick={() => setDistanceUnit(d => d === 'km' ? 'mi' : 'km')}
+                      className="text-[10px] font-mono text-[#ff641d] hover:underline uppercase"
+                    >
+                      {distanceUnit}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                   <div className="flex -space-x-1">
+                      {routePoints.map((_, i) => (
+                        <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#ff641d]/40 border border-black" />
+                      ))}
+                   </div>
+                   <span className="text-[8px] font-mono text-white/20 uppercase tracking-widest">{routePoints.length} WAYPOINTS</span>
+                </div>
+
+                {isTracing && (
+                  <div className="text-[8px] font-mono text-[#ff641d] animate-pulse uppercase tracking-[0.2em] pt-2 border-t border-white/5">
+                    CLIQUE_NO_MAPA_PARA_ADICIONAR...
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HUD: Sharing Info Panel */}
+        {isSharing && (
+          <div className="absolute right-6 top-48 z-[900] animate-in slide-in-from-right duration-500">
+             <div className="p-4 bg-black/80 backdrop-blur-md border-l-2 border-blue-500 border-y border-r border-white/5 shadow-2xl w-48">
+                <div className="text-[8px] font-mono text-blue-500 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                  <Radio size={10} className="animate-pulse" /> LIVE_BROADCAST
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-[8px] font-mono text-white/20 uppercase tracking-widest mb-1">SESSION_ID</div>
+                    <div className="text-[10px] font-mono text-white truncate">{trackingId}</div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => {
+                      const url = `${window.location.origin}${window.location.pathname}?session=${trackingId}`;
+                      navigator.clipboard.writeText(url);
+                      alert("Link de rastreamento copiado!");
+                    }}
+                    className="w-full h-8 bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[8px] font-mono uppercase tracking-[0.2em] hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <LinkIcon size={10} /> COPY_SHARE_LINK
+                  </button>
+                </div>
+             </div>
+          </div>
+        )}
 
         {/* HUD: Right Metrics Dashboard */}
         <div className="absolute right-6 top-6 z-[900] hidden lg:block">
@@ -853,12 +1071,64 @@ export default function AdventureMap() {
         >
           <LeafletZoomControl position="bottomright" />
           <MapController center={mapCenter} zoom={mapZoom} />
+          <MapEventsHandler onMapClick={handleMapClick} active={isTracing} />
           <HeatmapLayer points={initialPoints} active={showHeatmap} />
           
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
+
+          {/* Route Layer */}
+          {routePoints.length > 1 && (
+            <Polyline 
+              positions={routePoints} 
+              color="#ff641d" 
+              weight={3} 
+              dashArray="5, 10"
+              opacity={0.8}
+            />
+          )}
+
+          {/* Route Markers */}
+          {routePoints.map((p, i) => (
+            <Marker 
+              key={`route-${i}`} 
+              position={p} 
+              icon={L.divIcon({
+                className: 'route-marker',
+                html: `<div class="w-3 h-3 bg-[#ff641d] border-2 border-white rounded-full ${i === 0 || i === routePoints.length -1 ? 'scale-125 ring-4 ring-[#ff641d]/20' : ''}"></div>`,
+                iconSize: [12, 12],
+                iconAnchor: [6, 6],
+              })}
+            />
+          ))}
+
+          {/* Remote User Marker */}
+          {remoteUserLocation && (
+            <Marker position={remoteUserLocation} icon={L.divIcon({
+              className: 'remote-user-marker',
+              html: `
+                <div class="relative">
+                  <div class="w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(34,197,94,0.6)] flex items-center justify-center">
+                    <Radio size={12} className="text-white animate-pulse" />
+                  </div>
+                  <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm border border-white/10 px-2 py-1 rounded text-[8px] font-mono text-white whitespace-nowrap">
+                    LIVE: ${remoteUserName}
+                  </div>
+                </div>
+              `,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            })}>
+              <Popup>
+                <div className="p-2 text-center">
+                  <div className="text-[10px] font-mono text-green-500 uppercase font-bold mb-1">RASTREAMENTO_ATIVO</div>
+                  <div className="text-[8px] font-mono text-white/40">{remoteUserName} EM MOVIMENTO</div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
 
           {userLocation && (
             <Marker position={userLocation} icon={userLocationIcon()}>

@@ -14,12 +14,30 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
       },
       "required": ["userName", "content", "createdAt", "status"]
+    },
+    "trackingSession": {
+      "title": "GPS Tracking Session",
+      "description": "A real-time GPS tracking session for shared safety.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["userId", "lat", "lng", "updatedAt", "active"]
     }
   },
   "firestore": {
     "reports": {
       "schema": "report",
       "description": "Collection of community reports"
+    },
+    "trackingSessions": {
+      "schema": "trackingSession",
+      "description": "Real-time location sharing sessions"
     }
   }
 }

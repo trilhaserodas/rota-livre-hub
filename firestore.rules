@@ -29,6 +29,15 @@ service cloud.firestore {
       return resource.data;
     }
 
+    function isValidTracking(data) {
+      return data.keys().hasAll(['userId', 'lat', 'lng', 'updatedAt', 'active']) &&
+             data.userId is string &&
+             data.lat is number &&
+             data.lng is number &&
+             data.active is bool &&
+             (data.updatedAt == request.time || data.updatedAt is timestamp);
+    }
+
     function isValidReport(data) {
       return data.keys().hasAll(['userName', 'content', 'createdAt', 'status']) &&
              data.keys().size() <= 12 &&
@@ -57,6 +66,23 @@ service cloud.firestore {
         isValidReport(incoming()); // Only admin can approve (change status)
 
       allow delete: if isAdmin();
+    }
+
+    // Tracking Sessions
+    match /trackingSessions/{sessionId} {
+      allow get: if true; 
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() && 
+                      isValidTracking(incoming()) && 
+                      incoming().userId == request.auth.uid;
+      
+      allow update: if isSignedIn() && 
+                    existing().userId == request.auth.uid && 
+                    isValidTracking(incoming()) &&
+                    incoming().userId == existing().userId;
+                    
+      allow delete: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
     }
   }
 }
