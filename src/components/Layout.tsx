@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { auth } from '@/src/lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
+import RadarIA from './RadarIA';
 
 const ADMIN_EMAIL = "trilhaserodas@gmail.com";
 
@@ -316,6 +317,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+      <RadarIA />
     </div>
   );
 }
