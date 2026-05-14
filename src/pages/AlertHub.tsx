@@ -27,8 +27,11 @@ import {
   Wifi,
   Smartphone,
   Eye,
-  Zap
+  Zap,
+  Shield
 } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/src/lib/firebase';
 import SEO from '@/src/components/SEO';
 import ReportModal from '@/src/components/ReportModal';
 import CommunityReports from '@/src/components/CommunityReports';
@@ -427,11 +430,21 @@ const PRIORITY_THEMES = {
   CRITICAL: { color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', glow: 'shadow-[0_0_25px_rgba(239,68,68,0.2)]' },
 };
 
+const ADMIN_EMAIL = "trilhaserodas@gmail.com";
+
 export default function AlertHub() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAdmin(user?.email === ADMIN_EMAIL);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const filteredAlerts = useMemo(() => {
     return ALERTS.filter(alert => {
@@ -650,13 +663,24 @@ export default function AlertHub() {
                 <h2 className="text-2xl font-display font-black text-white uppercase tracking-tight">REPORTES DA COMUNIDADE</h2>
                 <p className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.2em] mt-1">// Tactical_Crowdsourced_Intel</p>
               </div>
-              <button 
-                onClick={() => setIsReportModalOpen(true)}
-                className="px-4 py-2 bg-[#ff641d]/10 hover:bg-[#ff641d] border border-[#ff641d]/20 text-[#ff641d] hover:text-white text-[9px] font-mono font-bold uppercase tracking-widest transition-all rounded-lg flex items-center gap-2 group"
-              >
-                <Zap size={12} className="group-hover:animate-pulse" />
-                Sinalizar Agora
-              </button>
+              <div className="flex items-center gap-3">
+                {isAdmin && (
+                  <Link 
+                    to="/admin"
+                    className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500 border border-blue-500/20 text-blue-500 hover:text-white text-[9px] font-mono font-bold uppercase tracking-widest transition-all rounded-lg flex items-center gap-2 group"
+                  >
+                    <Shield size={12} />
+                    Painel Admin
+                  </Link>
+                )}
+                <button 
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="px-4 py-2 bg-[#ff641d]/10 hover:bg-[#ff641d] border border-[#ff641d]/20 text-[#ff641d] hover:text-white text-[9px] font-mono font-bold uppercase tracking-widest transition-all rounded-lg flex items-center gap-2 group"
+                >
+                  <Zap size={12} className="group-hover:animate-pulse" />
+                  Sinalizar Agora
+                </button>
+              </div>
             </div>
             
             <CommunityReports />

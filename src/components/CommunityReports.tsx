@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 import { db, auth } from '@/src/lib/firebase';
 import { MessageCircle, Clock, MapPin, User, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -46,6 +46,7 @@ interface Report {
   category: string;
   location?: string;
   createdAt: any;
+  status: 'PENDING' | 'APPROVED';
 }
 
 export default function CommunityReports() {
@@ -56,6 +57,7 @@ export default function CommunityReports() {
   useEffect(() => {
     const q = query(
       collection(db, 'reports'),
+      where('status', '==', 'APPROVED'),
       orderBy('createdAt', 'desc'),
       limit(10)
     );

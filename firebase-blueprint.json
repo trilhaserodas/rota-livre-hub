@@ -5,13 +5,15 @@
       "description": "A tactical report shared by a community member about road conditions, borders, etc.",
       "type": "object",
       "properties": {
+        "userId": { "type": "string", "description": "UID of the reporter" },
         "userName": { "type": "string", "description": "Name of the reporter" },
         "content": { "type": "string", "description": "The report message" },
-        "category": { "type": "string", "description": "Category of the report (e.g., ROAD, BORDER, CLIMATE)" },
+        "category": { "type": "string", "description": "Category of the report" },
         "location": { "type": "string", "description": "Location description" },
-        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation" }
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED"], "description": "Moderation status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
       },
-      "required": ["userName", "content", "createdAt"]
+      "required": ["userName", "content", "createdAt", "status"]
     }
   },
   "firestore": {

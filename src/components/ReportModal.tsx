@@ -69,6 +69,7 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
         content,
         category,
         location,
+        status: 'PENDING',
         createdAt: serverTimestamp(),
       });
       setSuccess(true);

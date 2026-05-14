@@ -15,25 +15,48 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email == "trilhaserodas@gmail.com" && 
+             request.auth.token.email_verified == true;
+    }
+
     function incoming() {
       return request.resource.data;
     }
 
+    function existing() {
+      return resource.data;
+    }
+
     function isValidReport(data) {
-      return data.keys().hasAll(['userName', 'content', 'createdAt']) &&
-             data.keys().size() <= 10 &&
+      return data.keys().hasAll(['userName', 'content', 'createdAt', 'status']) &&
+             data.keys().size() <= 12 &&
              data.userName is string && data.userName.size() <= 100 &&
              data.content is string && data.content.size() <= 1000 &&
+             data.status in ['PENDING', 'APPROVED'] &&
              data.createdAt == request.time;
     }
 
     // Reports collection
     match /reports/{reportId} {
-      allow list: if true;
-      allow get: if true;
-      allow create: if isValidReport(incoming());
-      // No updates or deletes by public users
-      allow update, delete: if false;
+      allow list: if 
+        (resource.data.status == 'APPROVED') || // Public see approved
+        isAdmin(); // Admin sees all
+        
+      allow get: if 
+        (resource.data.status == 'APPROVED') ||
+        isAdmin();
+
+      allow create: if 
+        isValidReport(incoming()) && 
+        incoming().status == 'PENDING'; // Force pending for public
+      
+      allow update: if 
+        isAdmin() && 
+        isValidReport(incoming()); // Only admin can approve (change status)
+
+      allow delete: if isAdmin();
     }
   }
 }
