@@ -7,6 +7,7 @@ import SEO from '@/src/components/SEO';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import RouteWeather from '@/src/components/RouteWeather';
+import FavoriteToast from '@/src/components/FavoriteToast';
 
 const routes = [
   {
@@ -206,15 +207,31 @@ export default function Routes() {
     const saved = localStorage.getItem('favorite_routes');
     return saved ? JSON.parse(saved) : [];
   });
+  const [toast, setToast] = useState<{ isVisible: boolean; isFavorite: boolean; routeName: string }>({
+    isVisible: false,
+    isFavorite: false,
+    routeName: ''
+  });
 
   useEffect(() => {
     localStorage.setItem('favorite_routes', JSON.stringify(favorites));
   }, [favorites]);
 
   const toggleFavorite = (id: string) => {
+    const route = routes.find(r => r.id === id);
+    const isNowFavorite = !favorites.includes(id);
+    
     setFavorites(prev => 
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
+
+    if (route) {
+      setToast({ isVisible: true, isFavorite: isNowFavorite, routeName: route.name });
+      // Reset after animation
+      setTimeout(() => {
+        setToast(prev => ({ ...prev, isVisible: false }));
+      }, 3000);
+    }
   };
 
   return (
@@ -229,6 +246,12 @@ export default function Routes() {
         onClose={() => setActiveShare(null)}
         routeId={activeShare?.id || ''}
         routeName={activeShare?.name || ''}
+      />
+
+      <FavoriteToast 
+        isVisible={toast.isVisible}
+        isFavorite={toast.isFavorite}
+        routeName={toast.routeName}
       />
 
       <section className="pt-12 mb-12 text-left">

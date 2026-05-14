@@ -7,6 +7,55 @@ import AdSense from '@/src/components/AdSense';
 
 const posts = [
   {
+    id: 6,
+    title: 'COMO SE PREPARAR PARA O FRIO NA CICLO VIAGEM',
+    excerpt: 'O frio pode transformar uma cicloviagem incrível em uma batalha pela sobrevivência. Entenda o wind chill, o sistema de camadas e como evitar a hipotermia na estrada.',
+    category: 'EXPEDIÇÃO',
+    author: 'TR_COMMUNITY',
+    date: '14.05.26',
+    image: 'https://i.ibb.co/KcH6Hpss/Chat-GPT-Image-14-de-mai-de-2026-11-09-00.png',
+    content: `
+      <p>O frio pode transformar uma cicloviagem incrível em uma batalha pela sobrevivência — e não é exagero. Não estou falando só de desconforto. Estou falando de hipotermia, que ocorre quando a temperatura corporal cai abaixo de 35°C, provocando desde confusão mental até parada cardíaca.</p>
+
+      <p>No ciclismo de estrada, o corpo fica exposto a uma combinação letal: vento gerado pela própria velocidade, suor acumulado sob a roupa, e quedas bruscas de temperatura entre subidas e descidas. Isso não acontece na cidade. Acontece na estrada. E a pior parte? A maioria dos ciclistas subestima exatamente esse conjunto de fatores.</p>
+
+      <h2>O Dado Que Todo Ciclista Deveria Conhecer Antes de Sair</h2>
+      <p>Existe um fenômeno chamado <strong>wind chill</strong> — o resfriamento pelo vento — que transforma completamente a percepção de temperatura no cicloturismo. A fórmula usada pelo National Weather Service dos EUA calcula assim: pedalando a 25 km/h com temperatura ambiente de 12°C, a sensação térmica real no seu corpo cai para cerca de 8°C. Se a temperatura estiver em 2°C, essa mesma velocidade faz o seu corpo sentir algo próximo de -3°C.</p>
+      <p>O vento aumenta a taxa de perda de calor da pele: quanto mais rápido o ar se move, mais rapidamente a superfície corporal esfria. No ciclismo, você gera esse vento ao pedalar, mesmo em dias sem vento aparente. E a situação piora quando o corpo está molhado. Roupas úmidas de suor aceleram drasticamente essa perda de calor por condução, convecção, evaporação e radiação.</p>
+
+      <h2>O Erro Que Quase Todo Iniciante Comete</h2>
+      <p>A intuição diz: coloca mais roupa. A estrada diz: errado. No cicloturismo, o excesso de roupa desregula o sistema de termorregulação do corpo. Você aquece rápido pedalando, transpira dentro das camadas, a roupa encharca — e quando para, o suor começa a dissipar calor rapidamente. É exatamente aí que o perigo começa.</p>
+      <p>Traduzindo para quem vai pedalar: roupa de algodão encharcada de suor, somada a uma descida longa com vento de frente, é uma das combinações mais perigosas que existem. O algodão retém umidade e demora a secar. A solução não é mais roupa. É roupa certa, na ordem certa.</p>
+
+      <h2>O Sistema de Camadas: Como Funciona de Verdade</h2>
+      <p>O sistema de camadas não é modismo. É engenharia térmica aplicada ao corpo humano em movimento. Funciona porque cada camada tem uma função específica e elas trabalham juntas.</p>
+
+      <h3>Primeira Camada — Controle de Suor (A "Segunda Pele")</h3>
+      <p>Essa camada toca diretamente a pele e tem uma única missão: afastar o suor do corpo. Não é para aquecer. É para manter você seco. Os materiais mais eficazes incluem poliéster, poliamida, elastano e lã merino. Evite algodão nessa camada a todo custo.</p>
+
+      <h3>Segunda Camada — Isolamento Térmico</h3>
+      <p>Essa camada retém o calor gerado pelo seu corpo. Aqui entram fleece, lã grossa ou jaquetas leves com enchimento sintético. Em cicloviagens, o truque é escolher uma peça que comprima bem no bolso da mochila, pois você vai tirar e colocar essa camada dezenas de vezes por dia.</p>
+
+      <h3>Terceira Camada — Proteção Contra os Elementos</h3>
+      <p>A camada externa enfrenta o vento, a chuva e o frio direto. Os itens essenciais são o corta-vento ultraleve (bloqueia o principal responsável pela perda térmica em descidas) e a capa impermeável para chuvas pesadas.</p>
+
+      <h2>Os Itens Que Fazem Diferença Na Prática</h2>
+      <p><strong>Luvas:</strong> As mãos são a primeira coisa que paralisam no frio. Com as mãos dormentes, você perde controle do guidão, dos freios e do câmbio. Isso não é desconforto — é risco real.</p>
+      <p><strong>Meias e Pés:</strong> Pés molhados são pés que congelam. Leve sempre pelo menos dois pares de meias secas reserva (merino ou sintético técnico).</p>
+      <p><strong>Saco de Dormir e Isolante:</strong> Muita gente compra saco de dormir olhando para o preço, não para a temperatura de conforto real. Na Serra Catarinense, onde já registraram -8°C, um saco de 0°C é insuficiente. Além disso, o isolante térmico é vital para cortar o contato com o chão frio.</p>
+
+      <div class="bg-[#ff641d]/10 p-6 border-l-4 border-[#ff641d] my-8">
+        <p class="text-white font-bold mb-2 italic">"O improviso inteligente é o que separa um aventureiro de um turista em apuros."</p>
+      </div>
+
+      <p class="text-[9px] font-mono text-white/20 uppercase tracking-[0.4em] leading-relaxed mt-12 block">
+        Fontes consultadas: National Weather Service (EUA), NOAA Wind Chill Index, EPAGRI/CIRAM Santa Catarina, Manuais MSD de Medicina (hipotermia), TDA Global Cycling, Bicycle Patagonia, Exploring Wild (trip reports Patagônia), Patagonia Biking.
+      </p>
+
+      <p>Publicado em: 14.05.2026<br/>Projeto desenvolvido pela comunidade Trilhas e Rodas.<br/>Instagram: @trilhas_erodas</p>
+    `
+  },
+  {
     id: 5,
     title: 'CHECKLIST DE INVERNO: EXPEDIÇÕES EM CLIMA FRIO',
     excerpt: 'Pedalar no frio extremo exige preparação inteligente. Guia tático de equipamentos, camadas e mecânica para enfrentar temperaturas negativas com segurança.',
