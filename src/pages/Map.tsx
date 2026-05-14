@@ -96,7 +96,7 @@ const initialPoints: LocationPoint[] = [
   },
   { 
     id: '5', 
-    name: 'Ponto Seguro - Aduana Paso Roballos', 
+    name: 'PONTO SEGURO - Aduana Paso Roballos', 
     lat: -47.165, 
     lng: -71.868, 
     category: 'safe_point', 
@@ -190,19 +190,35 @@ const initialPoints: LocationPoint[] = [
     lng: -72.502,
     category: 'repair',
     description: 'Especialista em motos e veículos de expedição.',
+  },
+  {
+    id: 'offroad-1',
+    name: 'Trecho Terrestre Crítico - Paso Mayer',
+    lat: -48.243,
+    lng: -72.247,
+    category: 'terrestre',
+    description: 'Travessia de rio e trilha de terra técnica. Apenas 4x4 ou bicicletas de expedição.',
+  },
+  {
+    id: 'gas-remote-2',
+    name: 'Auto Posto Gasolina - Jalapão/Mateiros',
+    lat: -10.548,
+    lng: -46.421,
+    category: 'fuel',
+    description: 'Ponto crucial de abastecimento no coração do Jalapão.',
   }
 ];
 
 const categories = [
   { id: 'all', name: 'Todos', icon: Globe, color: '#ff641d' },
-  { id: 'camping', name: 'Camping', icon: Tent, color: '#ff641d' },
-  { id: 'hostel', name: 'Hostels', icon: Coffee, color: '#ff9d00' },
   { id: 'water', name: 'Água', icon: Droplets, color: '#00d4ff' },
+  { id: 'terrestre', name: 'Terrestre', icon: Mountain, color: '#f59e0b' },
+  { id: 'fuel', name: 'Posto Gasolina', icon: Fuel, color: '#fff200' },
   { id: 'repair', name: 'Oficina', icon: Hammer, color: '#f59e0b' },
   { id: 'danger', name: 'Perigo', icon: AlertTriangle, color: '#ff0000' },
-  { id: 'fuel', name: 'Combustível', icon: Fuel, color: '#fff200' },
-  { id: 'viewpoint', name: 'Mirante', icon: Eye, color: '#10b981' },
-  { id: 'safe_point', name: 'Seguro', icon: ShieldCheck, color: '#10b981' },
+  { id: 'safe_point', name: 'SEGURO', icon: ShieldCheck, color: '#10b981' },
+  { id: 'camping', name: 'Camping', icon: Tent, color: '#ff641d' },
+  { id: 'hostel', name: 'Hostels', icon: Coffee, color: '#ff9d00' },
 ];
 
 function createCustomIcon(color: string, glow: boolean = true) {
@@ -346,12 +362,26 @@ export default function AdventureMap() {
     e.preventDefault();
     if (!searchQuery) return;
     setIsSearching(true);
+    
+    // First, check internal points
+    const internalMatch = initialPoints.find(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase() === searchQuery.toLowerCase()
+    );
+
+    if (internalMatch) {
+      setMapCenter([internalMatch.lat, internalMatch.lng]);
+      setMapZoom(18);
+      setIsSearching(false);
+      return;
+    }
+
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
       const data = await res.json();
       if (data?.[0]) {
         setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
-        setMapZoom(12);
+        setMapZoom(16); // Smart Zoom Tactical
       }
     } finally {
       setIsSearching(false);
@@ -375,54 +405,65 @@ export default function AdventureMap() {
 
       {/* --- HUD OVERLAYS --- */}
 
-      {/* Main Control Panel */}
-      <div className="absolute top-0 left-0 right-0 z-[2000] p-4 md:p-6 pointer-events-none flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+      {/* Left Sidebar HUD (Categories - PC ONLY) */}
+      <div className="hidden lg:flex absolute left-6 top-1/2 -translate-y-1/2 z-[2000] flex-col gap-2 pointer-events-auto">
+         <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-sm mb-2">
+            <Filter size={14} className="text-[#ff641d] mx-auto" />
+         </div>
+         {categories.map(cat => (
+           <button
+             key={cat.id}
+             onClick={() => setSelectedCategory(cat.id)}
+             className={cn(
+               "w-12 h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+               selectedCategory === cat.id 
+                 ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.4)]" 
+                 : "bg-black/60 border-white/10 text-white/20 hover:border-[#ff641d]/40"
+             )}
+             title={cat.name}
+           >
+             <cat.icon size={18} />
+             <div className="absolute left-full ml-4 px-3 py-1.5 bg-[#0b0c0d] text-white text-[8px] font-mono uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 pointer-events-none transition-all translate-x-3 group-hover:translate-x-0 border border-white/5 whitespace-nowrap z-[3000]">
+               {cat.name.toUpperCase()}
+             </div>
+           </button>
+         ))}
+      </div>
+
+      {/* Top Header Control Panel */}
+      <div className="absolute top-0 left-0 right-0 z-[2000] p-4 md:p-6 pointer-events-none flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          {/* Branding Left */}
           <motion.div 
-            initial={{ x: -50, opacity: 0 }}
+            initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex flex-col gap-2 pointer-events-auto"
+            className="flex items-center gap-3 pointer-events-auto"
           >
-            <div className="flex items-center gap-3">
-               <div className="p-2 bg-[#ff641d] text-white rounded-sm shadow-[0_0_20px_rgba(255,100,29,0.4)]">
-                 <Navigation2 size={20} className={isExpeditionMode ? "animate-pulse" : ""} />
-               </div>
-               <div>
-                  <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.5</div>
-                  <h1 className="text-lg md:text-xl font-display font-black text-white uppercase tracking-tighter leading-none">GPS_TACTICAL<span className="text-[#ff641d]">.</span>SYSTEM</h1>
-               </div>
-            </div>
-            
-            {isExpeditionMode && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-4 mt-1 bg-black/60 backdrop-blur-md border border-white/10 p-3 rounded-sm"
-              >
-                 <OperationalMetric label="WIND" value="24 km/h" icon={Wind} />
-                 <div className="w-[1px] bg-white/10" />
-                 <OperationalMetric label="TEMP" value="12°C" icon={Thermometer} />
-                 <div className="w-[1px] bg-white/10" />
-                 <OperationalMetric label="ALT" value="2.450m" icon={Mountain} />
-              </motion.div>
-            )}
+             <div className="p-2 bg-[#ff641d] text-white rounded-sm shadow-[0_0_20px_rgba(255,100,29,0.4)]">
+               <Navigation2 size={24} className={isExpeditionMode ? "animate-pulse" : ""} />
+             </div>
+             <div>
+                <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.5</div>
+                <h1 className="text-xl font-display font-black text-white uppercase tracking-tighter leading-none">GPS_TACTICAL<span className="text-[#ff641d]">.</span>SYSTEM</h1>
+             </div>
           </motion.div>
 
-          <div className="flex gap-2 pointer-events-auto w-full md:w-auto">
+          {/* Mode Controls Right */}
+          <div className="flex gap-2 pointer-events-auto self-end md:self-auto">
              <button 
                onClick={() => setIsExpeditionMode(!isExpeditionMode)}
                className={cn(
-                 "flex-1 md:flex-none h-12 px-4 md:px-6 rounded-sm font-mono font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border shadow-2xl",
+                 "h-14 px-5 rounded-sm font-mono font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border shadow-2xl overflow-hidden relative group",
                  isExpeditionMode 
-                   ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_30px_rgba(255,100,29,0.3)]" 
+                   ? "bg-[#ff641d] border-[#ff641d] text-white" 
                    : "bg-black/80 border-white/10 text-white/40 hover:border-[#ff641d]/40"
                )}
              >
                <Zap size={14} className={isExpeditionMode ? "animate-pulse" : ""} /> 
-               {isExpeditionMode ? "MODO_EXP_ON" : "MODO_EXPEDIÇÃO"}
+               <span>{isExpeditionMode ? "EXP_ON" : "EXPEDIÇÃO"}</span>
              </button>
              
-             <div className="flex gap-1 h-12 bg-black/80 backdrop-blur-md border border-white/10 rounded-sm p-1">
+             <div className="flex gap-1 h-14 bg-black/80 backdrop-blur-md border border-white/10 rounded-sm p-1">
                 <button 
                   onClick={() => window.history.back()}
                   className="w-10 flex items-center justify-center rounded-xs transition-all text-white/40 hover:bg-white/5 border-r border-white/5 mr-1"
@@ -435,74 +476,99 @@ export default function AdventureMap() {
                     key={mode}
                     onClick={() => setTransportMode(mode)}
                     className={cn(
-                      "w-10 flex items-center justify-center rounded-xs transition-all",
-                      transportMode === mode ? "bg-[#ff641d] text-white" : "text-white/20 hover:bg-white/5"
+                      "w-12 flex items-center justify-center rounded-xs transition-all",
+                      transportMode === mode ? "bg-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.3)]" : "text-white/20 hover:bg-white/5"
                     )}
                   >
-                    {mode === 'bike' && <Bike size={16} />}
-                    {mode === 'walk' && <MapPin size={16} />}
-                    {mode === 'car' && <Navigation size={16} />}
+                    {mode === 'bike' && <Bike size={18} />}
+                    {mode === 'walk' && <MapPin size={18} />}
+                    {mode === 'car' && <Navigation size={18} />}
                   </button>
                 ))}
              </div>
           </div>
         </div>
 
-        {/* Search Bar HUD (Simplified for Mobile Top) */}
-        <div className="w-full pointer-events-auto">
-           <form onSubmit={handleSearch} className="relative max-w-2xl group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={16} />
-              <input 
-                type="text" 
-                placeholder="PROCURAR_DESTINO_OU_COORDENADAS..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-black/80 backdrop-blur-xl border border-white/10 rounded-sm h-12 pl-12 pr-4 text-[10px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d]/50 transition-all text-white placeholder:text-white/10 shadow-2xl"
-              />
-              {isSearching && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />}
-           </form>
+        {/* Central HUD Row: Search & Metrics */}
+        <div className="flex flex-col items-center gap-4 w-full pointer-events-none">
+           {/* Central Prominent Search Bar */}
+           <div className="w-full max-w-2xl pointer-events-auto">
+              <form onSubmit={handleSearch} className="relative group">
+                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
+                 <input 
+                   type="text" 
+                   placeholder="DIGITE_DESTINO_OU_PONTO_DE_INTERESSE..."
+                   value={searchQuery}
+                   onChange={(e) => setSearchQuery(e.target.value)}
+                   className="w-full bg-black/90 backdrop-blur-2xl border border-white/10 rounded-sm h-14 pl-12 pr-4 text-[11px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d] transition-all text-white placeholder:text-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] uppercase"
+                 />
+                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-3 items-center">
+                   {isSearching && <div className="w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />}
+                   <div className="hidden md:block h-4 w-[1px] bg-white/10" />
+                   <kbd className="hidden md:block text-[8px] font-mono text-white/20 border border-white/10 px-1.5 py-0.5 rounded-xs">ENTER</kbd>
+                 </div>
+              </form>
+           </div>
+
+           {/* Expedition Metrics (Adaptive) */}
+           {isExpeditionMode && (
+             <motion.div 
+               initial={{ opacity: 0, y: -20 }}
+               animate={{ opacity: 1, y: 0 }}
+               className="flex flex-wrap justify-center gap-4 md:gap-6 bg-black/80 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-sm shadow-2xl pointer-events-auto max-w-full overflow-x-auto no-scrollbar"
+             >
+                <OperationalMetric label="WIND" value="24.2 KM/H" icon={Wind} />
+                <div className="hidden md:block w-[1px] bg-white/10" />
+                <OperationalMetric label="TEMP" value="12.5°C" icon={Thermometer} />
+                <div className="hidden md:block w-[1px] bg-white/10" />
+                <OperationalMetric label="ALT" value="2.450M" icon={Mountain} />
+                <div className="hidden md:block w-[1px] bg-white/10" />
+                <div className="flex gap-4">
+                  <OperationalMetric label="LAT" value={userLocation ? userLocation[0].toFixed(4) : "---"} icon={MapPin} />
+                  <OperationalMetric label="LNG" value={userLocation ? userLocation[1].toFixed(4) : "---"} icon={MapPin} />
+                </div>
+             </motion.div>
+           )}
         </div>
       </div>
 
-      {/* Responsive Categories Bar (Bottom for all, but specially optimized for Mobile) */}
+      {/* Responsive Categories Bar (Mobile-only bottom bar) */}
       <AnimatePresence>
-        {routePoints.length === 0 && (
-          <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[2000] pointer-events-none"
-          >
-            <div className="w-full pointer-events-auto bg-black/80 backdrop-blur-xl border border-white/10 rounded-sm p-4 shadow-2xl overflow-hidden">
-               <div className="flex items-center gap-3 mb-3 border-b border-white/5 pb-2">
-                  <Filter size={10} className="text-[#ff641d]" />
-                  <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">CATEGORIAS_DE_SUPORTE</span>
+        <motion.div 
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          className="lg:hidden absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[2000] pointer-events-none"
+        >
+          <div className="w-full pointer-events-auto bg-black/90 backdrop-blur-xl border border-white/10 rounded-sm p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] overflow-hidden">
+             <div className="flex items-center gap-3 mb-2 border-b border-white/5 pb-2">
+                <Filter size={10} className="text-[#ff641d]" />
+                <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.3em]">CATEGORIAS_DE_SUPORTE</span>
+             </div>
+             <div className="w-full overflow-x-auto no-scrollbar">
+               <div className="flex gap-2 min-w-max pb-1">
+                 {categories.map(cat => (
+                   <button
+                     key={cat.id}
+                     onClick={() => setSelectedCategory(cat.id)}
+                     className={cn(
+                       "h-10 px-4 rounded-sm border backdrop-blur-md transition-all flex items-center gap-2 group whitespace-nowrap",
+                       selectedCategory === cat.id 
+                         ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.3)]" 
+                         : "bg-white/[0.03] border-white/5 text-white/40 hover:border-[#ff641d]/40"
+                     )}
+                   >
+                     <cat.icon size={14} className={cn(selectedCategory === cat.id ? "text-white" : "text-[#ff641d]")} />
+                     <span className="text-[9px] font-mono font-bold uppercase tracking-widest">{cat.name}</span>
+                   </button>
+                 ))}
                </div>
-               <div className="w-full overflow-x-auto no-scrollbar">
-                 <div className="flex gap-2 min-w-max">
-                   {categories.map(cat => (
-                     <button
-                       key={cat.id}
-                       onClick={() => setSelectedCategory(cat.id)}
-                       className={cn(
-                         "h-10 px-4 rounded-sm border backdrop-blur-md transition-all flex items-center gap-2 group whitespace-nowrap",
-                         selectedCategory === cat.id 
-                           ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.3)]" 
-                           : "bg-white/[0.03] border-white/5 text-white/40 hover:border-[#ff641d]/40"
-                       )}
-                     >
-                       <cat.icon size={14} className={cn(selectedCategory === cat.id ? "text-white" : "text-[#ff641d]")} />
-                       <span className="text-[9px] font-mono font-bold uppercase tracking-widest">{cat.name}</span>
-                     </button>
-                   ))}
-                 </div>
-               </div>
-            </div>
-          </motion.div>
-        )}
+             </div>
+          </div>
+        </motion.div>
       </AnimatePresence>
 
-      {/* Right Action Stack (Vertical) */}
+      {/* Right Action Stack (Vertical controls) */}
       <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-[2000] flex flex-col gap-2 pointer-events-auto">
          <button 
            onClick={handleLocateUser} 
@@ -551,7 +617,7 @@ export default function AdventureMap() {
         {(routePoints.length > 0) && (
           <motion.div 
             initial={{ y: 200 }} animate={{ y: 0 }} exit={{ y: 200 }}
-            className="absolute bottom-0 left-0 right-0 z-[2000] pointer-events-auto"
+            className="absolute bottom-0 left-0 right-0 z-[2100] pointer-events-auto"
           >
              <div className="max-w-4xl mx-auto bg-black/90 backdrop-blur-2xl border-t border-x border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.8)] overflow-hidden">
                 <div className="p-6 flex items-center justify-between border-b border-white/5">
