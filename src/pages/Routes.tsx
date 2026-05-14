@@ -1,11 +1,14 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowRight, Compass, MapPin, Share2, Activity, Copy, Check, X, 
-  Twitter, Send, MessageCircle, Info, Heart, Bike, Triangle, Zap 
+  Twitter, Send, MessageCircle, Info, Heart, Bike, Triangle, Zap,
+  Upload, FileJson, AlertCircle, Loader2
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { db, auth } from '@/src/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import RouteWeather from '@/src/components/RouteWeather';
 import FavoriteToast from '@/src/components/FavoriteToast';
 import TacticalHUD from '@/src/components/TacticalHUD';
@@ -201,8 +204,161 @@ function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
   );
 }
 
+interface ContributionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function ContributionModal({ isOpen, onClose }: ContributionModalProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [description, setDescription] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth.currentUser) {
+      alert("Necessário autenticação.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'reports'), {
+        userId: auth.currentUser.uid,
+        userName: auth.currentUser.displayName || 'Explorer',
+        content: description,
+        category: 'TRAIL_LOG',
+        location: 'PENDING_ANALYSIS',
+        status: 'PENDING',
+        createdAt: serverTimestamp(),
+        fileName: file?.name || 'manual_entry'
+      });
+      setSubmitted(true);
+      setTimeout(() => {
+        onClose();
+        setSubmitted(false);
+        setFile(null);
+        setDescription('');
+      }, 3000);
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao enviar. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center px-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-[#0b0c0d]/95 backdrop-blur-xl"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-lg dashboard-card p-8 border-white/10 bg-[#121417] overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#ff641d]"></div>
+            
+            <button 
+              onClick={onClose}
+              className="absolute top-4 right-4 text-white/20 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            {submitted ? (
+              <div className="py-12 text-center">
+                <div className="w-16 h-16 bg-green-500/20 border border-green-500/40 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check className="text-green-500" size={32} />
+                </div>
+                <h3 className="text-xl font-display font-black text-white uppercase tracking-tighter mb-2">DADOS_CARREGADOS</h3>
+                <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Sua contribuição está sendo processada por analistas de rota.</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-4 uppercase">OPS_INTEL // SUBMISSION_PHASE</div>
+                <h3 className="text-2xl font-display font-black uppercase tracking-tighter text-[#F8FAFC] mb-4 leading-none">
+                  REGISTRO<span className="text-[#ff641d]">.</span>DE<span className="text-[#ff641d]">.</span>RASTREAMENTO
+                </h3>
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="group border-2 border-dashed border-white/5 bg-white/[0.02] rounded-sm p-10 text-center cursor-pointer hover:border-[#ff641d]/40 transition-all"
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept=".gpx,.kml,.json"
+                      onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    />
+                    <div className="flex flex-col items-center gap-4">
+                      {file ? (
+                        <div className="text-[#ff641d] flex flex-col items-center gap-2">
+                          <FileJson size={32} />
+                          <span className="text-[10px] font-mono uppercase tracking-widest">{file.name}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="text-white/10 group-hover:text-[#ff641d] transition-colors" size={32} />
+                          <div>
+                            <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1">ARRASTE OU CLIQUE PARA CARREGAR GPX</div>
+                            <div className="text-[8px] font-mono text-white/10 uppercase tracking-widest">FORMATOS ACEITOS: GPX, KML, JSON</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-2">OBSERVAÇÕES_DE_CAMPO:</div>
+                    <textarea 
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="DETALHE CONDIÇÕES DA PISTA, PONTOS DE ÁGUA OU ALERTAS..."
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-sm p-4 text-[10px] font-mono text-white focus:outline-none focus:border-[#ff641d]/50 h-32 resize-none placeholder:text-white/10"
+                      required
+                    />
+                  </div>
+
+                  {!auth.currentUser && (
+                    <div className="flex items-center gap-3 p-4 bg-red-900/10 border border-red-900/20 rounded-sm">
+                      <AlertCircle className="text-red-500" size={16} />
+                      <span className="text-[8px] font-mono text-red-500 uppercase tracking-widest">LOGIN_REQUERIDO_PARA_ENVIO_DE_INTELIGÊNCIA</span>
+                    </div>
+                  )}
+
+                  <button 
+                    disabled={isSubmitting || !description || !auth.currentUser}
+                    type="submit"
+                    className="w-full h-14 bg-[#ff641d] text-white font-mono font-bold text-[11px] uppercase tracking-[0.4em] hover:bg-[#ff641d]/80 disabled:bg-white/5 disabled:text-white/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : 'CONFIRMAR_CARREGAMENTO'}
+                  </button>
+                </form>
+              </>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function Routes() {
   const [activeShare, setActiveShare] = useState<{ id: string; name: string } | null>(null);
+  const [isContributionOpen, setIsContributionOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [favorites, setFavorites] = useState<string[]>(() => {
     const saved = localStorage.getItem('favorite_routes');
@@ -247,6 +403,11 @@ export default function Routes() {
         onClose={() => setActiveShare(null)}
         routeId={activeShare?.id || ''}
         routeName={activeShare?.name || ''}
+      />
+
+      <ContributionModal 
+        isOpen={isContributionOpen}
+        onClose={() => setIsContributionOpen(false)}
       />
 
       <FavoriteToast 
@@ -390,11 +551,39 @@ export default function Routes() {
             As rotas evoluem. Novos desvios, condições climáticas e pontos de apoio surgem. 
             Envie seu relatório de campo e ajude a manter a Rota Livre atualizada.
           </p>
-          <button className="px-14 py-5 bg-[#ff641d] text-white font-mono font-bold text-[10px] uppercase tracking-[0.4em] hover:bg-[#ff641d]/80 transition-all shadow-[0_0_30px_rgba(255,100,29,0.2)]">
-            UPLOAD_TRAIL_LOG
+          <button 
+            onClick={() => setIsContributionOpen(true)}
+            className="px-14 py-5 bg-[#ff641d] text-white font-mono font-bold text-[10px] uppercase tracking-[0.4em] hover:bg-[#ff641d]/80 transition-all shadow-[0_0_30px_rgba(255,100,29,0.2)]"
+          >
+            REGISTRO DE RASTREAMENTO DE CARREGAMENTO
           </button>
         </div>
       </section>
     </div>
+  );
+}
+
+function FavoriteToast({ isVisible, isFavorite, routeName }: { isVisible: boolean; isFavorite: boolean; routeName: string }) {
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[3000] px-6 py-4 bg-[#0b0c0d] border border-[#ff641d]/30 shadow-[0_10px_40px_rgba(255,100,29,0.2)] flex items-center gap-4 min-w-[300px]"
+        >
+          <div className={`p-2 rounded-full ${isFavorite ? 'bg-red-500/10 text-red-500' : 'bg-white/5 text-white/40'}`}>
+            <Heart size={16} fill={isFavorite ? "currentColor" : "none"} />
+          </div>
+          <div>
+            <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-widest mb-1">FAVORITE_SYSTEM_UPDATE</div>
+            <div className="text-[10px] font-display font-black text-white uppercase">
+              {isFavorite ? 'ADICIONADO:' : 'REMOVIDO:'} {routeName}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
