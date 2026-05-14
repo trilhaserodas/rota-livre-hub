@@ -50,6 +50,8 @@ export default function RouteWeather({ lat, lng }: { lat: number; lng: number })
             weatherCode: data.current.weather_code,
             isDay: data.current.is_day === 1,
           });
+        } else {
+          setError(true);
         }
       } catch (err) {
         console.error("Weather fetch failed:", err);
@@ -64,44 +66,58 @@ export default function RouteWeather({ lat, lng }: { lat: number; lng: number })
 
   if (loading) {
     return (
-      <div className="flex gap-4 animate-pulse">
-        <div className="h-4 w-12 bg-white/5 rounded"></div>
-        <div className="h-4 w-12 bg-white/5 rounded"></div>
+      <div className="py-4 border-t border-white/5 mt-4">
+        <div className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em] mb-2">Sincronizando_Meteorologia...</div>
+        <div className="flex gap-4 animate-pulse">
+          <div className="h-3 w-16 bg-white/5 rounded"></div>
+          <div className="h-3 w-16 bg-white/5 rounded"></div>
+        </div>
       </div>
     );
   }
 
-  if (error || !weather) return null;
+  if (error || !weather) return (
+    <div className="py-4 border-t border-white/5 mt-4">
+      <div className="text-[8px] font-mono text-red-500/40 uppercase tracking-[0.3em]">Erro_Sinal_Meteorológico</div>
+    </div>
+  );
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }}
-      className="flex flex-wrap items-center gap-x-6 gap-y-2 py-3 border-t border-white/5 mt-4"
+      initial={{ opacity: 0, y: 10 }} 
+      animate={{ opacity: 1, y: 0 }}
+      className="py-4 border-t border-white/5 mt-4"
     >
-      <div className="flex items-center gap-2">
-        {getWeatherIcon(weather.weatherCode, weather.isDay)}
-        <span className="text-[10px] font-mono font-bold text-white uppercase tracking-widest">
-          {weather.temperature}°C
-        </span>
+      <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.3em] mb-3 font-bold flex items-center gap-2">
+        <div className="w-1 h-1 rounded-full bg-[#ff641d] animate-pulse" />
+        Condições_Atuais
       </div>
+      
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="flex items-center gap-2">
+          {getWeatherIcon(weather.weatherCode, weather.isDay)}
+          <span className="text-[12px] font-mono font-black text-white uppercase tracking-tight">
+            {weather.temperature}°C
+          </span>
+        </div>
 
-      <div className="flex items-center gap-2">
-        <Wind size={12} className="text-white/20" />
-        <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">
-          {weather.windSpeed} km/h
-        </span>
-      </div>
+        <div className="flex items-center gap-2">
+          <Wind size={12} className="text-[#ff641d]/40" />
+          <span className="text-[10px] font-mono text-white/60 uppercase tracking-widest">
+            {weather.windSpeed} <span className="text-[8px] opacity-40">km/h</span>
+          </span>
+        </div>
 
-      <div className="flex items-center gap-2">
-        <Droplets size={12} className="text-white/20" />
-        <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">
-          {weather.humidity}% UR
-        </span>
-      </div>
+        <div className="flex items-center gap-2">
+          <Droplets size={12} className="text-[#ff641d]/40" />
+          <span className="text-[10px] font-mono text-white/60 uppercase tracking-widest">
+            {weather.humidity}<span className="text-[8px] opacity-40">% UR</span>
+          </span>
+        </div>
 
-      <div className="text-[8px] font-mono text-[#ff641d]/60 uppercase tracking-[0.2em] ml-auto">
-        {getWeatherDesc(weather.weatherCode)}
+        <div className="text-[9px] font-mono text-[#ff641d] uppercase tracking-[0.1em] ml-auto font-bold px-2 py-0.5 bg-[#ff641d]/10 border border-[#ff641d]/20 rounded">
+          {getWeatherDesc(weather.weatherCode)}
+        </div>
       </div>
     </motion.div>
   );

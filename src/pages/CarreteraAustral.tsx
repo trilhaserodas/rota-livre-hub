@@ -7,6 +7,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import SEO from '@/src/components/SEO';
+import RouteWeather from '@/src/components/RouteWeather';
 
 export default function CarreteraAustral() {
   const [copied, setCopied] = useState(false);
@@ -65,6 +66,10 @@ export default function CarreteraAustral() {
         <p className="text-lg md:text-xl text-white/60 font-medium uppercase tracking-wide leading-relaxed italic border-l-4 border-[#ff641d] pl-8">
           A rota que não é apenas uma estrada, mas uma experiência que muda perspectiva. Cruza mais de 1.200 km de asfalto, cascalho e barro no sul do Chile.
         </p>
+
+        <div className="mt-12 max-w-sm">
+          <RouteWeather lat={-45.57} lng={-72.07} />
+        </div>
       </header>
 
       {/* Hero Image */}
