@@ -562,28 +562,3 @@ export default function Routes() {
     </div>
   );
 }
-
-function FavoriteToast({ isVisible, isFavorite, routeName }: { isVisible: boolean; isFavorite: boolean; routeName: string }) {
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[3000] px-6 py-4 bg-[#0b0c0d] border border-[#ff641d]/30 shadow-[0_10px_40px_rgba(255,100,29,0.2)] flex items-center gap-4 min-w-[300px]"
-        >
-          <div className={`p-2 rounded-full ${isFavorite ? 'bg-red-500/10 text-red-500' : 'bg-white/5 text-white/40'}`}>
-            <Heart size={16} fill={isFavorite ? "currentColor" : "none"} />
-          </div>
-          <div>
-            <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-widest mb-1">FAVORITE_SYSTEM_UPDATE</div>
-            <div className="text-[10px] font-display font-black text-white uppercase">
-              {isFavorite ? 'ADICIONADO:' : 'REMOVIDO:'} {routeName}
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
