@@ -22,6 +22,35 @@ import { useSearchParams } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 
+const preDefinedRoutes = [
+  {
+    id: 'br-156',
+    name: 'BR-156: O CORREDOR DA LAMA',
+    color: '#ff641d',
+    points: [
+      [0.033, -51.066], // Macapá
+      [0.72, -51.09],   // Ferreira Gomes
+      [2.04, -50.88],   // Calçoene
+      [2.45, -51.35],   // Lote Crítico
+      [3.84, -51.83]    // Oiapoque
+    ] as [number, number][],
+    difficulty: 'CRITICAL',
+    status: 'ACTIVE_MUD'
+  },
+  {
+    id: 'n2-guyane',
+    name: 'N2: CORREDOR SELVATIQUE',
+    color: '#00d4ff',
+    points: [
+      [3.89, -51.80],   // St Georges
+      [4.25, -52.12],   // Regina
+      [4.93, -52.33]    // Cayenne
+    ] as [number, number][],
+    difficulty: 'LOW',
+    status: 'PAVED'
+  }
+];
+
 // --- Tactical Utility Components ---
 
 const ElevationChart = ({ data }: { data: any[] }) => (
@@ -710,19 +739,139 @@ const initialPoints: LocationPoint[] = [
     lng: -54.5547,
     category: 'hostel',
     description: 'Foz do Iguaçu, PR. Confortável, com piscina e A/C. Perto da Ponte da Amizade.',
+  },
+  {
+    id: 'oa-border-1',
+    name: '🛂 POSTO_FRONTEIRA: Oiapoque/St Georges',
+    lat: 3.8820,
+    lng: -51.8020,
+    category: 'border',
+    description: 'Travessia internacional. Ponte sobre o Rio Oiapoque. Verifique horários da aduana (geralmente 08h-18h).',
+    isolationLevel: 'LOW',
+    operationalStatus: 'STABLE',
+    nextSupportDist: '2.5km'
+  },
+  {
+    id: 'oa-mkt-1',
+    name: '🛒 MERCADO: Central Oiapoque',
+    lat: 3.8415,
+    lng: -51.8350,
+    category: 'market',
+    description: 'Abastecimento de mantimentos para a travessia. Melhor ponto para câmbio informal.',
+    isolationLevel: 'LOW',
+    operationalStatus: 'STABLE',
+    nextSupportDist: '800m'
+  },
+  {
+    id: 'oa-mud-1',
+    name: '⚠️ ZONA_CRÍTICA: Lote 1/2 BR-156',
+    lat: 2.4500,
+    lng: -51.3500,
+    category: 'danger',
+    description: 'ALERTA: Trecho de lama pesada. 4x4 essencial em período chuvoso. Possibilidade de atoleiros em cascata.',
+    isolationLevel: 'CRITICAL',
+    operationalStatus: 'WARNING',
+    nextSupportDist: '145km'
+  },
+  {
+    id: 'oa-sig-1',
+    name: '📶 SINAL_BAIXO: Reserva Indígena Uaçá',
+    lat: 3.2000,
+    lng: -51.6000,
+    category: 'no_signal',
+    description: 'Ausência total de sinal celular. Use GPS offline. Área de preservação.',
+    isolationLevel: 'HIGH',
+    operationalStatus: 'CRITICAL'
+  },
+  {
+    id: 'oa-fuel-1',
+    name: '⛽ ABASTECIMENTO: Posto Shell Oiapoque',
+    lat: 3.8390,
+    lng: -51.8320,
+    category: 'fuel',
+    description: 'Último combustível de preço BR antes da Guiana Francesa. Diesel S10 disponível.',
+    isolationLevel: 'LOW',
+    operationalStatus: 'STABLE',
+    nextSupportDist: '12km'
+  },
+  {
+    id: 'oa-water-1',
+    name: '🚰 ÁGUA: Fonte Comunitária Oiapoque',
+    lat: 3.8450,
+    lng: -51.8280,
+    category: 'water',
+    description: 'Ponto de reabastecimento de água mineral. Poço profundo.',
+    isolationLevel: 'LOW',
+    operationalStatus: 'STABLE'
+  },
+  {
+    id: 'fg-camp-1',
+    name: '⛺ CAMPING: Chez Armande (Cayenne)',
+    lat: 4.9350,
+    lng: -52.3210,
+    category: 'camping',
+    description: 'Apoio overland em Caiena. Pátio gramado, eletricidade 220v. Próximo ao aeroporto.',
+    isolationLevel: 'LOW',
+    operationalStatus: 'STABLE',
+    nextSupportDist: '4km'
+  },
+  {
+    id: 'fg-host-1',
+    name: '🏨 HOSTEL: Central Guyane',
+    lat: 4.9400,
+    lng: -52.3350,
+    category: 'hostel',
+    description: 'Centro de Caiena. Base de mochileiros europeus. Preços em Euro (€).',
+    isolationLevel: 'LOW',
+    operationalStatus: 'STABLE'
+  },
+  {
+    id: 'fg-off-1',
+    name: '🔧 OFICINA: Garage de la Navigation',
+    lat: 4.9210,
+    lng: -52.3050,
+    category: 'repair',
+    description: 'Mecânica especializada em Toyotas e Land Rovers. Referência overland.',
+    isolationLevel: 'LOW',
+    operationalStatus: 'STABLE'
+  },
+  {
+    id: 'oa-bio-1',
+    name: '🦟 BIO_ALERTA: Dengue/Malária Outbreak',
+    lat: 3.5000,
+    lng: -51.7200,
+    category: 'bio',
+    description: 'ALERTA SANITÁRIO: Região com alta incidência de vetores tropicais. Use repelente e telas.',
+    isolationLevel: 'MEDIUM',
+    operationalStatus: 'WARNING'
+  },
+  {
+    id: 'oa-clim-1',
+    name: '🌧️ CLIMA: Temporada de Monções Am',
+    lat: 4.1000,
+    lng: -52.1000,
+    category: 'climate',
+    description: 'Risco de chuvas torrenciais. Nível dos rios em monitoramento.',
+    isolationLevel: 'MEDIUM',
+    operationalStatus: 'WARNING'
   }
 ];
 
 const categories = [
   { id: 'all', name: 'Todos', icon: Globe, color: '#ff641d' },
-  { id: 'water', name: 'Água', icon: Droplets, color: '#00d4ff' },
-  { id: 'terrestre', name: 'Terrestre', icon: Mountain, color: '#f59e0b' },
-  { id: 'fuel', name: 'Posto Gasolina', icon: Fuel, color: '#fff200' },
-  { id: 'repair', name: 'Oficina', icon: Hammer, color: '#f59e0b' },
-  { id: 'danger', name: 'Perigo', icon: AlertTriangle, color: '#ff0000' },
-  { id: 'safe_point', name: 'SEGURO', icon: ShieldCheck, color: '#10b981' },
-  { id: 'camping', name: 'Camping', icon: Tent, color: '#ff641d' },
-  { id: 'hostel', name: 'Hostels', icon: Coffee, color: '#ff9d00' },
+  { id: 'border', name: '🛂 Fronteira', icon: ShieldCheck, color: '#ff641d' },
+  { id: 'camping', name: '⛺ Camping', icon: Tent, color: '#ff641d' },
+  { id: 'hostel', name: '🏨 Hostel', icon: Coffee, color: '#ff9d00' },
+  { id: 'water', name: '🚰 Água', icon: Droplets, color: '#00d4ff' },
+  { id: 'fuel', name: '⛽ Abastecimento', icon: Fuel, color: '#fff200' },
+  { id: 'repair', name: '🔧 Oficina', icon: Hammer, color: '#f59e0b' },
+  { id: 'market', name: '🛒 Mercado', icon: Truck, color: '#a78bfa' },
+  { id: 'danger', name: '⚠️ Perigo', icon: AlertTriangle, color: '#ef4444' },
+  { id: 'no_signal', name: '📶 Sem Sinal', icon: Wifi, color: '#94a3b8' },
+  { id: 'climate', name: '🌧️ Clima', icon: Wind, color: '#38bdf8' },
+  { id: 'bio', name: '🦟 Ambiental', icon: ShieldAlert, color: '#22c55e' },
+  { id: 'terrestre', name: 'Montanha', icon: Mountain, color: '#f59e0b' },
+  { id: 'safe_point', name: 'Ponto Seguro', icon: ShieldCheck, color: '#10b981' },
 ];
 
 function createCustomIcon(color: string, glow: boolean = true) {
@@ -813,6 +962,7 @@ export default function AdventureMap() {
   const [isSearching, setIsSearching] = useState(false);
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState<LocationPoint | null>(null);
   
   // Routing State
   const [isTracing, setIsTracing] = useState(false);
@@ -936,6 +1086,113 @@ export default function AdventureMap() {
       isExpeditionMode ? "p-0" : "p-0"
     )}>
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
+      
+      {/* Tactical UI Overlay: HUD Effects */}
+      <div className="fixed inset-0 z-[1500] pointer-events-none overflow-hidden opacity-[0.03]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)]" />
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,_#fff_0px,_#fff_1px,_transparent_1px,_transparent_2px)] bg-[length:100%_2px]" />
+      </div>
+
+      <AnimatePresence>
+        {isSearching && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2500] pointer-events-none bg-black/20"
+          >
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-[#ff641d] shadow-[0_0_15px_#ff641d] animate-[scan_2s_ease-in-out_infinite]" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- SELECTED POINT INTEL PANEL --- */}
+      <AnimatePresence>
+        {selectedPoint && (
+          <motion.div
+            initial={{ x: 400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            className="fixed right-4 md:right-20 top-24 bottom-24 w-full max-w-[320px] bg-[#0b0c0d]/90 backdrop-blur-3xl border border-white/10 z-[2500] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-auto overflow-hidden rounded-sm"
+          >
+             <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 bg-[#ff641d] rounded-full animate-pulse shadow-[0_0_10px_#ff641d]" />
+                   <span className="text-[10px] font-mono font-black text-white/40 tracking-[0.3em]">INTEL_REPORT</span>
+                </div>
+                <button 
+                  onClick={() => setSelectedPoint(null)}
+                  className="text-white/20 hover:text-white transition-colors"
+                >
+                  <Plus size={16} className="rotate-45" />
+                </button>
+             </div>
+
+             <div className="flex-1 overflow-y-auto no-scrollbar p-6">
+                <div className="mb-6 relative group">
+                   {selectedPoint.image ? (
+                     <img src={selectedPoint.image} className="w-full h-40 object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 border border-white/5" referrerPolicy="no-referrer" />
+                   ) : (
+                     <div className="w-full h-40 bg-white/5 border border-white/10 flex items-center justify-center">
+                        <CompassIcon size={32} className="text-white/5 animate-spin-slow" />
+                     </div>
+                   )}
+                   <div className="absolute top-2 right-2 p-1 px-2 bg-black/80 text-[#ff641d] text-[7px] font-mono font-black border border-white/10 uppercase tracking-widest">SAT_VIEW_ACTIVE</div>
+                </div>
+
+                <div className="flex items-center gap-2 mb-2">
+                   <span className="text-[8px] font-mono text-[#ff641d] font-bold uppercase tracking-[0.2em]">{selectedPoint.category}</span>
+                   <div className="h-[1px] flex-1 bg-white/10" />
+                </div>
+
+                <h2 className="text-2xl font-display font-black text-white uppercase tracking-tighter mb-4 leading-none">{selectedPoint.name}</h2>
+                <p className="text-[10px] text-white/40 font-mono uppercase leading-relaxed mb-8 border-l border-[#ff641d]/40 pl-4">{selectedPoint.description}</p>
+
+                <div className="space-y-6">
+                   <div className="grid grid-cols-2 gap-6">
+                      <OperationalMetric 
+                        label="ISOLAMENTO" 
+                        value={selectedPoint.isolationLevel || "N/A"} 
+                        icon={Mountain} 
+                        color={selectedPoint.isolationLevel === 'CRITICAL' ? "text-red-500" : "text-white/40"} 
+                      />
+                      <OperationalMetric 
+                        label="OPERACIONAL" 
+                        value={selectedPoint.operationalStatus || "UNKNOWN"} 
+                        icon={ShieldCheck} 
+                        color={selectedPoint.operationalStatus === 'STABLE' ? "text-green-500" : "text-yellow-500"} 
+                      />
+                   </div>
+
+                   <div className="h-[1px] bg-white/5" />
+
+                   <OperationalMetric 
+                     label="PRÓXIMO_SUPORTE" 
+                     value={selectedPoint.nextSupportDist || "LOCAL_NODE"} 
+                     icon={Navigation} 
+                   />
+
+                   <div className="flex gap-4">
+                      <OperationalMetric label="GEO_LAT" value={selectedPoint.lat.toFixed(6)} icon={MapPin} />
+                      <OperationalMetric label="GEO_LNG" value={selectedPoint.lng.toFixed(6)} icon={MapPin} />
+                   </div>
+                </div>
+             </div>
+
+             <div className="p-4 bg-white/[0.02] border-t border-white/5">
+                <button 
+                  onClick={() => {
+                    setRoutePoints(p => [...p, [selectedPoint.lat, selectedPoint.lng]]);
+                    setSelectedPoint(null);
+                  }}
+                  className="w-full h-12 bg-[#ff641d] text-white text-[10px] font-mono font-black uppercase tracking-widest hover:bg-white hover:text-[#ff641d] transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,100,29,0.3)]"
+                >
+                   <Navigation2 size={16} /> ADICIONAR_AO_TRAJETO
+                </button>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* --- HUD OVERLAYS --- */}
 
@@ -1225,6 +1482,33 @@ export default function AdventureMap() {
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
 
+          {/* Pre-defined Expedition Routes */}
+          {preDefinedRoutes.map(route => (
+            <React.Fragment key={route.id}>
+              <Polyline 
+                positions={route.points} 
+                color={route.color} 
+                weight={6} 
+                opacity={0.15} 
+              />
+              <Polyline 
+                positions={route.points} 
+                color={route.color} 
+                weight={2} 
+                dashArray="10, 10" 
+                opacity={0.6} 
+                className="animate-pulse"
+              >
+                <MapTooltip sticky direction="top" className="custom-tooltip">
+                  <div className="bg-[#0b0c0d] border border-white/10 px-2 py-1 rounded-sm">
+                    <div className="text-[8px] font-mono font-black text-white">{route.name}</div>
+                    <div className="text-[6px] font-mono text-[#ff641d] tracking-widest uppercase">DIFFICULTY: {route.difficulty} // STATUS: {route.status}</div>
+                  </div>
+                </MapTooltip>
+              </Polyline>
+            </React.Fragment>
+          ))}
+
           {routePoints.length > 1 && (
             <Polyline positions={routePoints} color="#ff641d" weight={3} dashArray="5, 8" opacity={0.8} />
           )}
@@ -1255,7 +1539,14 @@ export default function AdventureMap() {
           {filteredPoints.map(p => {
             const cat = categories.find(c => c.id === p.category) || categories[0];
             return (
-              <Marker key={p.id} position={[p.lat, p.lng]} icon={createCustomIcon(cat.color)}>
+              <Marker 
+                key={p.id} 
+                position={[p.lat, p.lng]} 
+                icon={createCustomIcon(cat.color)}
+                eventHandlers={{
+                  click: () => setSelectedPoint(p)
+                }}
+              >
                 <MapTooltip direction="top" offset={[0, -10]} opacity={1} className="custom-tooltip">
                   <div className="bg-[#0b0c0d] border border-white/10 px-2 py-1 rounded-sm shadow-2xl">
                     <div className="text-[10px] font-display font-black text-white uppercase tracking-tighter">{p.name}</div>
@@ -1266,11 +1557,43 @@ export default function AdventureMap() {
                   <div className="p-0 min-w-[240px] bg-[#0b0c0d] overflow-hidden rounded-sm">
                     {p.image && <img src={p.image} className="w-full h-32 object-cover grayscale hover:grayscale-0 transition-all duration-700" referrerPolicy="no-referrer" />}
                     <div className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                         <div className="p-1 px-2 border border-white/10 rounded-sm text-[#ff641d] text-[8px] font-bold uppercase tracking-widest"><cat.icon size={10} className="inline mr-1" /> {p.category}</div>
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                         <div className="p-1 px-2 border border-white/10 rounded-sm text-[#ff641d] text-[8px] font-bold uppercase tracking-widest flex items-center gap-1.5"><cat.icon size={10} /> {cat.name}</div>
+                         {p.operationalStatus && (
+                           <div className={cn(
+                             "p-1 px-2 border rounded-sm text-[8px] font-bold uppercase tracking-widest",
+                             p.operationalStatus === 'STABLE' ? "border-green-500/20 text-green-500" :
+                             p.operationalStatus === 'WARNING' ? "border-yellow-500/20 text-yellow-500" :
+                             "border-red-500/20 text-red-500"
+                           )}>
+                             {p.operationalStatus}
+                           </div>
+                         )}
                       </div>
+                      
                       <h4 className="text-sm font-display font-black text-white uppercase tracking-tighter mb-1">{p.name}</h4>
                       <p className="text-[9px] text-white/40 uppercase font-mono leading-relaxed mb-4">{p.description}</p>
+                      
+                      <div className="grid grid-cols-2 gap-4 mb-4 border-t border-white/5 pt-4">
+                         {p.isolationLevel && (
+                           <div className="flex flex-col gap-1">
+                             <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">ISOLAMENTO</span>
+                             <span className={cn(
+                               "text-[10px] font-mono font-black",
+                               p.isolationLevel === 'LOW' ? "text-green-500" :
+                               p.isolationLevel === 'MEDIUM' ? "text-yellow-500" :
+                               "text-red-500"
+                             )}>{p.isolationLevel}</span>
+                           </div>
+                         )}
+                         {p.nextSupportDist && (
+                           <div className="flex flex-col gap-1">
+                             <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">PRÓXIMO_SUPORTE</span>
+                             <span className="text-[10px] font-mono font-black text-white">{p.nextSupportDist}</span>
+                           </div>
+                         )}
+                      </div>
+
                       <button className="w-full h-8 bg-white/5 border border-white/10 text-white/60 text-[8px] font-mono font-bold uppercase tracking-widest hover:bg-[#ff641d] hover:text-white transition-all flex items-center justify-center gap-2">
                         <ArrowUpRight size={12} /> TRAÇAR_DESTINO
                       </button>
@@ -1284,6 +1607,11 @@ export default function AdventureMap() {
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes scan {
+          0% { transform: translateY(0vh); }
+          50% { transform: translateY(100vh); }
+          100% { transform: translateY(0vh); }
+        }
         .leaflet-container { background: #0b0c0d !important; }
         .leaflet-popup-content-wrapper { background: #0b0c0d !important; padding: 0 !important; border: 1px solid rgba(255,255,255,0.05); }
         .leaflet-popup-content { margin: 0 !important; }
