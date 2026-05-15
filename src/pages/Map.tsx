@@ -1062,6 +1062,9 @@ function otherUserIcon(color: string = '#00d4ff') {
 function MapController({ center, zoom, bounds }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression }) {
   const map = useMap();
   useEffect(() => {
+    // Force map to recalculate its container size - critical for mobile/responsive fixes
+    map.invalidateSize();
+    
     try {
       if (bounds) {
         map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
@@ -1681,11 +1684,12 @@ export default function AdventureMap() {
   }, [selectedCategory, searchQuery, autoDiscoveredPoints]);
 
   return (
-    <div className="h-screen bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-[calc(100dvh-6rem)] lg:h-[calc(100dvh-6rem)] bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
-      <div className="w-full lg:w-[400px] lg:h-screen lg:flex lg:flex-col bg-[#0b0c0d] z-[2000] border-r border-white/5 order-2 lg:order-1 relative shadow-[20px_0_60px_rgba(0,0,0,0.5)]">
+      <div className="w-full h-1/2 lg:h-full lg:w-[400px] lg:flex lg:flex-col bg-[#0b0c0d] z-[2000] border-r border-white/5 order-2 lg:order-1 relative shadow-[20px_0_60px_rgba(0,0,0,0.5)]">
+
          {/* Brand Section */}
          <div className="hidden lg:flex p-6 border-b border-white/5 flex-col gap-1 bg-[#ff641d]/5">
             <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.5</div>
@@ -1745,6 +1749,48 @@ export default function AdventureMap() {
 
                        <div className="space-y-4">
                           <div className="flex items-center justify-between">
+                             <span className="text-[9px] font-mono font-black text-white/20 tracking-[0.3em] uppercase">REFINAMENTO_TÁTICO</span>
+                           </div>
+
+                           {/* Mobile Toggles & Categories in Sidebar */}
+                           <div className="lg:hidden space-y-4 pb-2 border-b border-white/5">
+                              <div className="grid grid-cols-2 gap-2">
+                                 <button 
+                                   onClick={handleAIAnalysis}
+                                   className={cn(
+                                     "h-10 px-3 border rounded-xs font-mono font-black text-[9px] flex items-center justify-center gap-2 transition-all",
+                                     showAIPanel? "bg-cyan-500 border-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]" : "bg-white/5 border-white/10 text-white/40"
+                                   )}
+                                 >
+                                   <Activity size={12} className={isAnalyzingAI ? "animate-spin" : ""} /> AI_INTEL
+                                 </button>
+                                 <button 
+                                   onClick={() => setIsExpeditionMode(!isExpeditionMode)}
+                                   className={cn(
+                                     "h-10 px-3 border rounded-xs font-mono font-black text-[9px] flex items-center justify-center gap-2 transition-all",
+                                     isExpeditionMode ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.3)]" : "bg-white/5 border-white/10 text-white/40"
+                                   )}
+                                 >
+                                   <Zap size={12} className={isExpeditionMode ? "animate-pulse" : ""} /> LIVE_NAV
+                                 </button>
+                              </div>
+                              <div className="flex overflow-x-auto no-scrollbar gap-2">
+                                 {categories.map(cat => (
+                                   <button
+                                     key={cat.id}
+                                     onClick={() => setSelectedCategory(cat.id)}
+                                     className={cn(
+                                       "h-10 px-4 border rounded-xs font-mono font-black text-[9px] flex items-center gap-2 whitespace-nowrap transition-all shrink-0",
+                                       selectedCategory === cat.id ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-white/5 border-white/10 text-white/40"
+                                     )}
+                                   >
+                                     <cat.icon size={12} /> {cat.name}
+                                   </button>
+                                 ))}
+                              </div>
+                           </div>
+
+                           <div className="hidden lg:flex items-center justify-between">
                              <span className="text-[9px] font-mono font-black text-white/20 tracking-[0.3em] uppercase">REFINAMENTO_TÁTICO</span>
                              <div className="flex items-center gap-2">
                                { (difficultyFilter !== 'all' || vehicleFilter !== 'all' || countryFilter !== 'all') && (
@@ -2075,7 +2121,9 @@ export default function AdventureMap() {
       </div>
 
       {/* --- MAP MAIN VIEWPORT --- */}
-      <div className="flex-1 relative h-[60vh] md:h-screen lg:h-full order-1 lg:order-2 flex flex-col">
+      <div className="flex-1 lg:h-full relative order-1 lg:order-2 flex flex-col min-h-0 bg-[#0b0c0d]">
+
+
           {/* --- MAP CORE (Layer 0) --- */}
           <div className="absolute inset-0 z-0">
             <MapContainer 
@@ -2631,9 +2679,24 @@ export default function AdventureMap() {
          ))}
       </div>
 
-      {/* Top Header Control Panel - Simplified for PC as Sidebar handles most. Visible on Mobile for quick access. */}
-      <div className="absolute top-0 left-0 right-0 z-[2000] p-4 md:p-6 pointer-events-none flex flex-col gap-6 lg:items-end">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full lg:w-auto">
+      {/* Top Header Control Panel - Simplified for Mobile */}
+      <div className="absolute top-0 left-0 right-0 z-[2000] p-4 md:p-6 pointer-events-none flex flex-col gap-6 items-center lg:items-end">
+        {/* Only show Search on mobile Map HUD */}
+        <div className="lg:hidden w-full max-w-2xl pointer-events-auto mt-2">
+           <form onSubmit={handleSearch} className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
+              <input 
+                type="text" 
+                placeholder="PROCURAR DESTINO NO MAPA..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-black/80 backdrop-blur-md border border-white/10 rounded-sm h-14 pl-12 pr-4 text-[10px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d] transition-all text-white placeholder:text-white/20 uppercase shadow-2xl"
+              />
+           </form>
+        </div>
+
+        {/* Branding & Hidden Controls on Mobile */}
+        <div className="hidden lg:flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full lg:w-auto">
           {/* Branding Left (Mobile Only as Sidebar handles PC) */}
           <motion.div 
             initial={{ x: -20, opacity: 0 }}
@@ -2708,15 +2771,15 @@ export default function AdventureMap() {
           </div>
         </div>
 
-        {/* Central HUD Row: Search & Metrics */}
-        <div className="flex flex-col items-center gap-4 w-full pointer-events-auto">
+        {/* Central HUD Row: Search & Metrics - Only on Desktop in this position */}
+        <div className="lg:flex hidden flex-col items-center gap-4 w-full pointer-events-auto p-4 lg:p-0">
            {/* Central Prominent Search Bar / Routing Panel */}
            <div className="w-full max-w-2xl flex flex-col gap-2">
               <div className="flex gap-2">
                 <button 
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn(
-                    "w-14 h-14 bg-black/80 backdrop-blur-md border rounded-sm flex items-center justify-center transition-all",
+                    "w-14 h-14 bg-black/80 backdrop-blur-md border rounded-sm flex items-center justify-center transition-all lg:flex hidden",
                     showFilters ? "border-[#ff641d] text-[#ff641d] shadow-[0_0_20px_rgba(255,100,29,0.3)]" : "border-white/10 text-white/20 hover:border-[#ff641d]/40"
                   )}
                 >
@@ -3121,13 +3184,13 @@ export default function AdventureMap() {
         </div>
       </div>
 
-      {/* Responsive Categories Bar (Mobile-only bottom bar) */}
+      {/* Responsive Categories Bar - REMOVED on Mobile as it is now in the sidebar */}
       <AnimatePresence>
         <motion.div 
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="lg:hidden absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[2000] pointer-events-none"
+          className="lg:hidden hidden absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[2000] pointer-events-none"
         >
           <div className="w-full pointer-events-auto bg-black/90 backdrop-blur-xl border border-white/10 rounded-sm p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] overflow-hidden">
              <div className="flex items-center gap-3 mb-2 border-b border-white/5 pb-2">
@@ -3157,38 +3220,38 @@ export default function AdventureMap() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Right Action Stack (Vertical controls) */}
-      <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-[2000] flex flex-col gap-2 pointer-events-auto">
+      {/* Right Action Stack (Vertical controls) - Repositioned for Mobile to bottom-right */}
+      <div className="absolute right-4 bottom-4 lg:top-1/2 lg:-translate-y-1/2 z-[2000] flex flex-col gap-2 pointer-events-auto">
          <button 
            onClick={handleLocateUser} 
            title="MINHA LOCALIZAÇÃO"
-           className="w-12 h-12 bg-black/80 border border-white/10 rounded-sm text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all shadow-xl flex items-center justify-center group relative"
+           className="w-10 h-10 lg:w-12 lg:h-12 bg-black/80 border border-white/10 rounded-sm text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all shadow-xl flex items-center justify-center group relative"
          >
-            <LocateFixed size={20} />
+            <LocateFixed size={18} />
             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Minha_Posição</div>
          </button>
          
          <button 
            onClick={() => setIsTracing(!isTracing)}
            className={cn(
-             "w-12 h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+             "w-10 h-10 lg:w-12 lg:h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
              isTracing ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-black/60 border-white/10 text-white/20 hover:border-[#ff641d]/40"
            )}
            title="TRAÇAR ROTA"
          >
-           <Ruler size={18} />
+           <Ruler size={16} />
            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Traçar_Rota</div>
          </button>
 
          <button 
            onClick={() => setShowHeatmap(!showHeatmap)}
            className={cn(
-             "w-12 h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+             "w-10 h-10 lg:w-12 lg:h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
              showHeatmap ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-black/60 border-white/10 text-white/20 hover:border-[#ff641d]/40"
            )}
            title="MODO TÉRMICO (CALOR)"
          >
-           <Activity size={18} />
+           <Activity size={16} />
            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Modo_Térmico</div>
          </button>
 
@@ -3196,20 +3259,20 @@ export default function AdventureMap() {
            onClick={() => setIsSharing(!isSharing)} 
            title="TRACKING GPS LIVE"
            className={cn(
-             "w-12 h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center group relative", 
+             "w-10 h-10 lg:w-12 lg:h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center group relative", 
              isSharing ? "bg-blue-500 border-blue-500 animate-pulse text-white" : "bg-black/80 border-white/10 text-white/20 hover:border-blue-500/40"
            )}
          >
-            <Radio size={20} />
+            <Radio size={18} />
             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Live_Tracking</div>
          </button>
 
-         <div className="h-[1px] bg-white/5 my-2" />
+         <div className="h-[1px] bg-white/5 my-1" />
 
          <div className="flex flex-col bg-black/40 border border-white/10 rounded-sm overflow-hidden text-[8px] font-mono text-white/20">
-            <div className="p-2 border-b border-white/5 text-center">ZOOM</div>
-            <button onClick={() => setMapZoom(z => Math.min(z + 1, 18))} className="p-3 hover:bg-white/5 hover:text-white transition-colors"><Plus size={14} /></button>
-            <button onClick={() => setMapZoom(z => Math.max(z - 1, 3))} className="p-3 hover:bg-white/5 hover:text-white transition-colors"><Minus size={14} /></button>
+            <div className="p-1 lg:p-2 border-b border-white/5 text-center hidden lg:block uppercase tracking-tighter">ZOOM</div>
+            <button onClick={() => setMapZoom(z => Math.min(z + 1, 18))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 lg:border-0"><Plus size={14} /></button>
+            <button onClick={() => setMapZoom(z => Math.max(z - 1, 3))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors"><Minus size={14} /></button>
          </div>
       </div>
 
