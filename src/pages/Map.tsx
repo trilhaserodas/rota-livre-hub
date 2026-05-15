@@ -11,6 +11,7 @@ import {
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer,
+  Cloud, Sun, CloudRain,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
@@ -21,6 +22,14 @@ import { doc, setDoc, onSnapshot, serverTimestamp, getDoc, updateDoc, deleteDoc,
 import { useSearchParams } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
+
+interface WeatherData {
+  temp: number;
+  description: string;
+  humidity: number;
+  windSpeed: number;
+  icon: string;
+}
 
 const preDefinedRoutes = [
   {
@@ -977,6 +986,8 @@ export default function AdventureMap() {
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<LocationPoint | null>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
   
   // Routing State
   const [isTracing, setIsTracing] = useState(false);
@@ -1104,6 +1115,44 @@ export default function AdventureMap() {
 
   const isSignedIn = useMemo(() => !!auth.currentUser, [auth.currentUser]);
 
+  // Weather Fetching
+  const fetchWeather = useCallback(async (lat: number, lng: number) => {
+    const apiKey = import.meta.env.VITE_WEATHER_API_KEY;
+    if (!apiKey) {
+      console.warn("Weather API key missing");
+      return;
+    }
+
+    setIsLoadingWeather(true);
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=metric`
+      );
+      if (!response.ok) throw new Error('Weather fetch failed');
+      const data = await response.json();
+      setWeatherData({
+        temp: Math.round(data.main.temp),
+        description: data.weather[0].description,
+        humidity: data.main.humidity,
+        windSpeed: data.wind.speed,
+        icon: data.weather[0].icon
+      });
+    } catch (err) {
+      console.error("Error fetching weather:", err);
+      setWeatherData(null);
+    } finally {
+      setIsLoadingWeather(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedPoint) {
+      fetchWeather(selectedPoint.lat, selectedPoint.lng);
+    } else {
+      setWeatherData(null);
+    }
+  }, [selectedPoint, fetchWeather]);
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery) return;
@@ -1211,6 +1260,47 @@ export default function AdventureMap() {
                 <p className="text-[10px] text-white/40 font-mono uppercase leading-relaxed mb-8 border-l border-[#ff641d]/40 pl-4">{selectedPoint.description}</p>
 
                 <div className="space-y-6">
+                   {/* Real-time Weather HUD */}
+                   {(weatherData || isLoadingWeather) && (
+                     <div className="p-4 bg-white/[0.02] border border-white/5 rounded-sm mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                           <Cloud size={10} className="text-blue-400" />
+                           <span className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">METEO_REALTIME</span>
+                        </div>
+                        {isLoadingWeather ? (
+                          <div className="flex items-center gap-4 animate-pulse">
+                             <div className="w-8 h-8 rounded-full bg-white/5" />
+                             <div className="space-y-2">
+                                <div className="w-12 h-4 bg-white/5 rounded-sm" />
+                                <div className="w-20 h-2 bg-white/5 rounded-sm" />
+                             </div>
+                          </div>
+                        ) : weatherData && (
+                          <div className="flex items-center gap-4">
+                             <div className="text-2xl font-display font-black text-white">{weatherData.temp}°C</div>
+                             <div className="flex-1">
+                                <div className="text-[8px] font-mono text-white/60 uppercase tracking-widest leading-none mb-1">{weatherData.description}</div>
+                                <div className="flex items-center gap-3">
+                                   <div className="flex items-center gap-1">
+                                      <Zap size={8} className="text-[#ff641d]" />
+                                      <span className="text-[8px] font-mono text-white/20">{weatherData.windSpeed} km/h</span>
+                                   </div>
+                                   <div className="flex items-center gap-1">
+                                      <Droplets size={8} className="text-blue-400" />
+                                      <span className="text-[8px] font-mono text-white/20">{weatherData.humidity}%</span>
+                                   </div>
+                                </div>
+                             </div>
+                             <img 
+                               src={`https://openweathermap.org/img/wn/${weatherData.icon}@2x.png`} 
+                               className="w-10 h-10 brightness-110 contrast-125" 
+                               alt="weather"
+                             />
+                          </div>
+                        )}
+                     </div>
+                   )}
+
                    <div className="grid grid-cols-2 gap-6">
                       <OperationalMetric 
                         label="ISOLAMENTO" 
