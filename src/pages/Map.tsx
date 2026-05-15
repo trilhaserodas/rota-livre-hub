@@ -1168,11 +1168,31 @@ export default function AdventureMap() {
     if (routePoints.length < 2) return 0;
     try {
       let dist = 0;
+      const toRad = (n: number) => (n * Math.PI) / 180;
       for (let i = 0; i < routePoints.length - 1; i++) {
           const p1 = routePoints[i];
           const p2 = routePoints[i+1];
-          if (!p1 || !p2 || isNaN(p1[0]) || isNaN(p1[1]) || isNaN(p2[0]) || isNaN(p2[1])) continue;
-          dist += L.latLng(p1).distanceTo(L.latLng(p2));
+          if (!p1 || !p2) continue;
+          
+          const lat1 = p1[0];
+          const lon1 = p1[1];
+          const lat2 = p2[0];
+          const lon2 = p2[1];
+          
+          if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) continue;
+
+          // Faster Haversine calculation (no object allocations)
+          const R = 6371e3; // meters
+          const φ1 = toRad(lat1);
+          const φ2 = toRad(lat2);
+          const Δφ = toRad(lat2 - lat1);
+          const Δλ = toRad(lon2 - lon1);
+
+          const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          dist += R * c;
       }
       return dist / 1000; // km
     } catch (e) {
@@ -1416,7 +1436,14 @@ export default function AdventureMap() {
           const osrmData = await osrmRes.json();
           
           if (osrmData.routes?.[0]?.geometry?.coordinates) {
-            const coords = osrmData.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
+            let coords = osrmData.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
+            
+            // Simplify route if it has too many points to prevent UI lag
+            if (coords.length > 2000) {
+              const factor = Math.ceil(coords.length / 2000);
+              coords = coords.filter((_: any, i: number) => i % factor === 0 || i === coords.length - 1);
+            }
+
             setRoutePoints(coords);
             try {
               const bounds = L.latLngBounds(coords);
@@ -1469,7 +1496,10 @@ export default function AdventureMap() {
       if (!response.ok) throw new Error('OSM Overpass failed');
       const data = await response.json();
       
-      const newPoints: LocationPoint[] = data.elements.map((el: any) => {
+      // Limit number of points to prevent rendering slowdown
+      const elements = data.elements.slice(0, 120);
+
+      const newPoints: LocationPoint[] = elements.map((el: any) => {
         let category = 'safe_point';
         if (el.tags.amenity === 'drinking_water' || el.tags.natural === 'spring') category = 'water';
         else if (el.tags.tourism === 'camp_site') category = 'camping';
@@ -1509,7 +1539,15 @@ export default function AdventureMap() {
       const osrmData = await osrmRes.json();
       
       if (osrmData.routes?.[0]?.geometry?.coordinates) {
-        return osrmData.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
+        let coords = osrmData.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
+        
+        // Simplify route if it has too many points
+        if (coords.length > 2500) {
+          const factor = Math.ceil(coords.length / 2500);
+          coords = coords.filter((_: any, i: number) => i % factor === 0 || i === coords.length - 1);
+        }
+        
+        return coords;
       }
     } catch (err) {
       console.error("OSRM fetch failed, using waypoints as fallback:", err);
@@ -2241,8 +2279,62 @@ export default function AdventureMap() {
                              </button>
                            )}
                         </div>
+
+                        {/* Filters in Route Menu */}
+                        <div className="p-4 border-b border-white/5 space-y-4 bg-black/40">
+                           <div className="space-y-2">
+                              <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">DIFICULDADE</label>
+                              <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                                 {['all', 'LOW', 'MODERATE', 'CRITICAL'].map(dif => (
+                                   <button 
+                                     key={dif}
+                                     onClick={() => setDifficultyFilter(dif)}
+                                     className={cn(
+                                       "px-2 py-1 text-[7px] font-mono border rounded-xs whitespace-nowrap transition-all",
+                                       difficultyFilter === dif ? "border-[#ff641d] text-[#ff641d] bg-[#ff641d]/10 font-bold" : "border-white/10 text-white/40 hover:text-white"
+                                     )}
+                                   >
+                                     {dif === 'all' ? 'TODAS' : dif}
+                                   </button>
+                                 ))}
+                              </div>
+                           </div>
+
+                           <div className="space-y-2">
+                              <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">VEÍCULO</label>
+                              <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                                 {['all', 'bike', 'moto', 'overland'].map(v => (
+                                   <button 
+                                     key={v}
+                                     onClick={() => setVehicleFilter(v)}
+                                     className={cn(
+                                       "px-2 py-1 text-[7px] font-mono border rounded-xs whitespace-nowrap transition-all",
+                                       vehicleFilter === v ? "border-[#ff641d] text-[#ff641d] bg-[#ff641d]/10 font-bold" : "border-white/10 text-white/40 hover:text-white"
+                                     )}
+                                   >
+                                     {v === 'all' ? 'TODOS' : v.toUpperCase()}
+                                   </button>
+                                 ))}
+                              </div>
+                           </div>
+
+                           <div className="space-y-2">
+                              <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">PAÍS</label>
+                              <select 
+                                value={countryFilter}
+                                onChange={(e) => setCountryFilter(e.target.value)}
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xs p-1.5 text-[8px] font-mono text-white/60 outline-none focus:border-[#ff641d]/40 transition-all uppercase"
+                              >
+                                 <option value="all">BR+ARG+CH+GF</option>
+                                 {countries.map(c => (
+                                   <option key={c} value={c}>{c}</option>
+                                 ))}
+                              </select>
+                           </div>
+                        </div>
+
                         <div className="max-h-[400px] overflow-y-auto no-scrollbar">
-                           {preDefinedRoutes.map(route => (
+                           {routeSuggestions.map(route => (
                              <button
                                key={route.id}
                                onClick={() => selectRoute(route)}
