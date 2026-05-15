@@ -787,7 +787,7 @@ export default function AdventureMap() {
   // Routing State
   const [isTracing, setIsTracing] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
-  const [transportMode, setTransportMode] = useState<'bike' | 'walk' | 'car'>('bike');
+  const [transportMode, setTransportMode] = useState<'bike' | 'walk' | 'moto' | 'overland'>('bike');
 
   // GPS Sharing State
   const [isSharing, setIsSharing] = useState(false);
@@ -806,7 +806,7 @@ export default function AdventureMap() {
   }, [routePoints]);
 
   const estimatedTime = useMemo(() => {
-    const speeds = { bike: 15, walk: 5, car: 60 }; // km/h
+    const speeds = { bike: 15, walk: 5, moto: 50, overland: 30 }; // km/h
     const hours = totalDistance / speeds[transportMode];
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
@@ -975,18 +975,21 @@ export default function AdventureMap() {
                 >
                   <ArrowUpRight size={16} className="rotate-[225deg]" />
                 </button>
-                {['bike', 'walk', 'car'].map((mode: any) => (
+                {[
+                  { id: 'bike', icon: Bike },
+                  { id: 'walk', icon: MapPin },
+                  { id: 'moto', icon: Zap },
+                  { id: 'overland', icon: Navigation }
+                ].map((mode) => (
                   <button 
-                    key={mode}
-                    onClick={() => setTransportMode(mode)}
+                    key={mode.id}
+                    onClick={() => setTransportMode(mode.id as any)}
                     className={cn(
                       "w-12 flex items-center justify-center rounded-xs transition-all",
-                      transportMode === mode ? "bg-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.3)]" : "text-white/20 hover:bg-white/5"
+                      transportMode === mode.id ? "bg-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.3)]" : "text-white/20 hover:bg-white/5"
                     )}
                   >
-                    {mode === 'bike' && <Bike size={18} />}
-                    {mode === 'walk' && <MapPin size={18} />}
-                    {mode === 'car' && <Navigation size={18} />}
+                    <mode.icon size={18} />
                   </button>
                 ))}
              </div>
@@ -1021,7 +1024,10 @@ export default function AdventureMap() {
                animate={{ opacity: 1, y: 0 }}
                className="flex flex-wrap justify-center gap-4 md:gap-6 bg-black/80 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-sm shadow-2xl pointer-events-auto max-w-full overflow-x-auto no-scrollbar"
              >
-                <OperationalMetric label="WIND" value="24.2 KM/H" icon={Wind} />
+                {transportMode === 'bike' && <OperationalMetric label="ESFORÇO" value="184W" icon={Zap} color="text-yellow-400" />}
+                {transportMode === 'moto' && <OperationalMetric label="VENTO_LAT" value="44.2 KM/H" icon={Wind} color="text-blue-400" />}
+                {transportMode === 'overland' && <OperationalMetric label="EXIGÊNCIA_4X4" value="HIGH (LOCKED)" icon={Layers} color="text-red-500" />}
+                {transportMode === 'walk' && <OperationalMetric label="RITMO" value="12:40 MIN/KM" icon={Clock} color="text-green-400" />}
                 <div className="hidden md:block w-[1px] bg-white/10" />
                 <OperationalMetric label="TEMP" value="12.5°C" icon={Thermometer} />
                 <div className="hidden md:block w-[1px] bg-white/10" />
