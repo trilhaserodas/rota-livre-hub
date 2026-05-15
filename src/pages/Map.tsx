@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { 
   MapContainer, TileLayer, Marker, Popup, useMap, 
-  ZoomControl as LeafletZoomControl, Polyline, useMapEvents 
+  ZoomControl as LeafletZoomControl, Polyline, useMapEvents, Tooltip as MapTooltip 
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.heat';
@@ -278,6 +278,278 @@ const initialPoints: LocationPoint[] = [
     lng: -46.3183,
     category: 'water',
     description: 'Pontos turísticos com bebedouros e ciclopostos em Extrema/MG.',
+  },
+  {
+    id: 'brazil-camping-1',
+    name: 'Manauara Redário e Camping',
+    lat: -2.5016,
+    lng: -54.9477,
+    category: 'camping',
+    description: 'Alter do Chão, PA. Frente à Praia do Amor. Redes suspensas e barraca, rodeado de floresta amazônica.',
+  },
+  {
+    id: 'brazil-camping-2',
+    name: 'Rancho Mariá',
+    lat: -14.1701,
+    lng: -47.6276,
+    category: 'camping',
+    description: 'Alto Paraíso de Goiás, GO. Chapada dos Veadeiros. Rio de argila terapêutica, fogueira coletiva.',
+  },
+  {
+    id: 'brazil-camping-3',
+    name: 'Camping Rancho do Waldomiro',
+    lat: -14.136,
+    lng: -47.6622,
+    category: 'camping',
+    description: 'Alto Paraíso de Goiás, GO. Vista impecável para o Morro da Baleia, horta com temperos.',
+  },
+  {
+    id: 'brazil-camping-4',
+    name: 'Camping Mucugê',
+    lat: -13.0259,
+    lng: -41.4389,
+    category: 'camping',
+    description: 'Mucugê, BA. Chapada Diamantina. Lavanderia, cozinha coletiva, banho quente.',
+  },
+  {
+    id: 'brazil-camping-5',
+    name: 'Chapada.camping',
+    lat: -12.4641,
+    lng: -41.4616,
+    category: 'camping',
+    description: 'Palmeiras, BA. Trilha para Águas Claras saindo direto do camping.',
+  },
+  {
+    id: 'brazil-camping-6',
+    name: 'Camping Pé na Jaca',
+    lat: -21.1375,
+    lng: -56.4938,
+    category: 'camping',
+    description: 'Bonito, MS. Tours e traslados. Tamanduá-bandeira e anta já foram vistos no terreno.',
+  },
+  {
+    id: 'brazil-camping-7',
+    name: 'Camping e Balneário Rio Formoso',
+    lat: -21.1753,
+    lng: -56.4478,
+    category: 'camping',
+    description: 'Bonito, MS. 2 min do Rio Formoso. churrasqueira e energia elétrica.',
+  },
+  {
+    id: 'brazil-camping-8',
+    name: 'Camping Nômadas',
+    lat: -21.128,
+    lng: -56.4961,
+    category: 'camping',
+    description: 'Bonito, MS. Cozinha compartilhada. Cabanas e camping.',
+  },
+  {
+    id: 'brazil-camping-9',
+    name: 'Cobra de Cabelo Camping',
+    lat: -10.547,
+    lng: -46.4229,
+    category: 'camping',
+    description: 'Mateiros, TO. Jalapão. Perto dos fervedouros e dunas.',
+  },
+  {
+    id: 'brazil-camping-10',
+    name: 'Cabana Camping Jalapão',
+    lat: -10.1612,
+    lng: -46.6698,
+    category: 'camping',
+    description: 'São Félix do Tocantins, TO. Cabanas com ventilador e banheiro individual.',
+  },
+  {
+    id: 'brazil-camping-11',
+    name: 'Camping Catumbi',
+    lat: -23.3685,
+    lng: -44.7828,
+    category: 'camping',
+    description: 'Camburi, Ubatuba, SP. Pizzaria no local, banheiros limpos. Praia sem sinal de celular.',
+  },
+  {
+    id: 'brazil-camping-12',
+    name: 'Camping Ypê',
+    lat: -23.3699,
+    lng: -44.7839,
+    category: 'camping',
+    description: 'Camburi, Ubatuba, SP. Grande e arborizado, beira da praia. Clima hippie.',
+  },
+  {
+    id: 'brazil-camping-13',
+    name: 'Camping Vida Longa',
+    lat: -23.1405,
+    lng: -44.3087,
+    category: 'camping',
+    description: 'Ilha Grande, RJ. Praia da Longa. Acesso só por trilha ou barco. Fogueira noturna.',
+  },
+  {
+    id: 'brazil-camping-14',
+    name: 'Camping Sunbeam',
+    lat: -23.1426,
+    lng: -44.1698,
+    category: 'camping',
+    description: 'Vila do Abraão, Ilha Grande, RJ. 8 min a pé do porto. Opção de barraca ou chalé.',
+  },
+  {
+    id: 'brazil-camping-15',
+    name: 'Camping Village Canastra',
+    lat: -20.1444,
+    lng: -46.6609,
+    category: 'camping',
+    description: 'São Roque de Minas, MG. Base para a nascente do Rio São Francisco.',
+  },
+  {
+    id: 'brazil-camping-16',
+    name: 'Camping Carcará da Canastra',
+    lat: -20.3046,
+    lng: -46.4189,
+    category: 'camping',
+    description: 'São Roque de Minas, MG. Vista panorâmica incrível, wi-fi, cozinha completa.',
+  },
+  {
+    id: 'brazil-camping-17',
+    name: 'Sítio Camping Família Catarina',
+    lat: -27.9439,
+    lng: -49.6167,
+    category: 'camping',
+    description: 'Urubici, SC. Águas Brancas. Pão fresco todo dia, geleia de amora, pomar.',
+  },
+  {
+    id: 'brazil-camping-18',
+    name: 'Camping do Riacho',
+    lat: -28.0213,
+    lng: -49.5678,
+    category: 'camping',
+    description: 'Urubici, SC. Cozinha com fogão a lenha, riacho para banhar os pés.',
+  },
+  {
+    id: 'brazil-camping-19',
+    name: 'Cantinho do Estradeiro',
+    lat: -25.5403,
+    lng: -54.5301,
+    category: 'camping',
+    description: 'Foz do Iguaçu, PR. Tranquilo, cozinha comunitária e banheiros limpos.',
+  },
+  {
+    id: 'brazil-camping-20',
+    name: 'Camping Internacional',
+    lat: -25.5594,
+    lng: -54.576,
+    category: 'camping',
+    description: 'Foz do Iguaçu, PR. Piscina, wi-fi, a ~10 min das Cataratas.',
+  },
+  {
+    id: 'co-hostel-1',
+    name: 'Los Patios Hostel Boutique',
+    lat: 6.2131,
+    lng: -75.5729,
+    category: 'hostel',
+    description: 'Medellín, Colômbia. Rooftop com vista, aulas de salsa e yoga. Bairro El Poblado.',
+  },
+  {
+    id: 'co-hostel-2',
+    name: 'Rio Elemento (Casa Elemento)',
+    lat: 11.1453,
+    lng: -74.1149,
+    category: 'hostel',
+    description: 'Minca, Colômbia. Hostel na selva com piscina e rio para nadar.',
+  },
+  {
+    id: 'ec-hostel-1',
+    name: 'Hostel Revolution',
+    lat: -0.2163,
+    lng: -78.5015,
+    category: 'hostel',
+    description: 'Quito, Equador. Acolhedor, café da manhã incluso, cozinha completa, terraço panorâmico.',
+  },
+  {
+    id: 'pe-hostel-1',
+    name: 'Pariwana Hostel',
+    lat: -12.1196,
+    lng: -77.0288,
+    category: 'hostel',
+    description: 'Lima (Miraflores), Peru. Hostel social no bairro mais seguro de Lima, rooftop e atividades.',
+  },
+  {
+    id: 'pe-hostel-2',
+    name: 'Wild Rover Hostel - Cusco',
+    lat: -13.5143,
+    lng: -71.9852,
+    category: 'hostel',
+    description: 'Cusco, Peru. Famoso hostel social. Bar enorme, eventos diários, base para Machu Picchu.',
+  },
+  {
+    id: 'pe-hostel-3',
+    name: 'Loki Hostel',
+    lat: -13.5152,
+    lng: -71.9844,
+    category: 'hostel',
+    description: 'Cusco, Peru. Vista para a Plaza de Armas, atmosfera relaxada.',
+  },
+  {
+    id: 'pe-hostel-4',
+    name: 'Viajero Hostel',
+    lat: -13.5199,
+    lng: -71.9788,
+    category: 'hostel',
+    description: 'Cusco, Peru. Excelente para organizar tours para Machu Picchu.',
+  },
+  {
+    id: 'bo-hostel-1',
+    name: 'Wild Rover Hostel - La Paz',
+    lat: -16.4976,
+    lng: -68.1313,
+    category: 'hostel',
+    description: 'La Paz, Bolívia. Base ideal para explorar o Salar de Uyuni e Lago Titicaca.',
+  },
+  {
+    id: 'cl-camping-1',
+    name: 'Andes Nomads Desert Camp & Lodge',
+    lat: -22.9836,
+    lng: -68.1827,
+    category: 'camping',
+    description: 'San Pedro de Atacama, Chile. Duchas de água quente, redes, energia elétrica.',
+  },
+  {
+    id: 'cl-hostel-1',
+    name: 'Hostel Forestal',
+    lat: -33.4373,
+    lng: -70.6373,
+    category: 'hostel',
+    description: 'Santiago, Chile. Ao lado do Parque Forestal, bairro artístico.',
+  },
+  {
+    id: 'cl-camping-2',
+    name: 'Camping Lago Pehoe',
+    lat: -51.1081,
+    lng: -72.9854,
+    category: 'camping',
+    description: 'Torres del Paine, Chile. À beira do Lago Pehoé, paisagem patagônica.',
+  },
+  {
+    id: 'cl-camping-3',
+    name: 'EcoCamp Patagonia',
+    lat: -50.9632,
+    lng: -72.8636,
+    category: 'camping',
+    description: 'Torres del Paine, Chile. Domos geodésicos sustentáveis com refeições inclusas.',
+  },
+  {
+    id: 'ar-hostel-1',
+    name: 'América del Sur Hostel',
+    lat: -50.3342,
+    lng: -72.2560,
+    category: 'hostel',
+    description: 'El Calafate, Argentina. Gateway para a Patagônia e Perito Moreno.',
+  },
+  {
+    id: 'ar-hostel-2',
+    name: 'Milhouse Hostel Avenue',
+    lat: -34.6090,
+    lng: -58.3841,
+    category: 'hostel',
+    description: 'Buenos Aires, Argentina. DJs, churrasco no rooftop, aulas de tango.',
   }
 ];
 
@@ -397,7 +669,7 @@ export default function AdventureMap() {
           const { latitude, longitude } = pos.coords;
           setUserLocation([latitude, longitude]);
           setMapCenter([latitude, longitude]);
-          setMapZoom(14);
+          setMapZoom(16);
         },
         (err) => console.error(err),
         { enableHighAccuracy: true }
@@ -765,6 +1037,12 @@ export default function AdventureMap() {
             const cat = categories.find(c => c.id === p.category) || categories[0];
             return (
               <Marker key={p.id} position={[p.lat, p.lng]} icon={createCustomIcon(cat.color)}>
+                <MapTooltip direction="top" offset={[0, -10]} opacity={1} className="custom-tooltip">
+                  <div className="bg-[#0b0c0d] border border-white/10 px-2 py-1 rounded-sm shadow-2xl">
+                    <div className="text-[10px] font-display font-black text-white uppercase tracking-tighter">{p.name}</div>
+                    <div className="text-[7px] font-mono text-[#ff641d] uppercase tracking-[0.2em]">{cat.name}</div>
+                  </div>
+                </MapTooltip>
                 <Popup className="custom-popup">
                   <div className="p-0 min-w-[240px] bg-[#0b0c0d] overflow-hidden rounded-sm">
                     {p.image && <img src={p.image} className="w-full h-32 object-cover grayscale hover:grayscale-0 transition-all duration-700" referrerPolicy="no-referrer" />}
@@ -791,6 +1069,8 @@ export default function AdventureMap() {
         .leaflet-popup-content-wrapper { background: #0b0c0d !important; padding: 0 !important; border: 1px solid rgba(255,255,255,0.05); }
         .leaflet-popup-content { margin: 0 !important; }
         .leaflet-popup-tip { background: #0b0c0d !important; border: 1px solid rgba(255,255,255,0.05); }
+        .leaflet-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+        .leaflet-tooltip-top:before { border-top-color: rgba(255,255,255,0.1) !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
