@@ -86,9 +86,10 @@ const preDefinedRoutes = [
     color: '#34d399',
     points: [
       [-41.4689, -72.9411], // Puerto Montt
-      [-42.9351, -72.7118], // Caleta Arena
+      [-41.86, -72.67],    // Hornopirén
       [-43.1256, -72.7051], // Chaitén
       [-44.3283, -72.5451], // Puyuhuapi
+      [-44.75, -72.70],    // Puerto Cisnes
       [-45.5689, -72.0664], // Coyhaique
       [-46.6439, -72.6711], // Puerto Rio Tranquilo
       [-47.9136, -73.2325], // Cochrane
@@ -105,12 +106,13 @@ const preDefinedRoutes = [
     color: '#3b82f6',
     points: [
       [-34.6037, -58.3816], // Buenos Aires
+      [-38.7183, -62.2663], // Bahia Blanca
       [-40.8115, -62.9961], // Viedma
       [-43.2504, -65.3117], // Trelew
       [-45.8647, -67.4808], // Comodoro Rivadavia
       [-51.6226, -69.2181], // Rio Gallegos
+      [-53.78, -67.70],    // Rio Grande
       [-54.8019, -68.303],  // Ushuaia
-      [-54.8486, -68.4947]  // Lapataia (End of Route 3)
     ] as [number, number][],
     difficulty: 'MODERATE',
     vehicleTypes: ['car', 'motorhome', 'moto', 'bike'],
@@ -128,7 +130,7 @@ const preDefinedRoutes = [
       [-49.331, -72.886],   // El Chaltén
       [-47.441, -70.925],   // Bajo Caracoles
       [-41.1335, -71.3103], // Bariloche
-      [-32.8895, -68.8458], // Mendoza
+      [-32.89, -68.84],    // Mendoza
       [-24.2184, -66.3181], // San Antonio de los Cobres
       [-22.1064, -65.5975]  // La Quiaca
     ] as [number, number][],
@@ -142,10 +144,12 @@ const preDefinedRoutes = [
     country: 'Brasil',
     color: '#fbbf24',
     points: [
-      [-19.2433, -43.4983], // Diamantina
+      [-18.23, -43.60],    // Diamantina
       [-19.9219, -43.9378], // Belo Horizonte
       [-20.3856, -43.5033], // Ouro Preto
       [-21.1392, -44.2608], // Tiradentes
+      [-22.51, -44.97],    // Passa Quatro
+      [-23.07, -44.95],    // Cunha
       [-23.2203, -44.7139], // Paraty
     ] as [number, number][],
     difficulty: 'MODERATE',
@@ -159,10 +163,10 @@ const preDefinedRoutes = [
     color: '#f97316',
     points: [
       [-23.5939, -70.3956], // Antofagasta
-      [-23.2500, -69.5833], // Sierra Gorda
       [-22.5000, -68.9167], // Calama
       [-22.9087, -68.1997], // San Pedro de Atacama
-      [-22.8122, -67.7850], // Paso de Jama
+      [-22.61, -67.81],    // Paso de Jama Boundary
+      [-23.23, -67.04],    // Susques (Argentina connection)
     ] as [number, number][],
     difficulty: 'CRITICAL',
     vehicleTypes: ['overland', 'moto', 'bike'],
@@ -175,8 +179,6 @@ const preDefinedRoutes = [
     color: '#fbbf24',
     points: [
       [-7.115, -34.863], // Cabedelo
-      [-7.23, -35.88],  // Campina Grande
-      [-7.01, -37.27],  // Patos
       [-5.37, -49.12],  // Marabá
       [-3.22, -52.21],  // Altamira
       [-4.26, -55.98],  // Itaituba
@@ -1444,8 +1446,10 @@ export default function AdventureMap() {
   const discoverPOIsAlongRoute = async (points: [number, number][]) => {
     setIsDiscoveringPOIs(true);
     try {
-      const samplePoints = points.length > 20 
-        ? points.filter((_, i) => i % 5 === 0) 
+      // Limit waypoints for discovery to avoid hitting URL length limits on long routes
+      const maxSamplePoints = 40;
+      const samplePoints = points.length > maxSamplePoints 
+        ? points.filter((_, i) => i % Math.floor(points.length / maxSamplePoints) === 0).slice(0, maxSamplePoints)
         : points;
 
       const aroundPoints = samplePoints.map(p => `${p[0]},${p[1]}`).join(',');
@@ -1491,15 +1495,51 @@ export default function AdventureMap() {
     }
   };
 
-  const selectRoute = (route: typeof preDefinedRoutes[0]) => {
+  const fetchRoadRoute = async (waypoints: [number, number][]) => {
+    if (waypoints.length < 2) return waypoints;
+    
+    // OSRM limited to ~100 waypoints for the 'route' service
+    // For very long routes, we might need to chunk, but for these pre-defined, 
+    // a handful of curated waypoints is usually enough to guide the routing engine.
+    const coordString = waypoints.map(p => `${p[1]},${p[0]}`).join(';');
+    try {
+      const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`);
+      if (!osrmRes.ok) throw new Error("OSRM server error");
+      const osrmData = await osrmRes.json();
+      
+      if (osrmData.routes?.[0]?.geometry?.coordinates) {
+        return osrmData.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
+      }
+    } catch (err) {
+      console.error("OSRM fetch failed, using waypoints as fallback:", err);
+    }
+    return waypoints;
+  };
+
+  const selectRoute = async (route: typeof preDefinedRoutes[0]) => {
     setAutoDiscoveredPoints([]);
-    setRoutePoints(route.points);
-    const bounds = L.latLngBounds(route.points);
-    setMapBounds(bounds);
+    setRoutePoints([]); // Clear immediately for visual feedback
     setSearchQuery(route.name);
     setShowSuggestions(false);
     setShowRoutesMenu(false);
-    discoverPOIsAlongRoute(route.points);
+    setIsCalculatingRoute(true);
+
+    try {
+      // Zoom to rough area first
+      const bounds = L.latLngBounds(route.points);
+      setMapBounds(bounds);
+
+      // Fetch realistic road route
+      const roadPoints = await fetchRoadRoute(route.points);
+      setRoutePoints(roadPoints);
+      
+      // Discover resources along the high-def route
+      await discoverPOIsAlongRoute(roadPoints);
+    } catch (err) {
+      console.error("Route selection workflow failed:", err);
+    } finally {
+      setIsCalculatingRoute(false);
+    }
   };
 
   const routeSuggestions = useMemo(() => {
@@ -2053,15 +2093,23 @@ export default function AdventureMap() {
                 {!isRoutingExpanded ? (
                   <div className="relative group flex-1">
                     <AnimatePresence>
-                      {isDiscoveringPOIs && (
+                      {(isDiscoveringPOIs || isCalculatingRoute) && (
                         <motion.div 
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 20 }}
                           className="absolute -top-16 left-1/2 -translate-x-1/2 z-[3000] bg-black/90 backdrop-blur-3xl border border-cyan-500/20 px-4 py-2 rounded-full flex items-center gap-3 shadow-2xl min-w-max"
                         >
-                          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
-                          <span className="text-[8px] font-mono text-cyan-400 uppercase tracking-[0.3em]">DESCOBRINDO_RECURSOS_OSM...</span>
+                          <div className={cn(
+                            "w-2 h-2 rounded-full animate-ping",
+                            isCalculatingRoute ? "bg-[#ff641d]" : "bg-cyan-400"
+                          )} />
+                          <span className={cn(
+                            "text-[8px] font-mono uppercase tracking-[0.3em]",
+                            isCalculatingRoute ? "text-[#ff641d]" : "text-cyan-400"
+                          )}>
+                             {isCalculatingRoute ? "SINC_ESTRADAS_REALISTAS..." : "DESCOBRINDO_RECURSOS_OSM..."}
+                          </span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -2464,37 +2512,25 @@ export default function AdventureMap() {
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
 
-          {/* Pre-defined Expedition Routes */}
-          {preDefinedRoutes.map(route => (
-            <React.Fragment key={route.id}>
-              <Polyline 
-                positions={route.points} 
-                color={route.color} 
-                weight={6} 
-                opacity={0.15} 
-              />
-              <Polyline 
-                positions={route.points} 
-                color={route.color} 
-                weight={2} 
-                dashArray="10, 10" 
-                opacity={0.6} 
-                className="animate-pulse"
-              >
-                <MapTooltip sticky direction="top" className="custom-tooltip">
-                  <div className="bg-[#0b0c0d] border border-white/10 px-2 py-1 rounded-sm">
-                    <div className="text-[8px] font-mono font-black text-white">{route.name}</div>
-                    <div className="text-[6px] font-mono text-[#ff641d] tracking-widest uppercase">DIFFICULTY: {route.difficulty} // STATUS: {route.status}</div>
-                  </div>
-                </MapTooltip>
-              </Polyline>
-            </React.Fragment>
-          ))}
-
+          {/* Active Route Display */}
           {routePoints.length > 1 && (
             <>
-              <Polyline positions={routePoints} color="#ff641d" weight={12} opacity={0.1} lineJoin="round" />
-              <Polyline positions={routePoints} color="#ff641d" weight={3} dashArray="5, 8" opacity={0.8} lineJoin="round" />
+              {/* Tactical Glow Effect */}
+              <Polyline 
+                positions={routePoints} 
+                color="#ff641d" 
+                weight={12} 
+                opacity={0.1} 
+                lineJoin="round" 
+              />
+              <Polyline 
+                positions={routePoints} 
+                color="#ff641d" 
+                weight={3} 
+                dashArray="5, 8" 
+                opacity={0.8} 
+                lineJoin="round" 
+              />
             </>
           )}
 
