@@ -991,6 +991,10 @@ export default function AdventureMap() {
   
   // Routing State
   const [isTracing, setIsTracing] = useState(false);
+  const [isRoutingExpanded, setIsRoutingExpanded] = useState(false);
+  const [originQuery, setOriginQuery] = useState('');
+  const [destinationQuery, setDestinationQuery] = useState('');
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
   const [transportMode, setTransportMode] = useState<'bike' | 'walk' | 'moto' | 'car' | 'motorhome'>('bike');
 
@@ -1152,6 +1156,54 @@ export default function AdventureMap() {
       setWeatherData(null);
     }
   }, [selectedPoint, fetchWeather]);
+
+  const handleRoutingSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!originQuery || !destinationQuery) return;
+    setIsCalculatingRoute(true);
+    
+    try {
+      // Geocode point A
+      const resA = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(originQuery)}&limit=1`);
+      const dataA = await resA.json();
+      
+      // Geocode point B
+      const resB = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destinationQuery)}&limit=1`);
+      const dataB = await resB.json();
+
+      if (dataA?.[0] && dataB?.[0]) {
+        const start = [parseFloat(dataA[0].lat), parseFloat(dataA[0].lon)] as [number, number];
+        const end = [parseFloat(dataB[0].lat), parseFloat(dataB[0].lon)] as [number, number];
+        
+        // Try to get actual road route from OSRM
+        try {
+          const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`);
+          const osrmData = await osrmRes.json();
+          
+          if (osrmData.routes?.[0]) {
+            const coords = osrmData.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]]);
+            setRoutePoints(coords);
+            setMapCenter(start);
+            setMapZoom(12);
+          } else {
+            // Fallback to straight line
+            setRoutePoints([start, end]);
+            setMapCenter(start);
+            setMapZoom(10);
+          }
+        } catch (err) {
+          console.error("OSRM failed", err);
+          setRoutePoints([start, end]);
+          setMapCenter(start);
+        }
+      }
+    } catch (err) {
+      console.error("Geocoding failed", err);
+    } finally {
+      setIsCalculatingRoute(false);
+      setIsRoutingExpanded(false);
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1441,23 +1493,92 @@ export default function AdventureMap() {
 
         {/* Central HUD Row: Search & Metrics */}
         <div className="flex flex-col items-center gap-4 w-full pointer-events-none">
-           {/* Central Prominent Search Bar */}
+           {/* Central Prominent Search Bar / Routing Panel */}
            <div className="w-full max-w-2xl pointer-events-auto">
-              <form onSubmit={handleSearch} className="relative group">
-                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
-                 <input 
-                   type="text" 
-                   placeholder="DIGITE_DESTINO_OU_PONTO_DE_INTERESSE..."
-                   value={searchQuery}
-                   onChange={(e) => setSearchQuery(e.target.value)}
-                   className="w-full bg-black/90 backdrop-blur-2xl border border-white/10 rounded-sm h-14 pl-12 pr-4 text-[11px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d] transition-all text-white placeholder:text-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] uppercase"
-                 />
-                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-3 items-center">
-                   {isSearching && <div className="w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />}
-                   <div className="hidden md:block h-4 w-[1px] bg-white/10" />
-                   <kbd className="hidden md:block text-[8px] font-mono text-white/20 border border-white/10 px-1.5 py-0.5 rounded-xs">ENTER</kbd>
-                 </div>
-              </form>
+              {!isRoutingExpanded ? (
+                <form onSubmit={handleSearch} className="relative group">
+                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
+                   <input 
+                     type="text" 
+                     placeholder="DIGITE_DESTINO_OU_PONTO_DE_INTERESSE..."
+                     value={searchQuery}
+                     onChange={(e) => setSearchQuery(e.target.value)}
+                     className="w-full bg-black/90 backdrop-blur-2xl border border-white/10 rounded-sm h-14 pl-12 pr-12 text-[11px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d] transition-all text-white placeholder:text-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] uppercase"
+                   />
+                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-3 items-center">
+                     <button 
+                       type="button"
+                       onClick={() => setIsRoutingExpanded(true)}
+                       className="p-2 text-white/20 hover:text-[#ff641d] transition-colors"
+                       title="MODO_ROTA"
+                     >
+                       <Navigation size={18} />
+                     </button>
+                     {isSearching && <div className="w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />}
+                   </div>
+                </form>
+              ) : (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-black/90 backdrop-blur-2xl border border-[#ff641d]/30 rounded-sm p-4 shadow-[0_10px_60px_rgba(255,100,29,0.2)]"
+                >
+                   <div className="flex items-center justify-between mb-4 px-1">
+                      <div className="flex items-center gap-2">
+                         <Navigation className="text-[#ff641d]" size={14} />
+                         <span className="text-[9px] font-mono font-black text-white/60 tracking-[0.3em]">TACTICAL_ROUTING_PRO</span>
+                      </div>
+                      <button onClick={() => setIsRoutingExpanded(false)} className="text-white/20 hover:text-white transition-colors">
+                        <Plus size={16} className="rotate-45" />
+                      </button>
+                   </div>
+                   
+                   <form onSubmit={handleRoutingSearch} className="space-y-3">
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full border border-[#ff641d] bg-[#ff641d]/20"></div>
+                        <input 
+                          type="text" 
+                          placeholder="PONTO_A (ORIGEM)"
+                          value={originQuery}
+                          onChange={(e) => setOriginQuery(e.target.value)}
+                          className="w-full bg-white/[0.03] border border-white/5 rounded-xs h-12 pl-10 pr-4 text-[10px] font-mono tracking-widest focus:outline-none focus:border-[#ff641d]/50 text-white placeholder:text-white/10 uppercase"
+                        />
+                      </div>
+                      
+                      <div className="flex justify-center -my-2 relative z-10">
+                         <div className="w-px h-4 bg-white/10"></div>
+                      </div>
+
+                      <div className="relative">
+                        <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#ff641d]" size={14} />
+                        <input 
+                          type="text" 
+                          placeholder="PONTO_B (DESTINO)"
+                          value={destinationQuery}
+                          onChange={(e) => setDestinationQuery(e.target.value)}
+                          className="w-full bg-white/[0.03] border border-white/5 rounded-xs h-12 pl-10 pr-4 text-[10px] font-mono tracking-widest focus:outline-none focus:border-[#ff641d]/50 text-white placeholder:text-white/10 uppercase"
+                        />
+                      </div>
+
+                      <button 
+                        type="submit"
+                        disabled={isCalculatingRoute || !originQuery || !destinationQuery}
+                        className="w-full h-12 bg-[#ff641d] hover:bg-white text-white hover:text-[#ff641d] transition-all text-[9px] font-mono font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                      >
+                         {isCalculatingRoute ? (
+                           <>
+                             <div className="w-3 h-3 border border-white/20 border-t-white rounded-full animate-spin" />
+                             CÁLCULO_ATIVO...
+                           </>
+                         ) : (
+                           <>
+                             <ArrowUpRight size={14} /> GERAR_TRAJETÓRIA_TÁTICA
+                           </>
+                         )}
+                      </button>
+                   </form>
+                </motion.div>
+              )}
            </div>
 
            {/* Expedition Metrics (Adaptive) */}

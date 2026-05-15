@@ -7,6 +7,7 @@ import {
 import SEO from '@/src/components/SEO';
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
+import { cn } from '@/src/lib/utils';
 import { db, auth } from '@/src/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import RouteWeather from '@/src/components/RouteWeather';
@@ -97,7 +98,7 @@ const routes = [
 const filterOptions = [
   { id: 'all', name: 'TODOS_OS_DADOS', icon: Activity },
   { id: 'bike', name: 'CICLO_EXPEDIÇÃO', icon: Bike }, 
-  { id: 'moto', name: 'MOTO_TRAVESSIA', icon: Triangle },
+  { id: 'moto', name: 'MOTO_TRAVESSIA', icon: Zap },
   { id: 'overland', name: 'OVERLAND_OPS', icon: Compass },
 ];
 
@@ -496,23 +497,83 @@ export default function Routes() {
         <TacticalHUD />
       </section>
 
-      {/* Tactic Filter HUD */}
-      <div className="flex flex-wrap gap-3 mb-20">
-        {filterOptions.map((opt) => (
-          <button
-            key={opt.id}
-            onClick={() => setSelectedFilter(opt.id)}
-            className={`px-6 py-3 border rounded-sm flex items-center gap-3 transition-all ${
-              selectedFilter === opt.id
-                ? 'bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_20px_rgba(255,100,29,0.3)]'
-                : 'bg-white/[0.02] border-white/5 text-white/40 hover:border-white/20'
-            }`}
-          >
-            <opt.icon size={14} className={selectedFilter === opt.id ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest">{opt.name}</span>
-          </button>
-        ))}
-      </div>
+      {/* Tactic Filter HUD - Separate Dynamic Section */}
+      <section className="mb-16">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="h-[1px] flex-1 bg-white/5"></div>
+          <div className="flex items-center gap-2 px-3 py-1 bg-[#ff641d]/10 border border-[#ff641d]/20 rounded-sm">
+            <Activity size={10} className="text-[#ff641d]" />
+            <span className="text-[8px] font-mono font-black uppercase tracking-[0.3em] text-[#ff641d]">OPS_FILTER_DASHBOARD</span>
+          </div>
+          <div className="h-[1px] flex-1 bg-white/5"></div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {filterOptions.map((opt) => {
+            const count = opt.id === 'all' 
+              ? routes.length 
+              : routes.filter(r => r.types.includes(opt.id)).length;
+            
+            const isActive = selectedFilter === opt.id;
+
+            return (
+              <button
+                key={opt.id}
+                onClick={() => setSelectedFilter(opt.id)}
+                className={cn(
+                  "relative group overflow-hidden transition-all h-20 border rounded-sm flex flex-col items-center justify-center gap-1",
+                  isActive 
+                    ? "bg-[#ff641d] border-[#ff641d] shadow-[0_0_30px_rgba(255,100,29,0.2)]" 
+                    : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                )}
+              >
+                {/* Background HUD decorations */}
+                <div className={cn(
+                  "absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none",
+                  isActive ? "bg-white" : "bg-white"
+                )}>
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,_transparent,_transparent_10px,_rgba(255,255,255,0.1)_10px,_rgba(255,255,255,0.1)_20px)]" />
+                </div>
+
+                <div className="relative z-10 flex flex-col items-center gap-1">
+                  <opt.icon size={16} className={cn(
+                    "transition-all",
+                    isActive ? "text-white animate-pulse" : "text-white/20 group-hover:text-white/40"
+                  )} />
+                  <span className={cn(
+                    "text-[9px] font-mono font-bold uppercase tracking-widest",
+                    isActive ? "text-white" : "text-white/40"
+                  )}>
+                    {opt.name}
+                  </span>
+                </div>
+
+                <div className={cn(
+                  "absolute top-2 right-3 text-[8px] font-mono",
+                  isActive ? "text-white/60" : "text-white/10"
+                )}>
+                  #{String(count).padStart(2, '0')}
+                </div>
+
+                {isActive && (
+                  <motion.div 
+                    layoutId="filter-indicator"
+                    className="absolute bottom-0 left-0 w-full h-0.5 bg-white/40"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex justify-between items-center px-2">
+           <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em]">DADOS_SINCRO_ATIVOS</span>
+           </div>
+           <span className="text-[7px] font-mono text-white/10 uppercase tracking-[0.2em]">SESSÃO: {new Date().getHours()}:{new Date().getMinutes()} // GMT-3</span>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {routes
