@@ -35,6 +35,7 @@ const preDefinedRoutes = [
   {
     id: 'br-156',
     name: 'BR-156: O CORREDOR DA LAMA',
+    country: 'Brasil',
     color: '#ff641d',
     points: [
       [0.033, -51.066], // Macapá
@@ -49,6 +50,7 @@ const preDefinedRoutes = [
   {
     id: 'n2-guyane',
     name: 'N2: CORREDOR SELVATIQUE',
+    country: 'Guiana Francesa',
     color: '#00d4ff',
     points: [
       [3.89, -51.80],   // St Georges
@@ -927,11 +929,15 @@ function otherUserIcon(color: string = '#00d4ff') {
 
 // --- Map Controllers ---
 
-function MapController({ center, zoom }: { center?: [number, number], zoom?: number }) {
+function MapController({ center, zoom, bounds }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression }) {
   const map = useMap();
   useEffect(() => {
-    if (center) map.flyTo(center, zoom || map.getZoom(), { duration: 1.5 });
-  }, [center, zoom, map]);
+    if (bounds) {
+      map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+    } else if (center) {
+      map.flyTo(center, zoom || map.getZoom(), { duration: 1.5 });
+    }
+  }, [center, zoom, bounds, map]);
   return null;
 }
 
@@ -982,7 +988,9 @@ export default function AdventureMap() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-34.603, -58.381]);
   const [mapZoom, setMapZoom] = useState(4);
+  const [mapBounds, setMapBounds] = useState<L.LatLngBoundsExpression | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<LocationPoint | null>(null);
@@ -1161,6 +1169,7 @@ export default function AdventureMap() {
     e.preventDefault();
     if (!originQuery || !destinationQuery) return;
     setIsCalculatingRoute(true);
+    setMapBounds(null); // Clear previous bounds
     
     try {
       // Geocode point A
@@ -1205,11 +1214,38 @@ export default function AdventureMap() {
     }
   };
 
+  const selectRoute = (route: typeof preDefinedRoutes[0]) => {
+    setRoutePoints(route.points);
+    const bounds = L.latLngBounds(route.points);
+    setMapBounds(bounds);
+    setSearchQuery(route.name);
+    setShowSuggestions(false);
+  };
+
+  const routeSuggestions = useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
+    return preDefinedRoutes.filter(r => 
+      r.name.toLowerCase().includes(q) || 
+      r.country.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery) return;
     setIsSearching(true);
+    setShowSuggestions(false);
+    setMapBounds(null);
     
+    // Check for route match first
+    const routeMatch = routeSuggestions[0];
+    if (routeMatch && routeMatch.name.toLowerCase() === searchQuery.toLowerCase()) {
+      selectRoute(routeMatch);
+      setIsSearching(false);
+      return;
+    }
+
     // First, check internal points
     const internalMatch = initialPoints.find(p => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1494,30 +1530,77 @@ export default function AdventureMap() {
         {/* Central HUD Row: Search & Metrics */}
         <div className="flex flex-col items-center gap-4 w-full pointer-events-none">
            {/* Central Prominent Search Bar / Routing Panel */}
-           <div className="w-full max-w-2xl pointer-events-auto">
-              {!isRoutingExpanded ? (
-                <form onSubmit={handleSearch} className="relative group">
-                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
-                   <input 
-                     type="text" 
-                     placeholder="DIGITE_DESTINO_OU_PONTO_DE_INTERESSE..."
-                     value={searchQuery}
-                     onChange={(e) => setSearchQuery(e.target.value)}
-                     className="w-full bg-black/90 backdrop-blur-2xl border border-white/10 rounded-sm h-14 pl-12 pr-12 text-[11px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d] transition-all text-white placeholder:text-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] uppercase"
-                   />
-                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-3 items-center">
-                     <button 
-                       type="button"
-                       onClick={() => setIsRoutingExpanded(true)}
-                       className="p-2 text-white/20 hover:text-[#ff641d] transition-colors"
-                       title="MODO_ROTA"
-                     >
-                       <Navigation size={18} />
-                     </button>
-                     {isSearching && <div className="w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />}
-                   </div>
-                </form>
-              ) : (
+   <div className="w-full max-w-2xl pointer-events-auto">
+      {!isRoutingExpanded ? (
+        <div className="relative group">
+          <form onSubmit={handleSearch} className="relative z-10">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
+             <input 
+               type="text" 
+               placeholder="PESQUISAR_ROTA_PAIS_OU_PONTO..."
+               value={searchQuery}
+               onChange={(e) => {
+                 setSearchQuery(e.target.value);
+                 setShowSuggestions(true);
+               }}
+               onFocus={() => setShowSuggestions(true)}
+               className="w-full bg-black/90 backdrop-blur-2xl border border-white/10 rounded-sm h-14 pl-12 pr-12 text-[11px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d] transition-all text-white placeholder:text-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] uppercase"
+             />
+             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-3 items-center">
+               <button 
+                 type="button"
+                 onClick={() => setIsRoutingExpanded(true)}
+                 className="p-2 text-white/20 hover:text-[#ff641d] transition-colors"
+                 title="MODO_ROTA"
+               >
+                 <Navigation size={18} />
+               </button>
+               {isSearching && <div className="w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />}
+             </div>
+          </form>
+
+          {/* Search Suggestions Dropdown */}
+          <AnimatePresence>
+            {showSuggestions && routeSuggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-[#0b0c0d]/95 backdrop-blur-2xl border border-[#ff641d]/20 rounded-sm overflow-hidden z-[3000] shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+              >
+                <div className="p-2 border-b border-white/5 bg-white/[0.02]">
+                  <span className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">ROTAS_TACTICAS_ENCONTRADAS</span>
+                </div>
+                <div className="max-h-60 overflow-y-auto no-scrollbar">
+                  {routeSuggestions.map(route => (
+                    <button
+                      key={route.id}
+                      onClick={() => selectRoute(route)}
+                      className="w-full p-4 flex items-center justify-between hover:bg-[#ff641d]/10 transition-colors border-b border-white/5 last:border-0"
+                    >
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="text-[10px] font-mono font-black text-white uppercase tracking-widest">{route.name}</span>
+                        <div className="flex items-center gap-2">
+                           <Globe size={10} className="text-[#ff641d]" />
+                           <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">{route.country}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className={`text-[7px] font-mono px-2 py-0.5 rounded-xs border ${
+                          route.difficulty === 'CRITICAL' ? 'border-red-500/50 text-red-500' : 'border-blue-500/50 text-blue-500'
+                        }`}>
+                          {route.difficulty}
+                        </div>
+                        <ArrowUpRight size={12} className="text-white/20" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ) : (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1746,8 +1829,10 @@ export default function AdventureMap() {
           style={{ width: '100%', height: '100%', background: '#0b0c0d' }}
           zoomControl={false}
         >
-          <MapController center={mapCenter} zoom={mapZoom} />
-          <MapEventsHandler onMapClick={(latlng) => setRoutePoints(p => [...p, [latlng.lat, latlng.lng]])} active={isTracing} />
+          <MapController center={mapCenter} zoom={mapZoom} bounds={mapBounds || undefined} />
+          <MapEventsHandler active={isTracing} onMapClick={(latlng) => {
+            setRoutePoints(prev => [...prev, [latlng.lat, latlng.lng]]);
+          }} />
           {showHeatmap && <HeatmapLayer points={filteredPoints} />}
           
           <TileLayer
