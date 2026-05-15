@@ -17,7 +17,7 @@ import SEO from '@/src/components/SEO';
 import { cn } from '@/src/lib/utils';
 import { LocationPoint } from '@/src/types';
 import { db, auth } from '@/src/lib/firebase';
-import { doc, setDoc, onSnapshot, serverTimestamp, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, serverTimestamp, getDoc, updateDoc, deleteDoc, collection, query, where } from 'firebase/firestore';
 import { useSearchParams } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
@@ -902,6 +902,20 @@ function userLocationIcon() {
   });
 }
 
+function otherUserIcon(color: string = '#00d4ff') {
+  return L.divIcon({
+    className: 'other-user-icon',
+    html: `
+      <div class="relative">
+        <div style="background-color: ${color}" class="w-4 h-4 rounded-full border-2 border-white shadow-[0_0_10px_${color}] relative z-10"></div>
+        <div style="background-color: ${color}" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 opacity-20 rounded-full animate-ping"></div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+}
+
 // --- Map Controllers ---
 
 function MapController({ center, zoom }: { center?: [number, number], zoom?: number }) {
@@ -972,6 +986,7 @@ export default function AdventureMap() {
   // GPS Sharing State
   const [isSharing, setIsSharing] = useState(false);
   const [trackingId, setTrackingId] = useState<string | null>(null);
+  const [otherSessions, setOtherSessions] = useState<any[]>([]);
   
   // Stats
   const totalDistance = useMemo(() => {
@@ -1027,20 +1042,67 @@ export default function AdventureMap() {
     if (isSharing && auth.currentUser) {
       const id = auth.currentUser.uid;
       setTrackingId(id);
+      
+      // Mark as active
+      setDoc(doc(db, 'trackingSessions', id), {
+        userId: id,
+        userName: auth.currentUser?.displayName || 'Explorer',
+        updatedAt: serverTimestamp(),
+        active: true
+      }, { merge: true });
+
       watchId = navigator.geolocation.watchPosition((pos) => {
         const { latitude, longitude } = pos.coords;
         setUserLocation([latitude, longitude]);
-        setDoc(doc(db, 'trackingSessions', id), {
-          userName: auth.currentUser?.displayName || 'Explorer',
+        updateDoc(doc(db, 'trackingSessions', id), {
           lat: latitude,
           lng: longitude,
           updatedAt: serverTimestamp(),
           active: true
-        }, { merge: true });
-      }, null, { enableHighAccuracy: true });
+        }).catch(err => {
+          console.error("Update tracking error:", err);
+          // Fallback to setDoc if update fails (e.g. doc doesn't exist yet)
+          setDoc(doc(db, 'trackingSessions', id), {
+            userId: id,
+            userName: auth.currentUser?.displayName || 'Explorer',
+            lat: latitude,
+            lng: longitude,
+            updatedAt: serverTimestamp(),
+            active: true
+          }, { merge: true });
+        });
+      }, (err) => {
+        console.error("Geolocation error:", err);
+      }, { enableHighAccuracy: true });
+    } else if (trackingId) {
+      // Mark as inactive when stopping
+      updateDoc(doc(db, 'trackingSessions', trackingId), {
+        active: false,
+        updatedAt: serverTimestamp()
+      }).catch(err => console.error("Disable tracking error:", err));
     }
-    return () => { if (watchId) navigator.geolocation.clearWatch(watchId); };
-  }, [isSharing]);
+
+    return () => { 
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [isSharing, trackingId]);
+
+  // Listen to other active explorers
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    const q = query(collection(db, 'trackingSessions'), where('active', '==', true));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const sessions = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter((s: any) => s.userId !== auth.currentUser?.uid && s.lat && s.lng);
+      setOtherSessions(sessions);
+    });
+
+    return () => unsubscribe();
+  }, [auth.currentUser]);
+
+  const isSignedIn = useMemo(() => !!auth.currentUser, [auth.currentUser]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1529,12 +1591,23 @@ export default function AdventureMap() {
             <Marker position={userLocation} icon={userLocationIcon()}>
               <Popup className="custom-popup">
                 <div className="p-3 bg-[#0b0c0d] text-center border border-white/5 min-w-[150px]">
-                  <div className="text-[9px] font-mono text-[#ff641d] font-black uppercase tracking-widest mb-1">LOCALIZAÇÃO_GPS</div>
-                  <div className="text-[7px] font-mono text-white/40 uppercase">SINAL_RECUPERADO // ESTÁVEL</div>
+                  <div className="text-[9px] font-mono text-[#ff641d] font-black uppercase tracking-widest mb-1">VOCÊ (LOCALIZAÇÃO)</div>
+                  <div className="text-[7px] font-mono text-white/40 uppercase">{isSharing ? 'TRANSMITINDO_LIVE' : 'SINAL_GPS_LOCAL'}</div>
                 </div>
               </Popup>
             </Marker>
           )}
+
+          {otherSessions.map(session => (
+            <Marker key={session.id} position={[session.lat, session.lng]} icon={otherUserIcon()}>
+              <Popup className="custom-popup">
+                <div className="p-3 bg-[#0b0c0d] text-center border border-white/5 min-w-[150px]">
+                  <div className="text-[9px] font-mono text-blue-400 font-black uppercase tracking-widest mb-1">{session.userName.toUpperCase()}</div>
+                  <div className="text-[7px] font-mono text-white/40 uppercase">EXPLORER_LIVE_HUB</div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
           {filteredPoints.map(p => {
             const cat = categories.find(c => c.id === p.category) || categories[0];

@@ -71,7 +71,7 @@ service cloud.firestore {
     // Tracking Sessions
     match /trackingSessions/{sessionId} {
       allow get: if true; 
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn(); // Allow all explorers to see each other
       
       allow create: if isSignedIn() && 
                       isValidTracking(incoming()) && 

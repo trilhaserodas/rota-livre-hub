@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowRight, Compass, MapPin, Share2, Activity, Copy, Check, X, 
   Twitter, Send, MessageCircle, Info, Heart, Bike, Triangle, Zap,
-  Upload, FileJson, AlertCircle, Loader2, Mail
+  Upload, FileJson, AlertCircle, Loader2, Mail, Download, HardDrive, CloudOff
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { Link } from 'react-router-dom';
@@ -361,10 +361,59 @@ export default function Routes() {
   const [activeShare, setActiveShare] = useState<{ id: string; name: string } | null>(null);
   const [isContributionOpen, setIsContributionOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [offlineRoutes, setOfflineRoutes] = useState<string[]>(() => {
+    const saved = localStorage.getItem('offline_routes_data');
+    if (!saved) return [];
+    try {
+      const data = JSON.parse(saved);
+      return Object.keys(data);
+    } catch {
+      return [];
+    }
+  });
+
   const [favorites, setFavorites] = useState<string[]>(() => {
     const saved = localStorage.getItem('favorite_routes');
     return saved ? JSON.parse(saved) : [];
   });
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const toggleOffline = (id: string) => {
+    const route = routes.find(r => r.id === id);
+    if (!route) return;
+
+    const savedData = localStorage.getItem('offline_routes_data');
+    let data = savedData ? JSON.parse(savedData) : {};
+
+    if (offlineRoutes.includes(id)) {
+      delete data[id];
+      setOfflineRoutes(prev => prev.filter(r => r !== id));
+      setToast({ isVisible: true, isFavorite: false, routeName: `${route.name} REMOVIDA_DO_OFFLINE` });
+    } else {
+      data[id] = route;
+      setOfflineRoutes(prev => [...prev, id]);
+      setToast({ isVisible: true, isFavorite: true, routeName: `${route.name} SALVA_OFFLINE` });
+    }
+
+    localStorage.setItem('offline_routes_data', JSON.stringify(data));
+
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
   const [toast, setToast] = useState<{ isVisible: boolean; isFavorite: boolean; routeName: string }>({
     isVisible: false,
     isFavorite: false,
@@ -422,6 +471,21 @@ export default function Routes() {
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-display font-black uppercase tracking-tighter mb-4 text-[#F8FAFC]">
           ROTAS<span className="text-[#ff641d]">.</span>ETERNAS
         </h1>
+        {!isOnline && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-6 p-4 bg-red-900/10 border border-red-900/30 rounded-sm flex items-center gap-4"
+          >
+            <CloudOff className="text-red-500 shrink-0" size={20} />
+            <div>
+              <div className="text-[10px] font-mono font-bold text-red-500 uppercase tracking-widest">STATUS: OFFLINE</div>
+              <p className="text-[9px] text-red-500/60 uppercase tracking-widest leading-loose">
+                Mostrando apenas rotas baixadas para acesso local. Algumas funcionalidades foram desativadas.
+              </p>
+            </div>
+          </motion.div>
+        )}
         <p className="text-[#F8FAFC]/40 text-sm font-medium max-w-xl uppercase tracking-widest leading-loose">
           Mapas táticos para as travessias que moldam o espírito. Onde o asfalto termina e a liberdade começa.
         </p>
@@ -452,7 +516,7 @@ export default function Routes() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {routes
-          .filter(r => selectedFilter === 'all' || r.types.includes(selectedFilter))
+          .filter(r => (selectedFilter === 'all' || r.types.includes(selectedFilter)) && (isOnline || offlineRoutes.includes(r.id)))
           .map((route, index) => (
           <motion.div
             key={route.id}
@@ -479,8 +543,15 @@ export default function Routes() {
                         {route.name}
                       </h3>
                    </div>
-                   <div className="text-[10px] font-mono text-[#ff641d] font-bold pb-2 uppercase tracking-widest">
-                     LVL: {route.difficulty}
+                   <div className="flex flex-col items-end gap-2">
+                     {offlineRoutes.includes(route.id) && (
+                       <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-500/20 border border-green-500/40 text-green-500 text-[7px] font-mono font-bold uppercase tracking-[0.2em] rounded-full">
+                         <HardDrive size={8} /> OFFLINE_SYNCED
+                       </div>
+                     )}
+                     <div className="text-[10px] font-mono text-[#ff641d] font-bold pb-2 uppercase tracking-widest">
+                       LVL: {route.difficulty}
+                     </div>
                    </div>
                 </div>
               </Link>
@@ -507,6 +578,17 @@ export default function Routes() {
                       title={favorites.includes(route.id) ? "Remover dos favoritos" : "Salvar rota"}
                     >
                       <Heart size={20} fill={favorites.includes(route.id) ? "currentColor" : "none"} />
+                    </button>
+                    <button
+                      onClick={() => toggleOffline(route.id)}
+                      className={`w-14 h-14 bg-white/[0.02] border rounded-full flex items-center justify-center transition-all ${
+                        offlineRoutes.includes(route.id) 
+                          ? 'text-green-500 border-green-500/30 bg-green-500/5' 
+                          : 'text-white/20 border-white/5 hover:text-green-500 hover:border-green-500/30'
+                      }`}
+                      title={offlineRoutes.includes(route.id) ? "Remover do modo offline" : "Baixar para modo offline"}
+                    >
+                      <Download size={20} className={offlineRoutes.includes(route.id) ? "" : "group-hover:translate-y-0.5 transition-transform"} />
                     </button>
                     <button
                       onClick={() => setActiveShare({ id: route.id, name: route.name })}
