@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowRight, Compass, MapPin, Share2, Activity, Copy, Check, X, 
   Twitter, Send, MessageCircle, Info, Heart, Bike, Triangle, Zap,
-  Upload, FileJson, AlertCircle, Loader2
+  Upload, FileJson, AlertCircle, Loader2, Mail
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { Link } from 'react-router-dom';
@@ -110,7 +110,7 @@ interface ShareModalProps {
 
 function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = `rotalivrehub.com/rotas/${routeId}`;
+  const shareUrl = `${window.location.origin}/rotas/${routeId}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -122,6 +122,7 @@ function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
     { name: 'WhatsApp', icon: MessageCircle, url: `https://wa.me/?text=Confira esta rota no Rota Livre Hub: ${routeName} em ${shareUrl}` },
     { name: 'Telegram', icon: Send, url: `https://t.me/share/url?url=${shareUrl}&text=Confira esta rota: ${routeName}` },
     { name: 'Twitter', icon: Twitter, url: `https://twitter.com/intent/tweet?text=Explorando a rota ${routeName} no @RotaLivreHub!&url=${shareUrl}` },
+    { name: 'Email', icon: Mail, url: `mailto:?subject=Rota: ${routeName}&body=Confira esta rota no Rota Livre Hub: ${shareUrl}` },
   ];
 
   return (
@@ -174,7 +175,7 @@ function ShareModal({ isOpen, onClose, routeId, routeName }: ShareModalProps) {
 
               <div>
                 <div className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-4">REDE_EXTERNA:</div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {socialShares.map((social) => (
                     <a
                       key={social.name}
