@@ -11,7 +11,7 @@ import {
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer,
-  Cloud, Sun, CloudRain, Database, Heart,
+  Cloud, Sun, CloudRain, Database, Heart, Cpu,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
@@ -1125,6 +1125,7 @@ export default function AdventureMap() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
+  const [selectedPreDefinedRoute, setSelectedPreDefinedRoute] = useState<typeof preDefinedRoutes[0] | null>(null);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<LocationPoint | null>(null);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -1519,10 +1520,15 @@ export default function AdventureMap() {
   const selectRoute = async (route: typeof preDefinedRoutes[0]) => {
     setAutoDiscoveredPoints([]);
     setRoutePoints([]); // Clear immediately for visual feedback
+    setSelectedPreDefinedRoute(route);
     setSearchQuery(route.name);
     setShowSuggestions(false);
     setShowRoutesMenu(false);
     setIsCalculatingRoute(true);
+    setIsExpeditionMode(true);
+    
+    // Fetch weather for the start point
+    fetchWeather(route.points[0][0], route.points[0][1]);
 
     try {
       // Zoom to rough area first
@@ -1540,6 +1546,16 @@ export default function AdventureMap() {
     } finally {
       setIsCalculatingRoute(false);
     }
+  };
+
+  const clearExpedition = () => {
+    setRoutePoints([]);
+    setAutoDiscoveredPoints([]);
+    setSelectedPreDefinedRoute(null);
+    setSearchQuery('');
+    setIsExpeditionMode(false);
+    setAiIntelligence(null);
+    setWeatherData(null);
   };
 
   const routeSuggestions = useMemo(() => {
@@ -1624,6 +1640,155 @@ export default function AdventureMap() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)]" />
         <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,_#fff_0px,_#fff_1px,_transparent_1px,_transparent_2px)] bg-[length:100%_2px]" />
       </div>
+
+      {/* Tactical Expedition Control Sidebar */}
+      <AnimatePresence>
+        {selectedPreDefinedRoute && (
+          <motion.div
+            initial={{ x: -400 }}
+            animate={{ x: 0 }}
+            exit={{ x: -400 }}
+            className="fixed left-0 top-0 bottom-0 w-80 bg-[#0b0c0d]/95 backdrop-blur-3xl border-r border-[#ff641d]/30 z-[5000] flex flex-col shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden pointer-events-auto"
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-white/10 bg-[#ff641d]/5 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+               <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                     <div className="w-2 h-2 bg-[#ff641d] rounded-full animate-pulse shadow-[0_0_10px_#ff641d]" />
+                     <span className="text-[10px] font-mono font-black text-[#ff641d] tracking-[0.4em] uppercase">EXPEDIÇÃO_ATIVA</span>
+                  </div>
+                  <button 
+                    onClick={clearExpedition}
+                    className="p-2 text-white/20 hover:text-red-500 hover:bg-white/5 rounded-sm transition-all"
+                    title="PARAR_EXPEDIÇÃO"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+               </div>
+               <h2 className="text-2xl font-mono font-black text-white leading-tight uppercase mb-2 line-clamp-2 tracking-tight">
+                 {selectedPreDefinedRoute.name}
+               </h2>
+               <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                     <Globe size={12} className="text-white/40" />
+                     <span className="text-[10px] font-mono text-white/60 tracking-wider uppercase">{selectedPreDefinedRoute.country}</span>
+                  </div>
+                  <div className={cn(
+                    "px-2 py-0.5 text-[8px] font-mono border rounded-xs",
+                    selectedPreDefinedRoute.difficulty === 'CRITICAL' ? "border-red-500/30 text-red-400 bg-red-400/5" : "border-blue-500/30 text-blue-400 bg-blue-400/5"
+                  )}>
+                    {selectedPreDefinedRoute.difficulty}
+                  </div>
+               </div>
+            </div>
+
+            {/* Tactical Metrics Dashboard */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
+               <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/5 border border-white/5 p-3 rounded-sm">
+                     <span className="text-[8px] font-mono text-white/20 tracking-widest block mb-1 uppercase">DISTÂNCIA_TOTAL</span>
+                     <span className="text-xl font-mono font-black text-white">{totalDistance.toFixed(0)} KM</span>
+                  </div>
+                  <div className="bg-white/5 border border-white/5 p-3 rounded-sm">
+                     <span className="text-[8px] font-mono text-white/20 tracking-widest block mb-1 uppercase">RECURSOS_DSCOV</span>
+                     <span className="text-xl font-mono font-black text-[#ff641d]">{autoDiscoveredPoints.length}</span>
+                  </div>
+               </div>
+
+               {/* Weather Summary Card */}
+               <AnimatePresence>
+                 {weatherData && (
+                   <motion.div 
+                     initial={{ opacity: 0, scale: 0.95 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     className="bg-cyan-500/5 border border-cyan-500/20 p-4 rounded-sm"
+                   >
+                      <div className="flex items-center justify-between mb-3">
+                         <div className="flex items-center gap-2">
+                            <Cloud size={14} className="text-cyan-400" />
+                            <span className="text-[9px] font-mono font-black text-cyan-400 tracking-[0.2em] uppercase">CLIMA_OPERACIONAL</span>
+                         </div>
+                         <div className="text-[12px] font-mono font-black text-white">{weatherData.temp}°C</div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="flex flex-col gap-1">
+                            <span className="text-[7px] font-mono text-white/20 uppercase">CONDIÇÃO</span>
+                            <span className="text-[9px] font-mono text-white/60 uppercase">{weatherData.description}</span>
+                         </div>
+                         <div className="flex flex-col gap-1">
+                            <span className="text-[7px] font-mono text-white/20 uppercase">VENTO</span>
+                            <span className="text-[9px] font-mono text-white/60 uppercase">{weatherData.windSpeed} M/S</span>
+                         </div>
+                      </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+
+               {/* Discovery List */}
+               <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                     <span className="text-[9px] font-mono font-black text-white/40 tracking-[0.3em] uppercase">LOG_DE_RECURSOS</span>
+                     <span className="text-[8px] font-mono text-[#ff641d]/60 uppercase">TIME_SYNC_OK</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {isDiscoveringPOIs && autoDiscoveredPoints.length === 0 && (
+                      <div className="py-10 flex flex-col items-center gap-3 opacity-40">
+                         <div className="w-8 h-8 border-2 border-[#ff641d]/10 border-t-[#ff641d] rounded-full animate-spin" />
+                         <span className="text-[8px] font-mono tracking-widest uppercase">Escaneando_Recursos_...</span>
+                      </div>
+                    )}
+                    {autoDiscoveredPoints.map(poi => (
+                      <button
+                        key={poi.id}
+                        onClick={() => {
+                          setMapCenter([poi.lat, poi.lng]);
+                          setMapZoom(16);
+                          setSelectedPoint(poi);
+                        }}
+                        className="w-full text-left p-3 bg-white/[0.02] border border-white/5 hover:border-[#ff641d]/30 hover:bg-[#ff641d]/5 transition-all group rounded-xs flex items-center gap-3"
+                      >
+                         <div className={cn(
+                           "w-8 h-8 flex items-center justify-center rounded-sm shrink-0",
+                           poi.category === 'fuel' ? "bg-red-500/10 text-red-500" :
+                           poi.category === 'water' ? "bg-blue-500/10 text-blue-500" :
+                           poi.category === 'camping' ? "bg-green-500/10 text-green-500" : "bg-white/5 text-white/40"
+                         )}>
+                            {poi.category === 'fuel' && <Fuel size={14} />}
+                            {poi.category === 'water' && <Zap size={14} />}
+                            {poi.category === 'camping' && <Triangle size={14} />}
+                            {poi.category === 'hostel' && <Shield size={14} />}
+                            {poi.category === 'market' && <Car size={14} />}
+                            {poi.category === 'repair' && <Zap size={14} />}
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <span className="text-[10px] font-mono font-bold text-white/80 group-hover:text-white truncate block uppercase tracking-wider">{poi.name}</span>
+                            <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">{poi.category} // LAT:{poi.lat.toFixed(3)}</span>
+                         </div>
+                      </button>
+                    ))}
+                  </div>
+               </div>
+            </div>
+
+            {/* Bottom Footer */}
+            <div className="p-4 border-t border-white/10 bg-black/40">
+               <button 
+                 onClick={handleAIAnalysis}
+                 disabled={isAnalyzingAI}
+                 className="w-full h-12 bg-white/5 hover:bg-[#ff641d] border border-white/10 hover:border-[#ff641d] text-white transition-all rounded-sm flex items-center justify-center gap-3 group"
+               >
+                  {isAnalyzingAI ? (
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Cpu size={16} className="group-hover:animate-spin" />
+                  )}
+                  <span className="text-[9px] font-mono font-black uppercase tracking-[0.3em]">RELATÓRIO_IA_EXPEDIÇÃO</span>
+               </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isSearching && (
@@ -2046,11 +2211,11 @@ export default function AdventureMap() {
                     onClick={() => setShowRoutesMenu(!showRoutesMenu)}
                     className={cn(
                       "h-14 px-6 bg-black/80 backdrop-blur-md border rounded-sm flex items-center justify-center gap-2 transition-all font-mono font-black text-[10px] tracking-[0.2em] uppercase whitespace-nowrap",
-                      showRoutesMenu ? "border-[#ff641d] text-[#ff641d] shadow-[0_0_20px_rgba(255,100,29,0.3)]" : "border-white/10 text-white/20 hover:border-[#ff641d]/40 hover:text-white"
+                      showRoutesMenu || selectedPreDefinedRoute ? "border-[#ff641d] text-[#ff641d] shadow-[0_0_20px_rgba(255,100,29,0.3)]" : "border-white/10 text-white/20 hover:border-[#ff641d]/40 hover:text-white"
                     )}
                   >
                     <MapPin size={18} className={showRoutesMenu ? "animate-bounce" : ""} />
-                    <span>ROTAS_INTELIGENTES</span>
+                    <span>{selectedPreDefinedRoute ? selectedPreDefinedRoute.name : 'ROTAS_INTELIGENTES'}</span>
                   </button>
 
                   <AnimatePresence>
@@ -2061,17 +2226,35 @@ export default function AdventureMap() {
                         exit={{ opacity: 0, y: 10 }}
                         className="absolute bottom-full left-0 mb-2 w-72 bg-[#0b0c0d]/95 backdrop-blur-3xl border border-[#ff641d]/30 rounded-sm overflow-hidden z-[4000] shadow-2xl"
                       >
-                        <div className="p-3 border-b border-white/5 bg-[#ff641d]/5">
+                        <div className="p-3 border-b border-white/5 bg-[#ff641d]/5 flex justify-between items-center">
                            <span className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.3em] font-black">EXPEDIÇÕES_AMÉRICA_LATINA</span>
+                           {selectedPreDefinedRoute && (
+                             <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 clearExpedition();
+                                 setShowRoutesMenu(false);
+                               }}
+                               className="text-white/20 hover:text-red-500 transition-colors"
+                             >
+                               <Trash2 size={12} />
+                             </button>
+                           )}
                         </div>
                         <div className="max-h-[400px] overflow-y-auto no-scrollbar">
                            {preDefinedRoutes.map(route => (
                              <button
                                key={route.id}
                                onClick={() => selectRoute(route)}
-                               className="w-full p-4 flex flex-col items-start gap-1 hover:bg-[#ff641d]/10 transition-colors border-b border-white/5 group text-left"
+                               className={cn(
+                                 "w-full p-4 flex flex-col items-start gap-1 hover:bg-[#ff641d]/10 transition-colors border-b border-white/5 group text-left",
+                                 selectedPreDefinedRoute?.id === route.id && "bg-[#ff641d]/5 border-l-2 border-l-[#ff641d]"
+                               )}
                              >
-                               <span className="text-[10px] font-mono font-black text-white group-hover:text-[#ff641d] uppercase tracking-widest">{route.name}</span>
+                               <span className={cn(
+                                 "text-[10px] font-mono font-black uppercase tracking-widest",
+                                 selectedPreDefinedRoute?.id === route.id ? "text-[#ff641d]" : "text-white group-hover:text-[#ff641d]"
+                               )}>{route.name}</span>
                                <div className="flex items-center gap-4 w-full justify-between">
                                   <div className="flex items-center gap-1">
                                      <Globe size={10} className="text-white/20" />
