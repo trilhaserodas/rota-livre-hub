@@ -11,7 +11,7 @@ import {
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer,
-  Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye
+  Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { cn } from '@/src/lib/utils';
@@ -772,6 +772,35 @@ function MapEventsHandler({ onMapClick, active }: { onMapClick: (latlng: L.LatLn
   return null;
 }
 
+function HeatmapLayer({ points }: { points: LocationPoint[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!points || points.length === 0) return;
+
+    // Use a slightly different intensity based on category density if needed, 
+    // but a standard 0.5-0.8 works well for visualization.
+    const heatPoints = points.map(p => [p.lat, p.lng, 0.6] as [number, number, number]);
+    const heatLayer = (L as any).heatLayer(heatPoints, {
+      radius: 35,
+      blur: 20,
+      maxZoom: 17,
+      minOpacity: 0.4,
+      gradient: { 
+        0.4: '#00d4ff', 
+        0.6: '#ff9d00', 
+        1.0: '#ff641d' 
+      }
+    }).addTo(map);
+
+    return () => {
+      map.removeLayer(heatLayer);
+    };
+  }, [map, points]);
+
+  return null;
+}
+
 // --- Main Component ---
 
 export default function AdventureMap() {
@@ -783,6 +812,7 @@ export default function AdventureMap() {
   const [mapZoom, setMapZoom] = useState(4);
   const [isSearching, setIsSearching] = useState(false);
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   
   // Routing State
   const [isTracing, setIsTracing] = useState(false);
@@ -1029,7 +1059,12 @@ export default function AdventureMap() {
                 {transportMode === 'overland' && <OperationalMetric label="EXIGÊNCIA_4X4" value="HIGH (LOCKED)" icon={Layers} color="text-red-500" />}
                 {transportMode === 'walk' && <OperationalMetric label="RITMO" value="12:40 MIN/KM" icon={Clock} color="text-green-400" />}
                 <div className="hidden md:block w-[1px] bg-white/10" />
-                <OperationalMetric label="TEMP" value="12.5°C" icon={Thermometer} />
+                <button 
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  className={cn("transition-all hover:opacity-80 active:scale-95", showHeatmap && "ring-1 ring-[#ff641d] rounded-sm p-1 -m-1")}
+                >
+                  <OperationalMetric label="TEMP" value="12.5°C" icon={Thermometer} />
+                </button>
                 <div className="hidden md:block w-[1px] bg-white/10" />
                 <OperationalMetric label="ALT" value="2.450M" icon={Mountain} />
                 <div className="hidden md:block w-[1px] bg-white/10" />
@@ -1102,6 +1137,18 @@ export default function AdventureMap() {
          </button>
 
          <button 
+           onClick={() => setShowHeatmap(!showHeatmap)}
+           className={cn(
+             "w-12 h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+             showHeatmap ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-black/60 border-white/10 text-white/20 hover:border-[#ff641d]/40"
+           )}
+           title="MODO TÉRMICO (CALOR)"
+         >
+           <Activity size={18} />
+           <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Modo_Térmico</div>
+         </button>
+
+         <button 
            onClick={() => setIsSharing(!isSharing)} 
            title="TRACKING GPS LIVE"
            className={cn(
@@ -1166,6 +1213,7 @@ export default function AdventureMap() {
         >
           <MapController center={mapCenter} zoom={mapZoom} />
           <MapEventsHandler onMapClick={(latlng) => setRoutePoints(p => [...p, [latlng.lat, latlng.lng]])} active={isTracing} />
+          {showHeatmap && <HeatmapLayer points={filteredPoints} />}
           
           <TileLayer
             attribution='&copy; CARTO'
