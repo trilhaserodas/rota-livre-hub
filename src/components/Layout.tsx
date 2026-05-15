@@ -181,101 +181,141 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay & Drawer */}
       <AnimatePresence>
         {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[60] bg-[#0b0c0d] flex flex-col px-8 md:px-12 xl:hidden overflow-y-auto"
-          >
-            {/* Mobile Menu Header - Need a separate close button since z-index is higher */}
-            <div className="flex items-center justify-between py-8 mb-8 border-b border-white/5">
-              <Link to="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                <div className="w-8 h-8 rounded-sm overflow-hidden">
-                  <img src="https://i.ibb.co/NnNRsj5N/Facion-site-rota-livre-hub.png" alt="Rota Livre Hub" className="w-full h-full object-cover" />
-                </div>
-                <span className="text-lg font-display font-black tracking-tighter uppercase text-[#F8FAFC]">Rota Livre</span>
-              </Link>
-              <button 
-                onClick={() => setIsMenuOpen(false)}
-                className="text-white/40 hover:text-[#ff641d] p-2"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-5">
-              {navItems.map((item, idx) => (
-                <motion.div
-                  key={item.path}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      "text-4xl font-display font-black uppercase tracking-tighter transition-colors block",
-                      location.pathname === item.path ? "text-[#ff641d]" : "text-[#F8FAFC]/90"
-                    )}
-                  >
-                    {item.name}
-                  </Link>
-                </motion.div>
-              ))}
-              
-              {isAdmin && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <Link to="/admin" className="text-4xl font-display font-black uppercase tracking-tighter text-[#ff641d]">
-                    ADMIN_MOD
-                  </Link>
-                </motion.div>
-              )}
-            </div>
+          <>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm xl:hidden"
+            />
             
-            <div className="mt-12 mb-12 pt-8 border-t border-white/5 flex flex-col gap-6">
-              {!user ? (
-                <button 
-                  onClick={handleLogin}
-                  className="w-full flex items-center justify-center gap-4 px-8 py-4 bg-[#ff641d] text-white font-display font-black uppercase tracking-tighter rounded-xl text-lg"
-                >
-                  <LogIn size={20} />
-                  LOGIN GOOGLE
-                </button>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
-                    <div className="w-12 h-12 rounded-full border border-white/10 overflow-hidden shrink-0">
-                      <img src={user.photoURL || ''} alt="" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-white font-bold uppercase tracking-tight">{user.displayName}</span>
-                      <span className="text-[10px] text-white/30 font-mono tracking-widest">{user.email}</span>
-                    </div>
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 300 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                if (info.offset.x > 100) setIsMenuOpen(false);
+              }}
+              className="fixed top-0 right-0 bottom-0 z-[61] w-[85%] max-w-[400px] bg-[#0b0c0d] border-l border-white/5 flex flex-col xl:hidden"
+            >
+              {/* Mobile Menu Header */}
+              <div className="flex items-center justify-between px-8 py-8 border-b border-white/5">
+                <Link to="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                  <div className="w-8 h-8 rounded-sm overflow-hidden">
+                    <img src="https://i.ibb.co/NnNRsj5N/Facion-site-rota-livre-hub.png" alt="Rota Livre Hub" className="w-full h-full object-cover" />
                   </div>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-4 px-8 py-4 bg-white/5 text-white/40 hover:text-red-400 font-display font-black uppercase tracking-tighter rounded-xl border border-white/5 transition-colors"
-                  >
-                    <LogOut size={20} />
-                    DESCONECTAR
-                  </button>
-                </div>
-              )}
-              
-              <div className="flex flex-col gap-2 px-2">
-                <span className="text-[10px] uppercase font-mono tracking-[0.4em] text-[#ff641d] font-bold">Localização_Grid</span>
-                <span className="text-[10px] font-mono text-[#F8FAFC]/20 tracking-widest">-34.6037° S, -58.3816° W // SAT_ACTIVE</span>
+                  <span className="text-lg font-display font-black tracking-tighter uppercase text-[#F8FAFC]">Rota Livre</span>
+                </Link>
+                <button 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="text-white/40 hover:text-[#ff641d] p-2"
+                >
+                  <X size={24} />
+                </button>
               </div>
-            </div>
-          </motion.div>
+
+              <div className="flex-grow overflow-y-auto px-8 py-10 space-y-8 no-scrollbar">
+                <div className="flex flex-col gap-6">
+                  {navItems.map((item, idx) => (
+                    <motion.div
+                      key={item.path}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.03 }}
+                    >
+                      <Link
+                        to={item.path}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-4 transition-all group",
+                          location.pathname === item.path ? "text-[#ff641d]" : "text-[#F8FAFC]/90"
+                        )}
+                      >
+                        <item.icon size={20} className={cn(
+                          "transition-colors",
+                          location.pathname === item.path ? "text-[#ff641d]" : "text-[#F8FAFC]/20 group-hover:text-[#ff641d]"
+                        )} />
+                        <span className="text-3xl font-display font-black uppercase tracking-tighter">
+                          {item.name}
+                        </span>
+                      </Link>
+                    </motion.div>
+                  ))}
+                  
+                  {isAdmin && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <Link 
+                        to="/admin" 
+                        onClick={() => setIsMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-4 text-[#ff641d] group",
+                          location.pathname === '/admin' ? "opacity-100" : "opacity-60"
+                        )}
+                      >
+                        <Shield size={20} />
+                        <span className="text-3xl font-display font-black uppercase tracking-tighter">
+                          ADMIN_MOD
+                        </span>
+                      </Link>
+                    </motion.div>
+                  )}
+                </div>
+
+                <div className="pt-8 border-t border-white/5 flex flex-col gap-8 pb-12">
+                  {!user ? (
+                    <button 
+                      onClick={handleLogin}
+                      className="w-full flex items-center justify-center gap-4 px-8 py-5 bg-[#ff641d] text-white font-display font-black uppercase tracking-tighter rounded-xl text-lg shadow-lg shadow-[#ff641d]/20"
+                    >
+                      <LogIn size={20} />
+                      ENTRAR_COM_GOOGLE
+                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                        <div className="w-12 h-12 rounded-full border border-white/10 overflow-hidden shrink-0">
+                          <img src={user.photoURL || ''} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-white font-bold uppercase tracking-tight line-clamp-1">{user.displayName}</span>
+                          <span className="text-[10px] text-white/30 font-mono tracking-widest line-clamp-1">{user.email}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-center gap-4 px-8 py-4 bg-white/5 text-white/40 hover:text-red-400 font-display font-black uppercase tracking-tighter rounded-xl border border-white/5 transition-colors"
+                      >
+                        <LogOut size={20} />
+                        LOGOUT_USER
+                      </button>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-col gap-2 px-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#ff641d] animate-pulse" />
+                      <span className="text-[10px] uppercase font-mono tracking-[0.4em] text-[#ff641d] font-bold">Protocol_Active</span>
+                    </div>
+                    <span className="text-[9px] font-mono text-[#F8FAFC]/20 tracking-[0.2em]">LAT: -25.4411 // LON: -49.2766</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
