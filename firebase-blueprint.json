@@ -28,6 +28,18 @@
         "active": { "type": "boolean" }
       },
       "required": ["userId", "lat", "lng", "updatedAt", "active"]
+    },
+    "savedRoute": {
+      "title": "Saved Tactical Route",
+      "description": "A route saved by a user for quick access.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user who saved the route" },
+        "routeId": { "type": "string", "description": "ID of the route" },
+        "routeName": { "type": "string", "description": "Name of the route" },
+        "savedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["userId", "routeId", "routeName", "savedAt"]
     }
   },
   "firestore": {
@@ -38,6 +50,10 @@
     "trackingSessions": {
       "schema": "trackingSession",
       "description": "Real-time location sharing sessions"
+    },
+    "savedRoutes": {
+      "schema": "savedRoute",
+      "description": "Collection of user-saved routes"
     }
   }
 }

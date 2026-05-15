@@ -47,6 +47,15 @@ service cloud.firestore {
              data.createdAt == request.time;
     }
 
+    function isValidSavedRoute(data) {
+      return data.keys().hasAll(['userId', 'routeId', 'routeName', 'savedAt']) &&
+             data.userId is string &&
+             data.routeId is string &&
+             data.routeName is string &&
+             data.userId == request.auth.uid &&
+             data.savedAt == request.time;
+    }
+
     // Reports collection
     match /reports/{reportId} {
       allow list: if 
@@ -83,6 +92,14 @@ service cloud.firestore {
                     incoming().userId == existing().userId;
                     
       allow delete: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Saved Routes
+    match /savedRoutes/{id} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSavedRoute(incoming());
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
     }
   }
 }

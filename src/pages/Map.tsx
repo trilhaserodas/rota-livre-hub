@@ -11,7 +11,7 @@ import {
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer,
-  Cloud, Sun, CloudRain, Database,
+  Cloud, Sun, CloudRain, Database, Heart,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck
 } from 'lucide-react';
 import SEO from '@/src/components/SEO';
@@ -46,6 +46,7 @@ const preDefinedRoutes = [
       [3.84, -51.83]    // Oiapoque
     ] as [number, number][],
     difficulty: 'CRITICAL',
+    vehicleTypes: ['overland', 'moto'],
     status: 'ACTIVE_MUD'
   },
   {
@@ -59,7 +60,132 @@ const preDefinedRoutes = [
       [4.93, -52.33]    // Cayenne
     ] as [number, number][],
     difficulty: 'LOW',
+    vehicleTypes: ['bike', 'moto', 'car', 'motorhome'],
     status: 'PAVED'
+  },
+  {
+    id: 'cwb-arg',
+    name: 'ROTA 277: CURITIBA > FRONTEIRA ARG',
+    country: 'Brasil',
+    color: '#ff641d',
+    points: [
+      [-25.429, -49.267], // Curitiba
+      [-25.099, -50.158], // Ponta Grossa
+      [-25.390, -51.462], // Guarapuava
+      [-24.957, -53.459], // Cascavel
+      [-25.547, -54.588]  // Foz do Iguaçu
+    ] as [number, number][],
+    difficulty: 'MODERATE',
+    vehicleTypes: ['car', 'motorhome', 'moto'],
+    status: 'ACTIVE_OPS'
+  },
+  {
+    id: 'carretera-austral',
+    name: 'CARRETERA_AUSTRAL (R7)',
+    country: 'Chile',
+    color: '#34d399',
+    points: [
+      [-41.4689, -72.9411], // Puerto Montt
+      [-42.9351, -72.7118], // Caleta Arena
+      [-43.1256, -72.7051], // Chaitén
+      [-44.3283, -72.5451], // Puyuhuapi
+      [-45.5689, -72.0664], // Coyhaique
+      [-46.6439, -72.6711], // Puerto Rio Tranquilo
+      [-47.9136, -73.2325], // Cochrane
+      [-48.465, -72.560]    // Villa O'Higgins
+    ] as [number, number][],
+    difficulty: 'MODERATE',
+    vehicleTypes: ['bike', 'moto', 'overland'],
+    status: 'STABLE'
+  },
+  {
+    id: 'ushuaia-ruta3',
+    name: 'Ruta 3: Rumo ao Fim do Mundo',
+    country: 'Argentina',
+    color: '#3b82f6',
+    points: [
+      [-34.6037, -58.3816], // Buenos Aires
+      [-40.8115, -62.9961], // Viedma
+      [-43.2504, -65.3117], // Trelew
+      [-45.8647, -67.4808], // Comodoro Rivadavia
+      [-51.6226, -69.2181], // Rio Gallegos
+      [-54.8019, -68.303],  // Ushuaia
+      [-54.8486, -68.4947]  // Lapataia (End of Route 3)
+    ] as [number, number][],
+    difficulty: 'MODERATE',
+    vehicleTypes: ['car', 'motorhome', 'moto', 'bike'],
+    status: 'STABLE'
+  },
+  {
+    id: 'ruta-40',
+    name: 'Ruta 40: A mística',
+    country: 'Argentina',
+    color: '#ef4444',
+    points: [
+      [-52.3308, -69.1764], // Cabo Vírgenes
+      [-51.6226, -69.2181], // Rio Gallegos
+      [-50.3342, -72.2560], // El Calafate
+      [-49.331, -72.886],   // El Chaltén
+      [-47.441, -70.925],   // Bajo Caracoles
+      [-41.1335, -71.3103], // Bariloche
+      [-32.8895, -68.8458], // Mendoza
+      [-24.2184, -66.3181], // San Antonio de los Cobres
+      [-22.1064, -65.5975]  // La Quiaca
+    ] as [number, number][],
+    difficulty: 'CRITICAL',
+    vehicleTypes: ['overland', 'moto', 'bike'],
+    status: 'ACTIVE_OPS'
+  },
+  {
+    id: 'estrada-real',
+    name: 'Estrada Real: Ciclo do Ouro',
+    country: 'Brasil',
+    color: '#fbbf24',
+    points: [
+      [-19.2433, -43.4983], // Diamantina
+      [-19.9219, -43.9378], // Belo Horizonte
+      [-20.3856, -43.5033], // Ouro Preto
+      [-21.1392, -44.2608], // Tiradentes
+      [-23.2203, -44.7139], // Paraty
+    ] as [number, number][],
+    difficulty: 'MODERATE',
+    vehicleTypes: ['bike', 'moto', 'overland'],
+    status: 'STABLE'
+  },
+  {
+    id: 'atacama-exp',
+    name: 'Deserto do Atacama',
+    country: 'Chile',
+    color: '#f97316',
+    points: [
+      [-23.5939, -70.3956], // Antofagasta
+      [-23.2500, -69.5833], // Sierra Gorda
+      [-22.5000, -68.9167], // Calama
+      [-22.9087, -68.1997], // San Pedro de Atacama
+      [-22.8122, -67.7850], // Paso de Jama
+    ] as [number, number][],
+    difficulty: 'CRITICAL',
+    vehicleTypes: ['overland', 'moto', 'bike'],
+    status: 'STABLE'
+  },
+  {
+    id: 'transamazonica',
+    name: 'BR-230: Transamazônica',
+    country: 'Brasil',
+    color: '#fbbf24',
+    points: [
+      [-7.115, -34.863], // Cabedelo
+      [-7.23, -35.88],  // Campina Grande
+      [-7.01, -37.27],  // Patos
+      [-5.37, -49.12],  // Marabá
+      [-3.22, -52.21],  // Altamira
+      [-4.26, -55.98],  // Itaituba
+      [-7.15, -64.83],  // Humaitá
+      [-8.13, -67.18]   // Lábrea
+    ] as [number, number][],
+    difficulty: 'CRITICAL',
+    vehicleTypes: ['overland', 'moto'],
+    status: 'ACTIVE_MUD'
   }
 ];
 
@@ -1004,6 +1130,17 @@ export default function AdventureMap() {
   const [aiIntelligence, setAiIntelligence] = useState<RouteAnalysisResult | null>(null);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+
+  const isSignedIn = useMemo(() => !!auth.currentUser, [auth.currentUser]);
+  
+  // Custom Filters state
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [vehicleFilter, setVehicleFilter] = useState('all');
+  const [countryFilter, setCountryFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Favorites state
+  const [savedRouteIds, setSavedRouteIds] = useState<string[]>([]);
   
   // Routing State
   const [isTracing, setIsTracing] = useState(false);
@@ -1013,6 +1150,10 @@ export default function AdventureMap() {
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
   const [transportMode, setTransportMode] = useState<'bike' | 'walk' | 'moto' | 'car' | 'motorhome'>('bike');
+
+  const [autoDiscoveredPoints, setAutoDiscoveredPoints] = useState<LocationPoint[]>([]);
+  const [isDiscoveringPOIs, setIsDiscoveringPOIs] = useState(false);
+  const [showRoutesMenu, setShowRoutesMenu] = useState(false);
 
   // GPS Sharing State
   const [isSharing, setIsSharing] = useState(false);
@@ -1144,9 +1285,46 @@ export default function AdventureMap() {
     });
 
     return () => unsubscribe();
-  }, [auth.currentUser]);
+  }, [auth.currentUser, isSignedIn]);
 
-  const isSignedIn = useMemo(() => !!auth.currentUser, [auth.currentUser]);
+  // Sync Saved Routes from Firestore
+  useEffect(() => {
+    if (!isSignedIn || !auth.currentUser) {
+      setSavedRouteIds([]);
+      return;
+    }
+
+    const q = query(collection(db, 'savedRoutes'), where('userId', '==', auth.currentUser.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const ids = snapshot.docs.map(doc => doc.data().routeId);
+      setSavedRouteIds(ids);
+    });
+
+    return () => unsubscribe();
+  }, [isSignedIn]);
+
+  const toggleFavoriteRoute = async (route: typeof preDefinedRoutes[0]) => {
+    if (!isSignedIn || !auth.currentUser) return;
+    
+    const isSaved = savedRouteIds.includes(route.id);
+    const userId = auth.currentUser.uid;
+    const docId = `${userId}_${route.id}`;
+    
+    try {
+      if (isSaved) {
+        await deleteDoc(doc(db, 'savedRoutes', docId));
+      } else {
+        await setDoc(doc(db, 'savedRoutes', docId), {
+          userId,
+          routeId: route.id,
+          routeName: route.name,
+          savedAt: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      console.error("Favorite toggle failed:", err);
+    }
+  };
 
   // AI Intelligence Logic
   const handleAIAnalysis = async () => {
@@ -1263,22 +1441,87 @@ export default function AdventureMap() {
     }
   };
 
+  const discoverPOIsAlongRoute = async (points: [number, number][]) => {
+    setIsDiscoveringPOIs(true);
+    try {
+      const samplePoints = points.length > 20 
+        ? points.filter((_, i) => i % 5 === 0) 
+        : points;
+
+      const aroundPoints = samplePoints.map(p => `${p[0]},${p[1]}`).join(',');
+      
+      const queryStr = `
+        [out:json][timeout:25];
+        (
+          node["amenity"~"drinking_water|fuel|car_repair"](around:5000,${aroundPoints});
+          node["tourism"~"camp_site|hostel|hotel"](around:5000,${aroundPoints});
+          node["shop"~"bicycle|motorcycle|supermarket|convenience"](around:5000,${aroundPoints});
+        );
+        out body;
+      `;
+      
+      const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(queryStr)}`);
+      if (!response.ok) throw new Error('OSM Overpass failed');
+      const data = await response.json();
+      
+      const newPoints: LocationPoint[] = data.elements.map((el: any) => {
+        let category = 'safe_point';
+        if (el.tags.amenity === 'drinking_water' || el.tags.natural === 'spring') category = 'water';
+        else if (el.tags.tourism === 'camp_site') category = 'camping';
+        else if (el.tags.tourism === 'hostel' || el.tags.tourism === 'hotel') category = 'hostel';
+        else if (el.tags.amenity === 'fuel') category = 'fuel';
+        else if (el.tags.amenity === 'car_repair' || el.tags.shop === 'bicycle' || el.tags.shop === 'motorcycle') category = 'repair';
+        else if (el.tags.shop === 'supermarket' || el.tags.shop === 'convenience') category = 'market';
+
+        return {
+          id: `osm-${el.id}`,
+          name: el.tags.name || el.tags.operator || 'Ponto de Interesse',
+          lat: el.lat,
+          lng: el.lon,
+          category,
+          description: `Recurso descoberto via OpenStreetMap ao longo da rota. ${el.tags.description || ''}`,
+        };
+      });
+
+      setAutoDiscoveredPoints(newPoints);
+    } catch (err) {
+      console.error("OSM Discovery failed:", err);
+    } finally {
+      setIsDiscoveringPOIs(false);
+    }
+  };
+
   const selectRoute = (route: typeof preDefinedRoutes[0]) => {
+    setAutoDiscoveredPoints([]);
     setRoutePoints(route.points);
     const bounds = L.latLngBounds(route.points);
     setMapBounds(bounds);
     setSearchQuery(route.name);
     setShowSuggestions(false);
+    setShowRoutesMenu(false);
+    discoverPOIsAlongRoute(route.points);
   };
 
   const routeSuggestions = useMemo(() => {
-    if (!searchQuery || searchQuery.length < 2) return [];
     const q = searchQuery.toLowerCase();
-    return preDefinedRoutes.filter(r => 
-      r.name.toLowerCase().includes(q) || 
-      r.country.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
+    
+    return preDefinedRoutes.filter(r => {
+      const matchSearch = !searchQuery || 
+        r.name.toLowerCase().includes(q) || 
+        r.country.toLowerCase().includes(q);
+        
+      const matchDifficulty = difficultyFilter === 'all' || r.difficulty === difficultyFilter;
+      const matchVehicle = vehicleFilter === 'all' || (r.vehicleTypes as string[]).includes(vehicleFilter);
+      const matchCountry = countryFilter === 'all' || r.country.toLowerCase() === countryFilter.toLowerCase();
+      
+      return matchSearch && matchDifficulty && matchVehicle && matchCountry;
+    });
+  }, [searchQuery, difficultyFilter, vehicleFilter, countryFilter]);
+
+  const countries = useMemo(() => {
+    const set = new Set(preDefinedRoutes.map(r => r.country));
+    return Array.from(set);
+  }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1321,12 +1564,13 @@ export default function AdventureMap() {
   };
 
   const filteredPoints = useMemo(() => {
-    return initialPoints.filter(p => {
+    const all = [...initialPoints, ...autoDiscoveredPoints];
+    return all.filter(p => {
       const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
       const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, autoDiscoveredPoints]);
 
   return (
     <div className={cn(
@@ -1743,12 +1987,85 @@ export default function AdventureMap() {
         </div>
 
         {/* Central HUD Row: Search & Metrics */}
-        <div className="flex flex-col items-center gap-4 w-full pointer-events-none">
+        <div className="flex flex-col items-center gap-4 w-full pointer-events-auto">
            {/* Central Prominent Search Bar / Routing Panel */}
-   <div className="w-full max-w-2xl pointer-events-auto">
-      {!isRoutingExpanded ? (
-        <div className="relative group">
-          <form onSubmit={handleSearch} className="relative z-10">
+           <div className="w-full max-w-2xl flex flex-col gap-2">
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={cn(
+                    "w-14 h-14 bg-black/80 backdrop-blur-md border rounded-sm flex items-center justify-center transition-all",
+                    showFilters ? "border-[#ff641d] text-[#ff641d] shadow-[0_0_20px_rgba(255,100,29,0.3)]" : "border-white/10 text-white/20 hover:border-[#ff641d]/40"
+                  )}
+                >
+                  <Filter size={18} />
+                </button>
+
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowRoutesMenu(!showRoutesMenu)}
+                    className={cn(
+                      "h-14 px-6 bg-black/80 backdrop-blur-md border rounded-sm flex items-center justify-center gap-2 transition-all font-mono font-black text-[10px] tracking-[0.2em] uppercase whitespace-nowrap",
+                      showRoutesMenu ? "border-[#ff641d] text-[#ff641d] shadow-[0_0_20px_rgba(255,100,29,0.3)]" : "border-white/10 text-white/20 hover:border-[#ff641d]/40 hover:text-white"
+                    )}
+                  >
+                    <MapPin size={18} className={showRoutesMenu ? "animate-bounce" : ""} />
+                    <span>ROTAS_INTELIGENTES</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {showRoutesMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute bottom-full left-0 mb-2 w-72 bg-[#0b0c0d]/95 backdrop-blur-3xl border border-[#ff641d]/30 rounded-sm overflow-hidden z-[4000] shadow-2xl"
+                      >
+                        <div className="p-3 border-b border-white/5 bg-[#ff641d]/5">
+                           <span className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.3em] font-black">EXPEDIÇÕES_AMÉRICA_LATINA</span>
+                        </div>
+                        <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                           {preDefinedRoutes.map(route => (
+                             <button
+                               key={route.id}
+                               onClick={() => selectRoute(route)}
+                               className="w-full p-4 flex flex-col items-start gap-1 hover:bg-[#ff641d]/10 transition-colors border-b border-white/5 group text-left"
+                             >
+                               <span className="text-[10px] font-mono font-black text-white group-hover:text-[#ff641d] uppercase tracking-widest">{route.name}</span>
+                               <div className="flex items-center gap-4 w-full justify-between">
+                                  <div className="flex items-center gap-1">
+                                     <Globe size={10} className="text-white/20" />
+                                     <span className="text-[8px] font-mono text-white/40 uppercase">{route.country}</span>
+                                  </div>
+                                  <span className={cn(
+                                    "text-[7px] font-mono px-2 py-0.5 rounded-xs border uppercase",
+                                    route.difficulty === 'CRITICAL' ? "border-red-500/50 text-red-500" : "border-blue-500/50 text-blue-500"
+                                  )}>{route.difficulty}</span>
+                               </div>
+                             </button>
+                           ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {!isRoutingExpanded ? (
+                  <div className="relative group flex-1">
+                    <AnimatePresence>
+                      {isDiscoveringPOIs && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 20 }}
+                          className="absolute -top-16 left-1/2 -translate-x-1/2 z-[3000] bg-black/90 backdrop-blur-3xl border border-cyan-500/20 px-4 py-2 rounded-full flex items-center gap-3 shadow-2xl min-w-max"
+                        >
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" />
+                          <span className="text-[8px] font-mono text-cyan-400 uppercase tracking-[0.3em]">DESCOBRINDO_RECURSOS_OSM...</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <form onSubmit={handleSearch} className="relative z-10">
              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
              <input 
                type="text" 
@@ -1776,40 +2093,64 @@ export default function AdventureMap() {
 
           {/* Search Suggestions Dropdown */}
           <AnimatePresence>
-            {showSuggestions && routeSuggestions.length > 0 && (
+            {showSuggestions && (searchQuery.length >= 2 || (routeSuggestions.length > 0 && searchQuery.length >= 0)) && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute top-full left-0 right-0 mt-2 bg-[#0b0c0d]/95 backdrop-blur-2xl border border-[#ff641d]/20 rounded-sm overflow-hidden z-[3000] shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
               >
-                <div className="p-2 border-b border-white/5 bg-white/[0.02]">
+                <div className="p-2 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
                   <span className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">ROTAS_TACTICAS_ENCONTRADAS</span>
+                  {routeSuggestions.length > 0 && (
+                    <span className="text-[7px] font-mono text-[#ff641d]/60 uppercase tracking-widest">{routeSuggestions.length} RESULTADOS</span>
+                  )}
                 </div>
                 <div className="max-h-60 overflow-y-auto no-scrollbar">
-                  {routeSuggestions.map(route => (
-                    <button
-                      key={route.id}
-                      onClick={() => selectRoute(route)}
-                      className="w-full p-4 flex items-center justify-between hover:bg-[#ff641d]/10 transition-colors border-b border-white/5 last:border-0"
-                    >
-                      <div className="flex flex-col items-start gap-1">
-                        <span className="text-[10px] font-mono font-black text-white uppercase tracking-widest">{route.name}</span>
-                        <div className="flex items-center gap-2">
-                           <Globe size={10} className="text-[#ff641d]" />
-                           <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">{route.country}</span>
-                        </div>
+                  {routeSuggestions.length > 0 ? (
+                    routeSuggestions.map(route => (
+                      <div key={route.id} className="flex items-center justify-between p-4 hover:bg-[#ff641d]/10 transition-colors border-b border-white/5 last:border-0 group/item">
+                        <button
+                          onClick={() => selectRoute(route)}
+                          className="flex-1 flex items-center justify-between text-left"
+                        >
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="text-[10px] font-mono font-black text-white group-hover/item:text-[#ff641d] uppercase tracking-widest transition-colors">{route.name}</span>
+                            <div className="flex items-center gap-2">
+                               <Globe size={10} className="text-[#ff641d]/60" />
+                               <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">{route.country}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 mr-4">
+                            <div className={`text-[7px] font-mono px-2 py-0.5 rounded-xs border ${
+                              route.difficulty === 'CRITICAL' ? 'border-red-500/50 text-red-500' : 'border-blue-500/50 text-blue-500'
+                            }`}>
+                              {route.difficulty}
+                            </div>
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavoriteRoute(route);
+                          }}
+                          className={cn(
+                             "p-2 rounded-full transition-all shrink-0",
+                             savedRouteIds.includes(route.id) ? "text-red-500 bg-red-500/10" : "text-white/20 hover:text-red-500 hover:bg-white/5"
+                          )}
+                          title={savedRouteIds.includes(route.id) ? "REMOVER_FAVORITO" : "SALVAR_FAVORITO"}
+                        >
+                           <Heart size={16} fill={savedRouteIds.includes(route.id) ? "currentColor" : "none"} />
+                        </button>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <div className={`text-[7px] font-mono px-2 py-0.5 rounded-xs border ${
-                          route.difficulty === 'CRITICAL' ? 'border-red-500/50 text-red-500' : 'border-blue-500/50 text-blue-500'
-                        }`}>
-                          {route.difficulty}
-                        </div>
-                        <ArrowUpRight size={12} className="text-white/20" />
-                      </div>
-                    </button>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="p-10 text-center flex flex-col items-center gap-3">
+                       <Activity size={24} className="text-white/5 animate-pulse" />
+                       <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">NENHUMA_ROTA_INTELIGENTE_ENCONTRADA_COM_FILTROS_ATIVOS</span>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -1878,6 +2219,74 @@ export default function AdventureMap() {
                 </motion.div>
               )}
            </div>
+        </div>
+
+        {/* Advance Tactic Filter Panel */}
+           <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="w-full max-w-2xl bg-black/80 backdrop-blur-3xl border border-white/10 overflow-hidden rounded-sm pointer-events-auto"
+                >
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Difficulty Filter */}
+                      <div>
+                          <label className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-3 block">DIFICULDADE</label>
+                          <div className="flex flex-wrap gap-2">
+                            {['all', 'LOW', 'MODERATE', 'CRITICAL'].map(dif => (
+                                <button 
+                                  key={dif}
+                                  onClick={() => setDifficultyFilter(dif)}
+                                  className={cn(
+                                    "px-3 py-1.5 text-[8px] font-mono font-bold uppercase tracking-widest border rounded-xs transition-all",
+                                    difficultyFilter === dif ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                                  )}
+                                >
+                                  {dif === 'all' ? 'TODAS' : dif === 'LOW' ? 'FÁCIL' : dif === 'MODERATE' ? 'MÉDIO' : 'CRÍTICO'}
+                                </button>
+                            ))}
+                          </div>
+                      </div>
+
+                      {/* Vehicle Filter */}
+                      <div>
+                          <label className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-3 block">TIPO_VEÍCULO</label>
+                          <div className="flex flex-wrap gap-2">
+                            {['all', 'bike', 'moto', 'overland'].map(v => (
+                                <button 
+                                  key={v}
+                                  onClick={() => setVehicleFilter(v)}
+                                  className={cn(
+                                    "px-3 py-1.5 text-[8px] font-mono font-bold uppercase tracking-widest border rounded-xs transition-all",
+                                    vehicleFilter === v ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                                  )}
+                                >
+                                  {v === 'all' ? 'PADRÃO' : v.toUpperCase()}
+                                </button>
+                            ))}
+                          </div>
+                      </div>
+
+                      {/* Country Filter */}
+                      <div>
+                          <label className="text-[9px] font-mono text-white/20 uppercase tracking-widest mb-3 block">PAÍS</label>
+                          <select 
+                            value={countryFilter}
+                            onChange={(e) => setCountryFilter(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xs p-2 text-[10px] font-mono text-white outline-none focus:border-[#ff641d]/50"
+                          >
+                            <option value="all">TODOS_PAÍSES</option>
+                            {countries.map(c => (
+                                <option key={c} value={c}>{c.toUpperCase()}</option>
+                            ))}
+                          </select>
+                      </div>
+                    </div>
+                </motion.div>
+              )}
+           </AnimatePresence>
 
            {/* Expedition Metrics (Adaptive) */}
            {isExpeditionMode && (
@@ -2083,7 +2492,10 @@ export default function AdventureMap() {
           ))}
 
           {routePoints.length > 1 && (
-            <Polyline positions={routePoints} color="#ff641d" weight={3} dashArray="5, 8" opacity={0.8} />
+            <>
+              <Polyline positions={routePoints} color="#ff641d" weight={12} opacity={0.1} lineJoin="round" />
+              <Polyline positions={routePoints} color="#ff641d" weight={3} dashArray="5, 8" opacity={0.8} lineJoin="round" />
+            </>
           )}
 
           {routePoints.map((p, i) => (
