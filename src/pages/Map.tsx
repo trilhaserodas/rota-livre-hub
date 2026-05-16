@@ -440,6 +440,38 @@ const initialPoints: LocationPoint[] = [
     image: 'https://images.unsplash.com/photo-1545145030-d30b27ece244?auto=format&fit=crop&q=80&w=400'
   },
   {
+    id: 'fuel-graal-japones-miracatu',
+    name: 'Graal Japonês',
+    lat: -24.050287,
+    lng: -47.208427,
+    category: 'fuel',
+    address: 'Rod. Régis Bittencourt, Km 348 — Serra do Cafezal, Miracatu - SP, 11850-000',
+    phone: '+55 11 91068-2293',
+    website: 'redegraal.com.br/graal-japones',
+    rating: '4.2 / 5 (9,207 avaliações)',
+    hours: 'Aberto 24 horas',
+    price: 'Médio-alto ($$$)',
+    type: 'Posto de Apoio, Restaurante, Banheiros e Banho',
+    description: 'Parada temática famosa na Serra do Cafezal. Jardim zen com lago de carpas, banheiros impecáveis e restaurantes variados. \n\n💬 Experiência Real: Possibilidade de pernoite com Motor Home/Kombi no estacionamento lateral (requer autorização da gerência). Use o local com respeito: sem lixo e sem barulho.',
+    image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=400'
+  },
+  {
+    id: 'safe-graal-japones-miracatu',
+    name: 'Graal Japonês',
+    lat: -24.050287,
+    lng: -47.208427,
+    category: 'safe_point',
+    address: 'Rod. Régis Bittencourt, Km 348 — Serra do Cafezal, Miracatu - SP, 11850-000',
+    phone: '+55 11 91068-2293',
+    website: 'redegraal.com.br/graal-japones',
+    rating: '4.2 / 5 (9,207 avaliações)',
+    hours: 'Aberto 24 horas',
+    price: 'Médio-alto ($$$)',
+    type: 'Posto de Apoio, Restaurante, Banheiros e Banho',
+    description: 'Parada temática famosa na Serra do Cafezal. Ponto Seguro certificado para pernoite e apoio ao viajante. \n\n💬 Experiência Real: Possibilidade de pernoite com Motor Home/Kombi no estacionamento lateral (requer autorização da gerência). Use o local com respeito: sem lixo e sem barulho.',
+    image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=400'
+  },
+  {
     id: 'water-br-2',
     name: 'Posto Itabuna',
     lat: -14.7833,
@@ -2406,6 +2438,7 @@ export default function AdventureMap() {
                               {p.rating && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>⭐</span> {p.rating}</div>}
                               {p.type && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>🏷️</span> {p.type}</div>}
                               {p.hours && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>🕐</span> {p.hours}</div>}
+                              {p.price && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>💰</span> {p.price}</div>}
                               {p.phone && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>📞</span> {p.phone}</div>}
                               {p.website && (
                                 <div className="text-[9px] text-[#ff641d] flex items-start gap-2">

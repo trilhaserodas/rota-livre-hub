@@ -27,6 +27,7 @@ export interface LocationPoint {
   rating?: string;
   hours?: string;
   type?: string;
+  price?: string;
   image?: string;
   images?: string[];
   isolationLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
