@@ -13,7 +13,8 @@ import {
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer,
   Cloud, Sun, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
-  Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck
+  Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck,
+  Map as MapIcon
 } from 'lucide-react';
 import WeatherWidget from '@/src/components/WeatherWidget';
 import SEO from '@/src/components/SEO';
@@ -2025,40 +2026,74 @@ export default function AdventureMap() {
                              </div>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-4 bg-white/[0.02] p-4 border border-white/5 rounded-sm">
+                          <div className="grid grid-cols-1 gap-6 bg-white/[0.02] p-4 border border-white/5 rounded-sm">
                              {/* Difficulty */}
-                             <div className="space-y-2">
-                                <label className="text-[7px] font-mono text-white/20 uppercase tracking-widest text-left block">DIFICULDADE</label>
-                                <div className="flex flex-wrap gap-1">
-                                   {['all', 'LOW', 'MODERATE', 'CRITICAL'].map(dif => (
+                             <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                   <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">NÍVEL_DIFICULDADE</label>
+                                   <span className="text-[7px] font-mono text-[#ff641d]/60 uppercase">{difficultyFilter === 'all' ? 'EXPEDIÇÃO_TOTAL' : difficultyFilter}</span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-1">
+                                   {[
+                                     { id: 'all', label: 'TUDO', icon: Filter, color: 'text-white' },
+                                     { id: 'LOW', label: 'FÁCIL', icon: MapIcon, color: 'text-green-500' },
+                                     { id: 'MODERATE', label: 'MÉDIO', icon: Mountain, color: 'text-blue-500' },
+                                     { id: 'CRITICAL', label: 'CRÍTICO', icon: ShieldAlert, color: 'text-red-500' }
+                                   ].map(dif => (
                                       <button 
-                                        key={dif}
-                                        onClick={() => setDifficultyFilter(dif)}
+                                        key={dif.id}
+                                        onClick={() => setDifficultyFilter(dif.id)}
                                         className={cn(
-                                          "px-2 py-1 text-[7px] font-mono border rounded-xs transition-all uppercase whitespace-nowrap",
-                                          difficultyFilter === dif ? "border-[#ff641d] text-[#ff641d] bg-[#ff641d]/10" : "border-white/5 text-white/40 hover:text-white"
+                                          "flex flex-col items-center justify-center gap-1.5 py-2.5 border rounded-xs transition-all group",
+                                          difficultyFilter === dif.id 
+                                            ? "border-[#ff641d] bg-[#ff641d]/10" 
+                                            : "border-white/5 bg-white/[0.02] hover:border-white/20"
                                         )}
                                       >
-                                        {dif === 'all' ? 'TODAS' : dif === 'LOW' ? 'FÁCIL' : dif === 'MODERATE' ? 'MÉDIO' : 'CRÍTICO'}
+                                        <dif.icon size={12} className={cn(
+                                          "transition-colors",
+                                          difficultyFilter === dif.id ? dif.color : "text-white/20 group-hover:text-white/40"
+                                        )} />
+                                        <span className={cn(
+                                          "text-[6px] font-mono tracking-tighter uppercase",
+                                          difficultyFilter === dif.id ? "text-white" : "text-white/20"
+                                        )}>{dif.label}</span>
                                       </button>
                                    ))}
                                 </div>
                              </div>
 
                              {/* Vehicle */}
-                             <div className="space-y-2">
-                                <label className="text-[7px] font-mono text-white/20 uppercase tracking-widest text-left block">TIPO_VEÍCULO</label>
-                                <div className="flex flex-wrap gap-1">
-                                   {['all', 'bike', 'moto', 'overland'].map(v => (
+                             <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                   <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">EQUIPAMENTO_FROTA</label>
+                                   <span className="text-[7px] font-mono text-[#ff641d]/60 uppercase">{vehicleFilter === 'all' ? 'POLIVALENTE' : vehicleFilter}</span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-1">
+                                   {[
+                                     { id: 'all', label: 'MIX', icon: Activity },
+                                     { id: 'bike', label: 'BIKE', icon: Bike },
+                                     { id: 'moto', label: 'MOTO', icon: Navigation2 },
+                                     { id: 'overland', label: '4X4', icon: Truck }
+                                   ].map(v => (
                                       <button 
-                                        key={v}
-                                        onClick={() => setVehicleFilter(v)}
+                                        key={v.id}
+                                        onClick={() => setVehicleFilter(v.id)}
                                         className={cn(
-                                          "px-2 py-1 text-[7px] font-mono border rounded-xs transition-all uppercase whitespace-nowrap",
-                                          vehicleFilter === v ? "border-[#ff641d] text-[#ff641d] bg-[#ff641d]/10" : "border-white/5 text-white/40 hover:text-white"
+                                          "flex flex-col items-center justify-center gap-1.5 py-2.5 border rounded-xs transition-all group",
+                                          vehicleFilter === v.id 
+                                            ? "border-[#ff641d] bg-[#ff641d]/10" 
+                                            : "border-white/5 bg-white/[0.02] hover:border-white/20"
                                         )}
                                       >
-                                        {v === 'all' ? 'PADRÃO' : v}
+                                        <v.icon size={12} className={cn(
+                                          "transition-colors",
+                                          vehicleFilter === v.id ? "text-[#ff641d]" : "text-white/20 group-hover:text-white/40"
+                                        )} />
+                                        <span className={cn(
+                                          "text-[6px] font-mono tracking-tighter uppercase",
+                                          vehicleFilter === v.id ? "text-white" : "text-white/20"
+                                        )}>{v.label}</span>
                                       </button>
                                    ))}
                                 </div>
@@ -2066,17 +2101,25 @@ export default function AdventureMap() {
 
                              {/* Country */}
                              <div className="space-y-2">
-                                <label className="text-[7px] font-mono text-white/20 uppercase tracking-widest text-left block">FILTRAR_POR_PAÍS</label>
-                                <select 
-                                  value={countryFilter}
-                                  onChange={(e) => setCountryFilter(e.target.value)}
-                                  className="w-full bg-[#0b0c0d] border border-white/10 rounded-sm p-2 text-[9px] font-mono text-white outline-none focus:border-[#ff641d]/50 transition-all uppercase"
-                                >
-                                   <option value="all">TODOS OS PAÍSES</option>
-                                   {countries.map(c => (
-                                      <option key={c} value={c}>{c}</option>
-                                   ))}
-                                </select>
+                                <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">LATITUDE_NACIONAL</label>
+                                <div className="relative group">
+                                   <div className="absolute left-3 top-1/2 -translate-y-1/2 p-1 border-r border-white/10 pr-2">
+                                      <Globe size={10} className={countryFilter !== 'all' ? "text-[#ff641d]" : "text-white/20"} />
+                                   </div>
+                                   <select 
+                                     value={countryFilter}
+                                     onChange={(e) => setCountryFilter(e.target.value)}
+                                     className="w-full bg-[#0b0c0d] border border-white/5 hover:border-white/20 rounded-xs py-2.5 pl-10 pr-4 text-[9px] font-mono text-white outline-none focus:border-[#ff641d]/50 transition-all uppercase appearance-none"
+                                   >
+                                      <option value="all">FROTAS_GLOBAIS (TODOS)</option>
+                                      {countries.map(c => (
+                                         <option key={c} value={c}>{c}</option>
+                                      ))}
+                                   </select>
+                                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/20">
+                                      <Triangle size={6} className="rotate-180" />
+                                   </div>
+                                </div>
                              </div>
                           </div>
 
@@ -3133,36 +3176,52 @@ export default function AdventureMap() {
                         {/* Filters in Route Menu */}
                         <div className="p-4 border-b border-white/5 space-y-4 bg-black/40">
                            <div className="space-y-2">
-                              <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">DIFICULDADE</label>
-                              <div className="flex gap-1 overflow-x-auto no-scrollbar">
-                                 {['all', 'LOW', 'MODERATE', 'CRITICAL'].map(dif => (
+                              <div className="flex items-center justify-between">
+                                 <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">DIFICULDADE</label>
+                                 <span className="text-[6px] font-mono text-[#ff641d]">{difficultyFilter.toUpperCase()}</span>
+                              </div>
+                              <div className="grid grid-cols-4 gap-1">
+                                 {[
+                                   { id: 'all', icon: Filter },
+                                   { id: 'LOW', icon: MapIcon },
+                                   { id: 'MODERATE', icon: Mountain },
+                                   { id: 'CRITICAL', icon: ShieldAlert }
+                                 ].map(dif => (
                                    <button 
-                                     key={dif}
-                                     onClick={() => setDifficultyFilter(dif)}
+                                     key={dif.id}
+                                     onClick={() => setDifficultyFilter(dif.id)}
                                      className={cn(
-                                       "px-2 py-1 text-[7px] font-mono border rounded-xs whitespace-nowrap transition-all",
-                                       difficultyFilter === dif ? "border-[#ff641d] text-[#ff641d] bg-[#ff641d]/10 font-bold" : "border-white/10 text-white/40 hover:text-white"
+                                       "p-2 border rounded-xs transition-all flex items-center justify-center",
+                                       difficultyFilter === dif.id ? "border-[#ff641d] bg-[#ff641d]/10 text-[#ff641d]" : "border-white/10 text-white/20 hover:text-white"
                                      )}
                                    >
-                                     {dif === 'all' ? 'TODAS' : dif}
+                                     <dif.icon size={10} />
                                    </button>
                                  ))}
                               </div>
                            </div>
 
                            <div className="space-y-2">
-                              <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">VEÍCULO</label>
-                              <div className="flex gap-1 overflow-x-auto no-scrollbar">
-                                 {['all', 'bike', 'moto', 'overland'].map(v => (
+                              <div className="flex items-center justify-between">
+                                 <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">VEÍCULO</label>
+                                 <span className="text-[6px] font-mono text-[#ff641d]">{vehicleFilter.toUpperCase()}</span>
+                              </div>
+                              <div className="grid grid-cols-4 gap-1">
+                                 {[
+                                   { id: 'all', icon: Activity },
+                                   { id: 'bike', icon: Bike },
+                                   { id: 'moto', icon: Navigation2 },
+                                   { id: 'overland', icon: Truck }
+                                 ].map(v => (
                                    <button 
-                                     key={v}
-                                     onClick={() => setVehicleFilter(v)}
+                                     key={v.id}
+                                     onClick={() => setVehicleFilter(v.id)}
                                      className={cn(
-                                       "px-2 py-1 text-[7px] font-mono border rounded-xs whitespace-nowrap transition-all",
-                                       vehicleFilter === v ? "border-[#ff641d] text-[#ff641d] bg-[#ff641d]/10 font-bold" : "border-white/10 text-white/40 hover:text-white"
+                                       "p-2 border rounded-xs transition-all flex items-center justify-center",
+                                       vehicleFilter === v.id ? "border-[#ff641d] bg-[#ff641d]/10 text-[#ff641d]" : "border-white/10 text-white/20 hover:text-white"
                                      )}
                                    >
-                                     {v === 'all' ? 'TODOS' : v.toUpperCase()}
+                                     <v.icon size={10} />
                                    </button>
                                  ))}
                               </div>
@@ -3170,16 +3229,22 @@ export default function AdventureMap() {
 
                            <div className="space-y-2">
                               <label className="text-[7px] font-mono text-white/20 uppercase tracking-[0.2em] block">PAÍS</label>
-                              <select 
-                                value={countryFilter}
-                                onChange={(e) => setCountryFilter(e.target.value)}
-                                className="w-full bg-white/[0.03] border border-white/10 rounded-xs p-1.5 text-[8px] font-mono text-white/60 outline-none focus:border-[#ff641d]/40 transition-all uppercase"
-                              >
-                                 <option value="all">BR+ARG+CH+GF</option>
-                                 {countries.map(c => (
-                                   <option key={c} value={c}>{c}</option>
-                                 ))}
-                              </select>
+                              <div className="relative">
+                                 <Globe size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-white/20" />
+                                 <select 
+                                   value={countryFilter}
+                                   onChange={(e) => setCountryFilter(e.target.value)}
+                                   className="w-full bg-white/[0.03] border border-white/10 rounded-xs py-1.5 pl-7 pr-2 text-[8px] font-mono text-white/60 outline-none focus:border-[#ff641d]/40 transition-all uppercase appearance-none"
+                                 >
+                                    <option value="all">BR+ARG+CH+GF</option>
+                                    {countries.map(c => (
+                                       <option key={c} value={c}>{c}</option>
+                                    ))}
+                                 </select>
+                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white/10">
+                                    <Triangle size={4} className="rotate-180" />
+                                 </div>
+                              </div>
                            </div>
                         </div>
 
