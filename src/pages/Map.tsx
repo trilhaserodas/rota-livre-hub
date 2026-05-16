@@ -698,6 +698,31 @@ const initialPoints: LocationPoint[] = [
     description: 'Torres del Paine, Chile. À beira do Lago Pehoé, paisagem patagônica.',
   },
   {
+    id: 'arg-camping-maldonado',
+    name: 'Camping Balneario Maldonado',
+    lat: -38.7491,
+    lng: -62.3396,
+    category: 'camping',
+    description: 'Bahía Blanca, Argentina. Amplo balneário com piscinas, áreas de lazer e suporte para viajantes. Tel: +54 291 4551614. G-Code: 7M8P+QW Bahía Blanca',
+    image: 'https://i.ibb.co/YT4zf28W/FACHADA.png',
+    images: [
+        'https://i.ibb.co/YT4zf28W/FACHADA.png',
+        'https://i.ibb.co/Zz4h2fQ5/AREA-DE-CAMPING.png',
+        'https://i.ibb.co/NdT2Q1Vg/ENTRADA.png',
+        'https://i.ibb.co/QFcTS9NG/Captura-de-tela-2026-05-16-103144.png',
+        'https://i.ibb.co/SDwgpWXC/Captura-de-tela-2026-05-16-103214.png'
+    ]
+  },
+  {
+    id: 'arg-hostel-bahia-blanca',
+    name: 'Bahia Blanca Hostel',
+    lat: -38.722399,
+    lng: -62.256024,
+    category: 'hostel',
+    description: 'Bahía Blanca, Argentina. Aberto 24h. Próximo ao centro. Tel: +54 291 452 6802. Site: hostelbahiablanca.com. G-Code: 7PHV+2H Bahía Blanca',
+    image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=400'
+  },
+  {
     id: 'cl-camping-3',
     name: 'EcoCamp Patagonia',
     lat: -50.9632,
@@ -2302,6 +2327,24 @@ export default function AdventureMap() {
                           
                           <h4 className="text-sm font-display font-black text-white uppercase tracking-tighter mb-1">{p.name}</h4>
                           <p className="text-[9px] text-white/40 uppercase font-mono leading-relaxed mb-4">{p.description}</p>
+                          
+                          {p.images && p.images.length > 1 && (
+                            <div className="grid grid-cols-4 gap-1 mb-4">
+                              {p.images.slice(1, 5).map((img, idx) => (
+                                <img 
+                                  key={idx} 
+                                  src={img} 
+                                  className="w-full h-10 object-cover border border-white/5 grayscale hover:grayscale-0 cursor-pointer transition-all" 
+                                  referrerPolicy="no-referrer"
+                                  onClick={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    const mainImg = target.closest('.custom-popup')?.querySelector('img:first-child') as HTMLImageElement;
+                                    if (mainImg) mainImg.src = target.src;
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
                           
                           <div className="grid grid-cols-2 gap-4 mb-4 border-t border-white/5 pt-4">
                              {p.isolationLevel && (

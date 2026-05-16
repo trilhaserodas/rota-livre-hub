@@ -22,6 +22,7 @@ export interface LocationPoint {
   category: 'camping' | 'water' | 'repair' | 'danger' | 'safe_point' | 'fuel' | 'policing' | 'hostel' | 'viewpoint' | 'bike_route' | 'moto_route' | 'overland' | 'terrestre' | 'border' | 'market' | 'no_signal' | 'climate' | 'bio';
   description: string;
   image?: string;
+  images?: string[];
   isolationLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   operationalStatus?: 'STABLE' | 'WARNING' | 'CRITICAL' | 'CLOSED';
   nextSupportDist?: string;
