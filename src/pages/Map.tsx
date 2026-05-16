@@ -25,6 +25,8 @@ import { useSearchParams } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeRouteIntelligence, RouteAnalysisResult } from '@/src/services/geminiService';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db as offlineDb, saveRouteOffline, removeRouteOffline, exportToGPX } from '@/src/services/offlineService';
 
 interface WeatherData {
   temp: number;
@@ -1297,6 +1299,10 @@ export default function AdventureMap() {
   const [aiIntelligence, setAiIntelligence] = useState<RouteAnalysisResult | null>(null);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  
+  // Offline functionality
+  const offlineRoutes = useLiveQuery(() => offlineDb.routes.toArray()) || [];
+  const [downloadingRoutes, setDownloadingRoutes] = useState<Set<string>>(new Set());
   const [performanceMetrics, setPerformanceMetrics] = useState({
     watts: 184,
     traction: 'OPT_AUTO',
@@ -1798,6 +1804,29 @@ export default function AdventureMap() {
     setAiIntelligence(null);
     setWeatherData(null);
     setActiveTab('explore');
+  };
+
+  const handleDownloadRoute = async (e: React.MouseEvent, route: any) => {
+    e.stopPropagation();
+    setDownloadingRoutes(prev => new Set(prev).add(route.id));
+    try {
+      await saveRouteOffline(route);
+    } catch (err) {
+      console.error("Offline save failed:", err);
+    } finally {
+      setTimeout(() => {
+        setDownloadingRoutes(prev => {
+          const next = new Set(prev);
+          next.delete(route.id);
+          return next;
+        });
+      }, 1000);
+    }
+  };
+
+  const handleRemoveOfflineRoute = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    await removeRouteOffline(id);
   };
 
   const routeSuggestions = useMemo(() => {
@@ -3107,6 +3136,54 @@ export default function AdventureMap() {
                         </div>
 
                         <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                           {/* Offline Routes Section */}
+                           {offlineRoutes.length > 0 && (
+                             <div className="border-b border-white/5">
+                               <div className="p-2 bg-green-500/5 flex items-center justify-between">
+                                 <span className="text-[7px] font-mono text-green-500 uppercase tracking-[0.3em] font-black">LOCAL_OFFLINE_SAVED</span>
+                               </div>
+                               {offlineRoutes.map(route => (
+                                 <button
+                                   key={`offline-${route.id}`}
+                                   onClick={() => selectRoute(route as any)}
+                                   className={cn(
+                                     "w-full p-4 flex flex-col items-start gap-1 hover:bg-green-500/5 transition-colors border-b border-white/5 group text-left relative",
+                                     selectedPreDefinedRoute?.id === route.id && "bg-green-500/5 border-l-2 border-l-green-500"
+                                   )}
+                                 >
+                                   <div className="flex items-center gap-2">
+                                     <Wifi size={8} className="text-green-500" />
+                                     <span className={cn(
+                                       "text-[10px] font-mono font-black uppercase tracking-widest",
+                                       selectedPreDefinedRoute?.id === route.id ? "text-green-500" : "text-white/80 group-hover:text-green-500"
+                                     )}>{route.name}</span>
+                                   </div>
+                                   <div className="flex items-center gap-4 w-full justify-between">
+                                      <div className="flex items-center gap-1">
+                                         <span className="text-[8px] font-mono text-white/30 uppercase">{route.country}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                         <button
+                                           onClick={(e) => { e.stopPropagation(); exportToGPX(route as any); }}
+                                           className="p-1.5 text-white/20 hover:text-white transition-all"
+                                           title="EXPORTAR_GPX"
+                                         >
+                                           <ArrowUpRight size={10} className="rotate-45" />
+                                         </button>
+                                         <button
+                                           onClick={(e) => handleRemoveOfflineRoute(e, route.id)}
+                                           className="p-1.5 text-white/20 hover:text-red-500 transition-all"
+                                           title="REMOVER_OFFLINE"
+                                         >
+                                           <Trash2 size={10} />
+                                         </button>
+                                      </div>
+                                   </div>
+                                 </button>
+                               ))}
+                             </div>
+                           )}
+
                            {routeSuggestions.map(route => (
                              <button
                                key={route.id}
@@ -3125,10 +3202,31 @@ export default function AdventureMap() {
                                      <Globe size={10} className="text-white/20" />
                                      <span className="text-[8px] font-mono text-white/40 uppercase">{route.country}</span>
                                   </div>
-                                  <span className={cn(
-                                    "text-[7px] font-mono px-2 py-0.5 rounded-xs border uppercase",
-                                    route.difficulty === 'CRITICAL' ? "border-red-500/50 text-red-500" : "border-blue-500/50 text-blue-500"
-                                  )}>{route.difficulty}</span>
+                                  <div className="flex items-center gap-2">
+                                     <button
+                                       onClick={(e) => handleDownloadRoute(e, route)}
+                                       className={cn(
+                                         "p-1.5 rounded-xs transition-all",
+                                         offlineRoutes.some(or => or.id === route.id) 
+                                           ? "text-green-500 bg-green-500/10" 
+                                           : "text-white/20 hover:text-white"
+                                       )}
+                                       title="BAIXAR_OFFLINE"
+                                     >
+                                       <Database size={10} className={downloadingRoutes.has(route.id) ? "animate-bounce" : ""} />
+                                     </button>
+                                     <button
+                                       onClick={(e) => { e.stopPropagation(); exportToGPX(route as any); }}
+                                       className="p-1.5 text-white/20 hover:text-white transition-all rounded-xs"
+                                       title="EXPORTAR_GPX"
+                                     >
+                                       <ArrowUpRight size={10} className="rotate-45" />
+                                     </button>
+                                     <span className={cn(
+                                       "text-[7px] font-mono px-2 py-0.5 rounded-xs border uppercase",
+                                       route.difficulty === 'CRITICAL' ? "border-red-500/50 text-red-500" : "border-blue-500/50 text-blue-500"
+                                     )}>{route.difficulty}</span>
+                                  </div>
                                </div>
                              </button>
                            ))}
