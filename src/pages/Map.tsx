@@ -121,6 +121,28 @@ const preDefinedRoutes = [
     status: 'STABLE'
   },
   {
+    id: 'maringa-ushuaia',
+    name: 'EXPEDIÇÃO: MARINGÁ > USHUAIA',
+    country: 'Brasil / Argentina',
+    color: '#f59e0b',
+    points: [
+      [-23.4209, -51.9331], // Maringá, PR
+      [-24.9555, -53.4552], // Cascavel, PR
+      [-25.5478, -54.5881], // Foz do Iguaçu, PR
+      [-27.3671, -55.8961], // Posadas, ARG
+      [-31.6333, -60.7000], // Santa Fe, ARG
+      [-34.6037, -58.3816], // Buenos Aires, ARG
+      [-38.7183, -62.2663], // Bahia Blanca, ARG
+      [-42.7692, -65.0385], // Puerto Madryn, ARG
+      [-45.8647, -67.4808], // Comodoro Rivadavia, ARG
+      [-51.6226, -69.2181], // Rio Gallegos, ARG
+      [-54.8019, -68.3030]  // Ushuaia, ARG
+    ] as [number, number][],
+    difficulty: 'MODERATE',
+    vehicleTypes: ['car', 'motorhome', 'moto', 'overland'],
+    status: 'ACTIVE_OPS'
+  },
+  {
     id: 'ruta-40',
     name: 'Ruta 40: A mística',
     country: 'Argentina',
