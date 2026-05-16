@@ -15,6 +15,7 @@ import {
   Cloud, Sun, CloudRain, Database, Heart, Cpu,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck
 } from 'lucide-react';
+import WeatherWidget from '@/src/components/WeatherWidget';
 import SEO from '@/src/components/SEO';
 import { cn } from '@/src/lib/utils';
 import { LocationPoint } from '@/src/types';
@@ -703,7 +704,11 @@ const initialPoints: LocationPoint[] = [
     lat: -38.7491,
     lng: -62.3396,
     category: 'camping',
-    description: 'Bahía Blanca, Argentina. Amplo balneário com piscinas, áreas de lazer e suporte para viajantes. Tel: +54 291 4551614. G-Code: 7M8P+QW Bahía Blanca',
+    description: 'Amplo balneário com piscinas, áreas de lazer e suporte para viajantes.',
+    address: 'Ruta Nac. 3 Sur, km 695 y, Charlone, Bahía Blanca, Provincia de Buenos Aires, Argentina',
+    phone: '+54 291 455 1614',
+    rating: '4.3 / 5 (1.226 avaliações)',
+    type: 'Camping · Balneario',
     image: 'https://i.ibb.co/YT4zf28W/FACHADA.png',
     images: [
         'https://i.ibb.co/YT4zf28W/FACHADA.png',
@@ -719,8 +724,29 @@ const initialPoints: LocationPoint[] = [
     lat: -38.722399,
     lng: -62.256024,
     category: 'hostel',
-    description: 'Bahía Blanca, Argentina. Aberto 24h. Próximo ao centro. Tel: +54 291 452 6802. Site: hostelbahiablanca.com. G-Code: 7PHV+2H Bahía Blanca',
+    description: 'Hostel próximo ao centro, bom custo-benefício.',
+    address: 'Soler 701, B8000 FJO, Provincia de Buenos Aires, Argentina',
+    phone: '+54 291 452 6802',
+    website: 'https://www.hostelbahiablanca.com/',
+    rating: '3.7 / 5 (727 avaliações)',
+    hours: 'Aberto 24 horas',
+    type: 'Bed & Breakfast · Hostel',
     image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=400'
+  },
+  {
+    id: 'pe-hostel-viajero-cusco',
+    name: 'Viajero Cusco Hostel',
+    lat: -13.519869,
+    lng: -71.978824,
+    category: 'hostel',
+    address: 'San Andrés 260, Cusco 08002, Peru',
+    phone: '+51 946 046 366',
+    website: 'https://viajerohostels.com/cusco',
+    rating: '4.7 / 5 (2.282 avaliações)',
+    hours: 'Aberto 24 horas',
+    type: 'Hostel · Bar · Restaurante',
+    description: 'Atendimento excepcional e facilidade para tours Machu Picchu. Área social com sofás confortáveis. Centro histórico.',
+    image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=400'
   },
   {
     id: 'cl-camping-3',
@@ -2273,7 +2299,8 @@ export default function AdventureMap() {
                   <Popup className="custom-popup">
                     <div className="p-3 bg-[#0b0c0d] text-center border border-white/5 min-w-[150px]">
                       <div className="text-[9px] font-mono text-[#ff641d] font-black uppercase tracking-widest mb-1">VOCÊ (LOCALIZAÇÃO)</div>
-                      <div className="text-[7px] font-mono text-white/40 uppercase">{isSharing ? 'TRANSMITINDO_LIVE' : 'SINAL_GPS_LOCAL'}</div>
+                      <div className="text-[7px] font-mono text-white/40 uppercase mb-3">{isSharing ? 'TRANSMITINDO_LIVE' : 'SINAL_GPS_LOCAL'}</div>
+                      <WeatherWidget lat={userLocation[0]} lng={userLocation[1]} />
                     </div>
                   </Popup>
                 </Marker>
@@ -2284,7 +2311,8 @@ export default function AdventureMap() {
                   <Popup className="custom-popup">
                     <div className="p-3 bg-[#0b0c0d] text-center border border-white/5 min-w-[150px]">
                       <div className="text-[9px] font-mono text-blue-400 font-black uppercase tracking-widest mb-1">{session.userName.toUpperCase()}</div>
-                      <div className="text-[7px] font-mono text-white/40 uppercase">EXPLORER_LIVE_HUB</div>
+                      <div className="text-[7px] font-mono text-white/40 uppercase mb-3">EXPLORER_LIVE_HUB</div>
+                      <WeatherWidget lat={session.lat} lng={session.lng} />
                     </div>
                   </Popup>
                 </Marker>
@@ -2328,6 +2356,24 @@ export default function AdventureMap() {
                           <h4 className="text-sm font-display font-black text-white uppercase tracking-tighter mb-1">{p.name}</h4>
                           <p className="text-[9px] text-white/40 uppercase font-mono leading-relaxed mb-4">{p.description}</p>
                           
+                          {(p.address || p.phone || p.website || p.rating || p.hours || p.type) && (
+                            <div className="space-y-1.5 mb-4 border-t border-white/5 pt-3">
+                              {p.address && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>📍</span> {p.address}</div>}
+                              {p.rating && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>⭐</span> {p.rating}</div>}
+                              {p.type && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>🏷️</span> {p.type}</div>}
+                              {p.hours && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>🕐</span> {p.hours}</div>}
+                              {p.phone && <div className="text-[9px] text-white/50 flex items-start gap-2"><span>📞</span> {p.phone}</div>}
+                              {p.website && (
+                                <div className="text-[9px] text-[#ff641d] flex items-start gap-2">
+                                  <span>🌐</span> 
+                                  <a href={p.website} target="_blank" rel="noopener noreferrer" className="hover:underline break-all">
+                                    {p.website.replace('https://', '').replace('www.', '')}
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {p.images && p.images.length > 1 && (
                             <div className="grid grid-cols-4 gap-1 mb-4">
                               {p.images.slice(1, 5).map((img, idx) => (
@@ -2345,6 +2391,8 @@ export default function AdventureMap() {
                               ))}
                             </div>
                           )}
+                          
+                          <WeatherWidget lat={p.lat} lng={p.lng} />
                           
                           <div className="grid grid-cols-2 gap-4 mb-4 border-t border-white/5 pt-4">
                              {p.isolationLevel && (

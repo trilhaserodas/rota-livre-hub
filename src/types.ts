@@ -21,6 +21,12 @@ export interface LocationPoint {
   lng: number;
   category: 'camping' | 'water' | 'repair' | 'danger' | 'safe_point' | 'fuel' | 'policing' | 'hostel' | 'viewpoint' | 'bike_route' | 'moto_route' | 'overland' | 'terrestre' | 'border' | 'market' | 'no_signal' | 'climate' | 'bio';
   description: string;
+  address?: string;
+  phone?: string;
+  website?: string;
+  rating?: string;
+  hours?: string;
+  type?: string;
   image?: string;
   images?: string[];
   isolationLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
