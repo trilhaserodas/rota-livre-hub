@@ -1137,6 +1137,15 @@ export default function AdventureMap() {
   const [aiIntelligence, setAiIntelligence] = useState<RouteAnalysisResult | null>(null);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    watts: 184,
+    traction: 'OPT_AUTO',
+    windLat: 12.5,
+    autonomy: 'H_CAPACITY',
+    pace: '12:30 min/km'
+  });
+  const [satelliteStatus, setSatelliteStatus] = useState<'STRONG' | 'DEGRADED' | 'STABLE' | 'LOST'>('STABLE');
+  const [securityAlerts, setSecurityAlerts] = useState<string[]>([]);
 
   const isSignedIn = useMemo(() => !!auth.currentUser, [auth.currentUser]);
   
@@ -1372,6 +1381,36 @@ export default function AdventureMap() {
     setAiIntelligence(result);
     setIsAnalyzingAI(false);
   };
+
+  useEffect(() => {
+    if (!isExpeditionMode) return;
+    const interval = setInterval(() => {
+      setPerformanceMetrics(prev => ({
+        ...prev,
+        watts: Math.max(120, Math.min(450, prev.watts + Math.floor((Math.random() - 0.5) * 10))),
+        windLat: parseFloat((prev.windLat + (Math.random() - 0.5) * 2).toFixed(1)),
+        traction: Math.random() > 0.8 ? 'ADAPT_SYNC' : 'OPT_AUTO'
+      }));
+      
+      if (Math.random() > 0.9) {
+        const statuses: ('STRONG' | 'DEGRADED' | 'STABLE')[] = ['STRONG', 'DEGRADED', 'STABLE'];
+        setSatelliteStatus(statuses[Math.floor(Math.random() * statuses.length)]);
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isExpeditionMode]);
+
+  useEffect(() => {
+    if (isExpeditionMode && weatherData) {
+      const alerts = [];
+      if (weatherData.temp > 35) alerts.push("⚠️ CALOR EXTREMO: RISCO DE DESIDRATAÇÃO");
+      if (weatherData.windSpeed > 15) alerts.push("⚠️ VENTOS FORTES: AFETA ESTABILIDADE");
+      if (weatherData.humidity > 85) alerts.push("⚠️ HUMIDADE ALTA: IMPACTO TÉRMICO");
+      setSecurityAlerts(alerts);
+    } else {
+      setSecurityAlerts([]);
+    }
+  }, [isExpeditionMode, weatherData]);
 
   // Weather Fetching
   const fetchWeather = useCallback(async (lat: number, lng: number) => {
@@ -3152,33 +3191,86 @@ export default function AdventureMap() {
                 </motion.div>
               )}
            </AnimatePresence>
-
-           {/* Expedition Metrics (Adaptive) */}
+                                  {/* Expedition Metrics (Adaptive) */}
            {isExpeditionMode && (
              <motion.div 
                initial={{ opacity: 0, y: -20 }}
                animate={{ opacity: 1, y: 0 }}
-               className="flex flex-wrap justify-center gap-4 md:gap-6 bg-black/80 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-sm shadow-2xl pointer-events-auto max-w-full overflow-x-auto no-scrollbar"
+               className="flex flex-col gap-3 pointer-events-auto max-w-full"
              >
-                {transportMode === 'bike' && <OperationalMetric label="ESFORÇO" value="184W" icon={Zap} color="text-yellow-400" />}
-                {transportMode === 'moto' && <OperationalMetric label="VENTO_LAT" value="44.2 KM/H" icon={Wind} color="text-blue-400" />}
-                {transportMode === 'car' && <OperationalMetric label="TRAÇÃO" value="AUTO_SYNC" icon={Layers} color="text-red-500" />}
-                {transportMode === 'motorhome' && <OperationalMetric label="AUTONOMIA" value="HIGH" icon={Battery} color="text-green-500" />}
-                {transportMode === 'walk' && <OperationalMetric label="RITMO" value="12:40 MIN/KM" icon={Clock} color="text-green-400" />}
-                <div className="hidden md:block w-[1px] bg-white/10" />
-                <button 
-                  onClick={() => setShowHeatmap(!showHeatmap)}
-                  className={cn("transition-all hover:opacity-80 active:scale-95", showHeatmap && "ring-1 ring-[#ff641d] rounded-sm p-1 -m-1")}
-                >
-                  <OperationalMetric label="TEMP" value="12.5°C" icon={Thermometer} />
-                </button>
-                <div className="hidden md:block w-[1px] bg-white/10" />
-                <OperationalMetric label="ALT" value="2.450M" icon={Mountain} />
-                <div className="hidden md:block w-[1px] bg-white/10" />
-                <div className="flex gap-4">
-                  <OperationalMetric label="LAT" value={userLocation ? userLocation[0].toFixed(4) : "---"} icon={MapPin} />
-                  <OperationalMetric label="LNG" value={userLocation ? userLocation[1].toFixed(4) : "---"} icon={MapPin} />
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6 bg-black/80 backdrop-blur-xl border border-white/10 p-3 md:p-4 rounded-sm shadow-2xl relative overflow-hidden">
+                   {/* Scanline pattern for tech vibe */}
+                   <div className="absolute inset-x-0 top-0 h-[1px] bg-white/5" />
+                   
+                   {/* Satellite Status */}
+                   <div className="flex flex-col gap-1 pr-4 border-r border-white/5">
+                      <div className="flex items-center gap-1.5">
+                         <Wifi size={10} className={cn(
+                           satelliteStatus === 'STRONG' ? "text-green-500" :
+                           satelliteStatus === 'DEGRADED' ? "text-yellow-500" : "text-blue-500"
+                         )} />
+                         <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">SAT_CONN</span>
+                      </div>
+                      <div className="text-[9px] font-mono font-black text-white flex items-center gap-1.5">
+                         {satelliteStatus}
+                         <div className="flex gap-0.5">
+                            {[1,2,3].map(i => (
+                              <div key={i} className={cn(
+                                "w-[2px] h-[6px] rounded-full",
+                                (satelliteStatus === 'STRONG' || (satelliteStatus === 'STABLE' && i <= 2) || (satelliteStatus === 'DEGRADED' && i <= 1)) ? "bg-cyan-500" : "bg-white/10"
+                              )} />
+                            ))}
+                         </div>
+                      </div>
+                   </div>
+
+                   {transportMode === 'bike' && <OperationalMetric label="ESFORÇO" value={`${performanceMetrics.watts}W`} icon={Zap} color="text-yellow-400" />}
+                   {transportMode === 'moto' && <OperationalMetric label="VENTO_LAT" value={`${performanceMetrics.windLat} KM/H`} icon={Wind} color="text-blue-400" />}
+                   {transportMode === 'car' && <OperationalMetric label="TRAÇÃO" value={performanceMetrics.traction} icon={Layers} color="text-red-500" />}
+                   {transportMode === 'motorhome' && <OperationalMetric label="AUTONOMIA" value={performanceMetrics.autonomy} icon={Battery} color="text-green-500" />}
+                   {transportMode === 'walk' && <OperationalMetric label="RITMO" value={performanceMetrics.pace} icon={Clock} color="text-green-400" />}
+                   
+                   <div className="hidden md:block w-[1px] bg-white/10" />
+                   
+                   <button 
+                     onClick={() => setShowHeatmap(!showHeatmap)}
+                     className={cn("transition-all hover:opacity-80 active:scale-95", showHeatmap && "ring-1 ring-[#ff641d] rounded-sm p-1 -m-1")}
+                   >
+                     <OperationalMetric label="TEMP" value={weatherData ? `${weatherData.temp}°C` : "12.5°C"} icon={Thermometer} />
+                   </button>
+                   
+                   <div className="hidden md:block w-[1px] bg-white/10" />
+                   <OperationalMetric label="ALT" value="2.450M" icon={Mountain} />
+                   
+                   <div className="hidden md:block w-[1px] bg-white/10" />
+                   <div className="flex gap-4">
+                     <OperationalMetric label="LAT" value={userLocation ? userLocation[0].toFixed(4) : "---"} icon={MapPin} />
+                     <OperationalMetric label="LNG" value={userLocation ? userLocation[1].toFixed(4) : "---"} icon={MapPin} />
+                   </div>
                 </div>
+
+                {/* Tactical Alerts Bar */}
+                <AnimatePresence>
+                  {securityAlerts.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="bg-red-500 border border-red-400/50 p-2 rounded-sm flex items-center gap-3 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+                    >
+                       <ShieldAlert size={14} className="text-white animate-pulse" />
+                       <div className="flex-1 overflow-hidden">
+                          <motion.div 
+                            animate={{ x: [0, -100] }}
+                            transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+                            className="text-[9px] font-mono font-black text-white uppercase tracking-widest whitespace-nowrap"
+                          >
+                             {securityAlerts.join(' // ')} // {securityAlerts.join(' // ')}
+                          </motion.div>
+                       </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
              </motion.div>
            )}
         </div>
