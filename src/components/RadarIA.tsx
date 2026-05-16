@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Loader2, Zap } from 'lucide-react';
+import { X, Send, Loader2, Zap, ExternalLink } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/src/lib/utils';
@@ -22,6 +22,7 @@ Responda sempre em Português do Brasil.`;
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  groundingMetadata?: any;
 }
 
 export default function RadarIA() {
@@ -72,7 +73,11 @@ export default function RadarIA() {
       
       const data = await res.json();
       const responseText = data.text || "Erro na comunicação via satélite. Tente novamente.";
-      setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: responseText,
+        groundingMetadata: data.groundingMetadata
+      }]);
     } catch (error: any) {
       console.error("AI Error:", error);
       const errorMessage = error.message.includes('API_KEY_INVALID') || error.message.includes('GEMINI_API_KEY') 
@@ -159,6 +164,32 @@ export default function RadarIA() {
                         <ReactMarkdown>
                           {msg.content}
                         </ReactMarkdown>
+                        
+                        {/* Grounding Sources */}
+                        {msg.groundingMetadata?.groundingChunks?.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
+                            <p className="text-[8px] font-mono uppercase tracking-[0.2em] text-[#ff641d]">Fontes de Pesquisa:</p>
+                            <div className="grid grid-cols-1 gap-2">
+                              {msg.groundingMetadata.groundingChunks.map((chunk: any, idx: number) => {
+                                const url = chunk.web?.uri || chunk.maps?.uri;
+                                const title = chunk.web?.title || chunk.maps?.title || "Abrir Link";
+                                if (!url) return null;
+                                return (
+                                  <a 
+                                    key={idx} 
+                                    href={url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-[10px] text-white/60 hover:text-[#ff641d] bg-white/[0.03] hover:bg-white/[0.08] p-2 rounded-lg border border-white/5 transition-all group/link"
+                                  >
+                                    <ExternalLink size={12} className="shrink-0 text-[#ff641d] group-hover/link:scale-110 transition-transform" />
+                                    <span className="truncate">{title}</span>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       msg.content

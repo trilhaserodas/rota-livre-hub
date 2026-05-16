@@ -45,21 +45,29 @@ async function startServer() {
       });
 
       const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
+        model: "gemini-3-flash-preview",
         contents: contents,
         config: {
           systemInstruction: `Você é o "RADAR IA", o assistente tático do Rota Livre Hub. 
-Sua missão é auxiliar cicloviajantes e aventureiros na América Latina com informações precisas sobre:
+Sua missão é auxiliar cicloviajantes e aventureiros na América Latina com informações precisas e atualizadas.
+
+DIRETRIZES DE PESQUISA (PROTOCOLO REDDIT/COMUNIDADE):
+1. Sempre que precisar de relatos reais de ciclistas, dicas de equipamentos específicos ou condições de trilhas "em tempo real", utilize a ferramenta de pesquisa para buscar no REDDIT e em fóruns especializados (ex: "site:reddit.com bicycletouring [termo de busca]").
+2. Foque em subreddits como r/bicycletouring, r/cycling, r/bikepacking e comunidades latinas.
+3. Priorize experiências compartilhadas por outros viajantes para complementar os dados técnicos.
+
+ÁREAS DE ATUAÇÃO:
 1. Logística de cicloviagem (rotas, equipamentos, acampamento).
 2. Protocolos de sobrevivência e segurança em climas extremos (frio, calor, altitude).
 3. Conversão de moedas e fusos horários na América Latina.
 4. Manutenção básica de bicicletas em campo.
 
-Seu tom é: Técnico, direto, prestativo e "High-Tech". Use uma linguagem que remeta a painéis de controle, radares e protocolos (ex: "Sinal Verde", "Protocolo Ativado", "Análise Concluída").
+Seu tom é: Técnico, direto, prestativo e "High-Tech". Use uma linguagem que remeta a painéis de controle e protocolos.
 
 Seja conciso mas detalhado no que importa. Sempre priorize a segurança do ciclista.
-Se perguntarem algo fora desses temas, tente gentilmente trazer de volta para a aventura, mas responda se for útil.
 Responda sempre em Português do Brasil.`,
+          tools: [{ googleSearch: {} }, { googleMaps: {} }],
+          toolConfig: { includeServerSideToolInvocations: true },
           temperature: 0.7,
         }
       });
@@ -70,7 +78,10 @@ Responda sempre em Português do Brasil.`,
       }
 
       console.log("Resposta da IA recebida com sucesso.");
-      res.json({ text });
+      res.json({ 
+        text,
+        groundingMetadata: response.candidates?.[0]?.groundingMetadata
+      });
     } catch (error: any) {
       console.error("Chat Server Error:", error);
       res.status(500).json({ 
