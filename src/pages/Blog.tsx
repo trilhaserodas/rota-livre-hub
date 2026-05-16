@@ -7,6 +7,57 @@ import AdSense from '@/src/components/AdSense';
 
 const posts = [
   {
+    id: 7,
+    title: '⚠️ NOVAS REGRAS PARA POWER BANK EM AVIÕES: O QUE MOCHILEIROS E CICLOTURISTAS PRECISAM SABER EM 2026',
+    excerpt: 'As regras para transporte de baterias portáteis em voos internacionais estão ficando mais rígidas em 2026. Saiba como evitar problemas no embarque e não perder seus equipamentos.',
+    category: 'LOGÍSTICA',
+    author: 'TR_COMMUNITY',
+    date: '16.05.26',
+    image: 'https://i.ibb.co/XkZ6gQ8C/THUMBMAIL-POWERBANK-NO-AVI-O.png',
+    content: `
+      <p>Se você viaja com mochila, bicicleta, câmera ou celular, atenção. As regras para transporte de baterias portáteis em voos internacionais estão ficando mais rígidas em 2026. Muita gente pode acabar perdendo equipamentos ou sendo barrado no aeroporto, principalmente quem faz mochilão e cicloviagem pela América do Sul.</p>
+
+      <h2>O QUE ESTÁ MUDANDO?</h2>
+      <p>As novas recomendações internacionais de segurança aérea surgiram após diversos incidentes envolvendo superaquecimento, fumaça e incêndios causados por baterias de lítio dentro de aeronaves. Por causa disso, órgãos ligados à aviação internacional e várias companhias aéreas começaram endurecer as regras para power banks e baterias extras.</p>
+
+      <h2>POWER BANK AGORA SÓ NA BAGAGEM DE MÃO</h2>
+      <p>Uma das regras mais importantes: ⚠️ <strong>Power banks NÃO podem ser transportados na bagagem despachada.</strong></p>
+      <p>Eles devem ficar na mochila de cabine, acessíveis durante o voo e protegidos contra curto-circuito. Isso vale para power banks, baterias extras, carregadores portáteis e baterias de notebook.</p>
+
+      <h2>EXISTE LIMITE DE CAPACIDADE?</h2>
+      <p>Sim. A maioria das companhias segue algo próximo disso:</p>
+      <ul>
+        <li><strong>Até 100Wh:</strong> permitido normalmente ✅</li>
+        <li><strong>Entre 100Wh e 160Wh:</strong> precisa aprovação da companhia aérea ⚠️</li>
+        <li><strong>Acima de 160Wh:</strong> proibido em voos comerciais ❌</li>
+      </ul>
+
+      <h2>LIMITAÇÃO DE QUANTIDADE</h2>
+      <p>Em 2026, novas recomendações começaram a limitar a quantidade de aparelhos por passageiro. Algumas companhias já permitem no máximo 2 power banks por pessoa e podem proibir o carregamento durante o voo em aviões mais antigos por segurança térmica.</p>
+
+      <h2>COMO SABER SE O SEU POWER BANK É PERMITIDO?</h2>
+      <p>Olhe a parte traseira da bateria. Se não mostrar Wh, faça o cálculo: <strong>Capacidade (mAh) ÷ 1000 × Voltagem = Wh</strong></p>
+      <p>Exemplo: 20.000mAh × 3.7V = aproximadamente 74Wh (Permitido ✅).</p>
+
+      <div class="bg-[#ff641d]/10 p-6 border-l-4 border-[#ff641d] my-8">
+        <p class="text-white font-bold mb-2 italic">"Para quem vive na estrada, a bateria portátil deixou de ser apenas um acessório e virou equipamento operacional vital."</p>
+      </div>
+
+      <h2>DICAS PARA CICLOTURISTAS</h2>
+      <ul>
+        <li>Proteja os conectores das baterias contra curto-circuito.</li>
+        <li>Deixe as baterias acessíveis para inspeção rápida.</li>
+        <li>Confira as regras específicas da companhia antes de embarcar.</li>
+      </ul>
+
+      <p class="text-[9px] font-mono text-white/20 uppercase tracking-[0.4em] leading-relaxed mt-12 block">
+        Fontes consultadas: FAA (Federal Aviation Administration) PackSafe, IATA Battery Regulations 2026, Reuters Aviation Reports.
+      </p>
+
+      <p>Publicado em: 16.05.2026<br/>Projeto desenvolvido pela comunidade Trilhas e Rodas.<br/>Instagram: @trilhas_erodas</p>
+    `
+  },
+  {
     id: 6,
     title: 'COMO SE PREPARAR PARA O FRIO NA CICLO VIAGEM',
     excerpt: 'O frio pode transformar uma cicloviagem incrível em uma batalha pela sobrevivência. Entenda o wind chill, o sistema de camadas e como evitar a hipotermia na estrada.',
