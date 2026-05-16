@@ -356,11 +356,17 @@ const initialPoints: LocationPoint[] = [
   },
   {
     id: 'repair-motos-puerto-natales',
-    name: 'Mecânica Patagônia - Puerto Natales',
-    lat: -51.727,
-    lng: -72.502,
+    name: 'MECANICA Automotriz Natales',
+    lat: -51.722399,
+    lng: -72.506024,
     category: 'repair',
-    description: 'Especialista em motos e veículos de expedição.',
+    address: 'Agustín Molina 18, Puerto Natales, Natales, Magallanes y la Antártica Chilena, Chile',
+    phone: '+56 9 7696 0799',
+    rating: '4.8 / 5 (27 reviews)',
+    hours: '09:30 - 21:30',
+    type: 'Carros e Motos',
+    description: 'Especializado em Carros e Motos. "Ele dedicou um tempo para nos explicar tudo e foi super simpático. resolveu o problema na hora." G-Code: 7GJ3+QH.',
+    image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=400'
   },
   {
     id: 'offroad-1',
@@ -379,12 +385,31 @@ const initialPoints: LocationPoint[] = [
     description: 'Ponto crucial de abastecimento no coração do Jalapão.',
   },
   {
-    id: 'water-br-1',
-    name: 'Posto São Roque',
-    lat: -23.5333,
-    lng: -47.1333,
-    category: 'water',
-    description: 'Rod. Pres. Castelo Branco km 57, São Roque/SP. Ponto de água potável.',
+    id: 'fuel-portal-jalapao-dianopolis',
+    name: 'Auto Posto Portal do Jalapão',
+    lat: -11.6166,
+    lng: -46.8143,
+    category: 'fuel',
+    address: 'TO-040, Km. 431, Dianópolis - TO, 77300-000',
+    hours: '24 Horas',
+    phone: '063 99221-7873',
+    rating: '4.6 (49 reviews)',
+    description: 'Posto de Combustível e Restaurante. "Restaurante do Auto posto Jalapão serviu no domingo almoço com salada, arroz, feijão, lasanha, batata frita, linguiça, frango ao molho, bife e macarrão. Serve no quilo, marmita ou PF. Comida gostosa. Suco de laranja muito bom. Funcionários muito atenciosos. Banheiros limpos."',
+    image: 'https://images.unsplash.com/photo-1545145030-d30b27ece244?auto=format&fit=crop&q=80&w=400'
+  },
+  {
+    id: 'fuel-quinta-marques-sao-roque',
+    name: 'Auto Posto Quinta do Marquês',
+    lat: -23.54141,
+    lng: -47.13524,
+    category: 'fuel',
+    address: 'Rod. Pres. Castello Branco, 57 - São Roque, SP, 18147-000',
+    phone: '01147179800',
+    website: 'http://www.aquintadomarques.com.br/',
+    rating: '4.5 (7,951 reviews)',
+    type: 'Posto de Combustível · Ponto de Água · Restaurante',
+    description: 'Ponto tradicional na Castello Branco. Excelente infraestrutura, restaurante e ponto de abastecimento de água e combustível. G-Code: HVC6+4M.',
+    image: 'https://images.unsplash.com/photo-1545145030-d30b27ece244?auto=format&fit=crop&q=80&w=400'
   },
   {
     id: 'water-br-2',
@@ -1315,34 +1340,25 @@ export default function AdventureMap() {
       const id = auth.currentUser.uid;
       setTrackingId(id);
       
-      // Mark as active
-      setDoc(doc(db, 'trackingSessions', id), {
-        userId: id,
-        userName: auth.currentUser?.displayName || 'Explorer',
-        updatedAt: serverTimestamp(),
-        active: true
-      }, { merge: true });
-
-      watchId = navigator.geolocation.watchPosition((pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation([latitude, longitude]);
-        updateDoc(doc(db, 'trackingSessions', id), {
-          lat: latitude,
-          lng: longitude,
-          updatedAt: serverTimestamp(),
-          active: true
-        }).catch(err => {
-          console.error("Update tracking error:", err);
-          // Fallback to setDoc if update fails (e.g. doc doesn't exist yet)
-          setDoc(doc(db, 'trackingSessions', id), {
+      const updateTracking = async (latitude: number, longitude: number) => {
+        try {
+          await setDoc(doc(db, 'trackingSessions', id), {
             userId: id,
-            userName: auth.currentUser?.displayName || 'Explorer',
+            userName: auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Explorer',
             lat: latitude,
             lng: longitude,
             updatedAt: serverTimestamp(),
             active: true
           }, { merge: true });
-        });
+        } catch (err) {
+          console.error("Tracking update failed:", err);
+        }
+      };
+
+      watchId = navigator.geolocation.watchPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation([latitude, longitude]);
+        updateTracking(latitude, longitude);
       }, (err) => {
         console.error("Geolocation error:", err);
       }, { enableHighAccuracy: true });
@@ -1357,7 +1373,7 @@ export default function AdventureMap() {
     return () => { 
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
-  }, [isSharing, trackingId]);
+  }, [isSharing, trackingId, auth.currentUser]);
 
   // Listen to other active explorers
   useEffect(() => {
