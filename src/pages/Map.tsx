@@ -395,7 +395,13 @@ const initialPoints: LocationPoint[] = [
     phone: '063 99221-7873',
     rating: '4.6 (49 reviews)',
     description: 'Posto de Combustível e Restaurante. "Restaurante do Auto posto Jalapão serviu no domingo almoço com salada, arroz, feijão, lasanha, batata frita, linguiça, frango ao molho, bife e macarrão. Serve no quilo, marmita ou PF. Comida gostosa. Suco de laranja muito bom. Funcionários muito atenciosos. Banheiros limpos."',
-    image: 'https://images.unsplash.com/photo-1545145030-d30b27ece244?auto=format&fit=crop&q=80&w=400'
+    image: 'https://i.ibb.co/Z1mhp7Wv/Captura-de-tela-2026-05-16-134624.png',
+    images: [
+      'https://i.ibb.co/Z1mhp7Wv/Captura-de-tela-2026-05-16-134624.png',
+      'https://i.ibb.co/svK1zgry/Captura-de-tela-2026-05-16-134500.png',
+      'https://i.ibb.co/9km6pZNd/Captura-de-tela-2026-05-16-134547.png',
+      'https://i.ibb.co/tT27tpJT/Captura-de-tela-2026-05-16-134721.png'
+    ]
   },
   {
     id: 'fuel-quinta-marques-sao-roque',
