@@ -45,7 +45,7 @@ async function startServer() {
       });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: contents,
         config: {
           systemInstruction: `Você é o "RADAR IA", o assistente tático do Rota Livre Hub. 
@@ -66,8 +66,7 @@ Seu tom é: Técnico, direto, prestativo e "High-Tech". Use uma linguagem que re
 
 Seja conciso mas detalhado no que importa. Sempre priorize a segurança do ciclista.
 Responda sempre em Português do Brasil.`,
-          tools: [{ googleSearch: {} }, { googleMaps: {} }],
-          toolConfig: { includeServerSideToolInvocations: true },
+          tools: [{ googleSearch: {} }],
           temperature: 0.7,
         }
       });

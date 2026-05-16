@@ -80,9 +80,13 @@ export default function RadarIA() {
       }]);
     } catch (error: any) {
       console.error("AI Error:", error);
-      const errorMessage = error.message.includes('API_KEY_INVALID') || error.message.includes('GEMINI_API_KEY') 
-        ? "ERRO_SISTEMA: Chave de API não configurada corretamente. Verifique as configurações de Secrets."
-        : `ERRO_SISTEMA: ${error.message || "Conexão de satélite interrompida. Tente novamente."}`;
+      let errorMessage = `ERRO_SISTEMA: ${error.message || "Conexão de satélite interrompida. Tente novamente."}`;
+      
+      if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED')) {
+        errorMessage = "RADAR ALERTA: Sobrecarga nos servidores de busca. Nossa quota diária foi atingida. Por favor, tente novamente em alguns instantes ou retorne em breve.";
+      } else if (error.message.includes('API_KEY_INVALID') || error.message.includes('GEMINI_API_KEY')) {
+        errorMessage = "ERRO_SISTEMA: Chave de API não configurada corretamente. Verifique as configurações de Secrets.";
+      }
       
       setMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
     } finally {
