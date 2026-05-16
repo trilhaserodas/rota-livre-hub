@@ -453,7 +453,19 @@ const initialPoints: LocationPoint[] = [
     price: 'Médio-alto ($$$)',
     type: 'Posto de Apoio, Restaurante, Banheiros e Banho',
     description: 'Parada temática famosa na Serra do Cafezal. Jardim zen com lago de carpas, banheiros impecáveis e restaurantes variados. \n\n💬 Experiência Real: Possibilidade de pernoite com Motor Home/Kombi no estacionamento lateral (requer autorização da gerência). Use o local com respeito: sem lixo e sem barulho.',
-    image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=400'
+    image: 'https://i.ibb.co/6czx2qQZ/Local-imagem-a-rea.png',
+    images: [
+      'https://i.ibb.co/6czx2qQZ/Local-imagem-a-rea.png',
+      'https://i.ibb.co/1f3xSXL8/imagem-a-rea-01.png',
+      'https://i.ibb.co/xt6bPTwT/Possibilidade-de-pernoite-com-Motor-Home.png',
+      'https://i.ibb.co/Gf9WS68v/pra-a-de-alimenta-o-e-tomadas-para-carregar-celular.png',
+      'https://i.ibb.co/s9WDXVs9/Padaria-Lanches.png',
+      'https://i.ibb.co/39v5PkRY/Pra-a-de-alimenta-o.png',
+      'https://i.ibb.co/BWDhQSw/RECEP-O-PREMIUM.png',
+      'https://i.ibb.co/j95xMxYR/Banheiros-com-Possibilidade-de-banho.png',
+      'https://i.ibb.co/SwcnqQWS/estacionamento-com-banheiros.png',
+      'https://i.ibb.co/7Nj2K9Fh/Restaurante.png'
+    ]
   },
   {
     id: 'safe-graal-japones-miracatu',
@@ -469,7 +481,19 @@ const initialPoints: LocationPoint[] = [
     price: 'Médio-alto ($$$)',
     type: 'Posto de Apoio, Restaurante, Banheiros e Banho',
     description: 'Parada temática famosa na Serra do Cafezal. Ponto Seguro certificado para pernoite e apoio ao viajante. \n\n💬 Experiência Real: Possibilidade de pernoite com Motor Home/Kombi no estacionamento lateral (requer autorização da gerência). Use o local com respeito: sem lixo e sem barulho.',
-    image: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=400'
+    image: 'https://i.ibb.co/6czx2qQZ/Local-imagem-a-rea.png',
+    images: [
+      'https://i.ibb.co/6czx2qQZ/Local-imagem-a-rea.png',
+      'https://i.ibb.co/1f3xSXL8/imagem-a-rea-01.png',
+      'https://i.ibb.co/xt6bPTwT/Possibilidade-de-pernoite-com-Motor-Home.png',
+      'https://i.ibb.co/Gf9WS68v/pra-a-de-alimenta-o-e-tomadas-para-carregar-celular.png',
+      'https://i.ibb.co/s9WDXVs9/Padaria-Lanches.png',
+      'https://i.ibb.co/39v5PkRY/Pra-a-de-alimenta-o.png',
+      'https://i.ibb.co/BWDhQSw/RECEP-O-PREMIUM.png',
+      'https://i.ibb.co/j95xMxYR/Banheiros-com-Possibilidade-de-banho.png',
+      'https://i.ibb.co/SwcnqQWS/estacionamento-com-banheiros.png',
+      'https://i.ibb.co/7Nj2K9Fh/Restaurante.png'
+    ]
   },
   {
     id: 'water-br-2',
