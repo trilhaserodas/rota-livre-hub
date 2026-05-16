@@ -12,7 +12,7 @@ import {
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer,
-  Cloud, Sun, CloudRain, Database, Heart, Cpu,
+  Cloud, Sun, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck
 } from 'lucide-react';
 import WeatherWidget from '@/src/components/WeatherWidget';
@@ -1299,6 +1299,7 @@ export default function AdventureMap() {
   const [aiIntelligence, setAiIntelligence] = useState<RouteAnalysisResult | null>(null);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [isBottomPanelMinimized, setIsBottomPanelMinimized] = useState(false);
   
   // Offline functionality
   const offlineRoutes = useLiveQuery(() => offlineDb.routes.toArray()) || [];
@@ -2078,6 +2079,53 @@ export default function AdventureMap() {
                                 </select>
                              </div>
                           </div>
+
+                          {/* Active Route Metrics in Sidebar */}
+                          {routePoints.length > 0 && (
+                            <div className="mt-4 p-4 bg-[#ff641d]/10 border border-[#ff641d]/20 rounded-sm space-y-4">
+                               <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                     <Activity size={10} className="text-[#ff641d]" />
+                                     <span className="text-[8px] font-mono font-black text-[#ff641d] tracking-[0.3em] uppercase">MÉTRICAS_DA_ROTA</span>
+                                  </div>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); setRoutePoints([]); }}
+                                    className="text-white/20 hover:text-red-500 transition-colors"
+                                  >
+                                     <Trash2 size={12} />
+                                  </button>
+                               </div>
+                               <div className="grid grid-cols-2 gap-4">
+                                  <div className="flex flex-col gap-1">
+                                     <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">TOTAL_KM</span>
+                                     <span className="text-sm font-mono font-black text-white">{totalDistance.toFixed(2)} KM</span>
+                                  </div>
+                                  <div className="flex flex-col gap-1">
+                                     <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">ESTIMADO</span>
+                                     <span className="text-sm font-mono font-black text-[#ff641d]">{estimatedTime}</span>
+                                  </div>
+                               </div>
+                               <div className="h-[1px] bg-white/5" />
+                               <div className="flex gap-2">
+                                 <button
+                                   onClick={() => {
+                                     setActiveTab('expedition');
+                                     setIsExpeditionMode(true);
+                                   }}
+                                   className="flex-1 h-9 bg-[#ff641d] text-white text-[9px] font-mono font-black uppercase tracking-widest hover:bg-white hover:text-[#ff641d] transition-all"
+                                 >
+                                   INICIAR_NAV
+                                 </button>
+                                 <button
+                                   onClick={() => setIsBottomPanelMinimized(!isBottomPanelMinimized)}
+                                   className="px-3 h-9 bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all text-[9px] font-mono flex items-center justify-center"
+                                   title={isBottomPanelMinimized ? "MOSTRAR_HUD_DETALHADO" : "MINIMIZAR_HUD"}
+                                 >
+                                   {isBottomPanelMinimized ? <Maximize2 size={12} /> : <Minimize2 size={12} />}
+                                 </button>
+                               </div>
+                            </div>
+                          )}
                        </div>
                     </div>
 
@@ -3662,11 +3710,38 @@ export default function AdventureMap() {
       <AnimatePresence>
         {(routePoints.length > 0) && (
           <motion.div 
-            initial={{ y: 200 }} animate={{ y: 0 }} exit={{ y: 200 }}
+            initial={{ y: 200 }} 
+            animate={{ y: isBottomPanelMinimized ? 150 : 0 }} 
+            exit={{ y: 200 }}
             className="absolute bottom-0 left-0 right-0 z-[2100] pointer-events-auto"
           >
              <div className="max-w-4xl mx-auto bg-black/90 backdrop-blur-2xl border-t border-x border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.8)] overflow-hidden">
-                <div className="p-6 flex items-center justify-between border-b border-white/5">
+                {/* Minimal Header for Minimized state */}
+                {isBottomPanelMinimized && (
+                   <div className="h-10 px-6 flex items-center justify-between border-b border-white/5 bg-[#ff641d]/5 cursor-pointer" onClick={() => setIsBottomPanelMinimized(false)}>
+                      <div className="flex items-center gap-10">
+                         <div className="flex items-center gap-2">
+                            <Activity size={10} className="text-[#ff641d]" />
+                            <span className="text-[8px] font-mono font-black text-white uppercase tracking-widest">{totalDistance.toFixed(2)} KM</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                            <Clock size={10} className="text-[#ff641d]" />
+                            <span className="text-[8px] font-mono text-white/60 uppercase">{estimatedTime}</span>
+                         </div>
+                      </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setIsBottomPanelMinimized(false); }}
+                        className="text-white/20 hover:text-white transition-colors"
+                      >
+                         <Maximize2 size={12} />
+                      </button>
+                   </div>
+                )}
+
+                <div className={cn(
+                  "p-6 flex items-center justify-between border-b border-white/5",
+                  isBottomPanelMinimized && "opacity-0 h-0 p-0 pointer-events-none"
+                )}>
                    <div className="flex gap-10">
                       <div className="flex flex-col gap-1">
                          <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">TOTAL_KM</div>
@@ -3682,11 +3757,18 @@ export default function AdventureMap() {
                       </div>
                    </div>
                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setIsBottomPanelMinimized(true)}
+                        className="p-3 text-white/20 hover:text-white transition-colors border border-white/5 hover:border-white/20"
+                        title="MINIMIZAR"
+                      >
+                         <Minimize2 size={14} />
+                      </button>
                       <button onClick={() => setRoutePoints([])} className="h-10 px-4 border border-white/10 text-white/40 hover:text-red-500 hover:border-red-500/30 text-[8px] font-mono uppercase font-black tracking-widest transition-all">LIMPAR</button>
                       <button className="h-10 px-6 bg-[#ff641d] text-white text-[8px] font-mono uppercase font-black tracking-widest hover:bg-white hover:text-[#ff641d] transition-all">INICIAR_EXP</button>
                    </div>
                 </div>
-                <ElevationChart data={elevationData} />
+                {!isBottomPanelMinimized && <ElevationChart data={elevationData} />}
              </div>
           </motion.div>
         )}
