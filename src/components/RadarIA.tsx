@@ -49,25 +49,26 @@ export default function RadarIA() {
     setIsLoading(true);
 
     try {
-      // @ts-ignore
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const chat = ai.chats.create({
-        model: "gemini-3-flash-preview",
-        config: {
-          systemInstruction: SYSTEM_PROMPT,
+      const history = messages.slice(1).map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.content }]
+      }));
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          message: userMessage,
+          history: history,
+        }),
       });
 
-      // Simple history mapping for the SDK
-      // Note: chat metadata is handled internally by the SDK when using chat objects
-      // but for simple stateless calls we can also just pass the message.
-      // Since history persistence across turns is handled by the SDK chat object:
+      if (!res.ok) throw new Error('Falha na resposta do servidor');
       
-      const response = await chat.sendMessage({
-        message: userMessage,
-      });
-
-      const responseText = response.text || "Erro na comunicação via satélite. Tente novamente.";
+      const data = await res.json();
+      const responseText = data.text || "Erro na comunicação via satélite. Tente novamente.";
       setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
     } catch (error) {
       console.error("AI Error:", error);
@@ -84,12 +85,12 @@ export default function RadarIA() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 left-4 sm:bottom-6 sm:right-6 z-50 p-3.5 sm:p-4 bg-[#ff641d] text-white rounded-full shadow-[0_0_20px_rgba(255,100,29,0.4)] border border-[#ff641d]/50 group"
+        className="fixed bottom-4 left-4 sm:bottom-8 sm:left-auto sm:right-8 z-50 p-4 sm:p-5 bg-[#ff641d] text-white rounded-full shadow-[0_0_30px_rgba(255,100,29,0.4)] border border-white/20 group"
       >
-        <Zap size={22} className="sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform" />
-        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+        <Zap size={24} className="group-hover:rotate-12 transition-transform" />
+        <span className="absolute -top-1 -right-1 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+          <span className="relative inline-flex rounded-full h-4 w-4 bg-white"></span>
         </span>
       </motion.button>
 
@@ -97,10 +98,10 @@ export default function RadarIA() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, x: -100, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: -100, scale: 0.9 }}
-            className="fixed bottom-4 left-4 sm:bottom-6 sm:right-6 z-[60] w-[calc(100vw-32px)] sm:w-[400px] h-[500px] sm:h-[600px] max-h-[calc(100vh-48px)] bg-[#0b0c0d] border border-white/10 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden backdrop-blur-xl"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-4 left-4 sm:bottom-24 sm:right-8 sm:left-auto z-[60] w-[calc(100vw-32px)] sm:w-[420px] h-[550px] sm:h-[650px] max-h-[calc(100vh-120px)] bg-[#0b0c0d] border border-white/10 rounded-2xl shadow-[0_20px_80px_-15px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden backdrop-blur-2xl"
           >
             {/* Header */}
             <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
