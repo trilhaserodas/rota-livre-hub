@@ -116,8 +116,32 @@ Responda sempre em Português do Brasil.`,
     res.json({ 
       status: "ok", 
       hasKey: !!process.env.GEMINI_API_KEY,
+      hasWeatherKey: !!process.env.WEATHER_API_KEY,
       node: process.version
     });
+  });
+
+  app.get("/api/weather", async (req, res) => {
+    const { lat, lon } = req.query;
+    const apiKey = process.env.WEATHER_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "WEATHER_API_KEY non-existent." });
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=pt_br`
+      );
+      if (!response.ok) {
+        return res.status(response.status).json({ error: "Failed to fetch from OpenWeatherMap" });
+      }
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Weather Proxy Error:", error);
+      res.status(500).json({ error: "Internal server error fetching weather" });
+    }
   });
 
   // Vite middleware for development

@@ -1583,19 +1583,16 @@ export default function AdventureMap() {
 
   // Weather Fetching
   const fetchWeather = useCallback(async (lat: number, lng: number) => {
-    const apiKey = import.meta.env.VITE_WEATHER_API_KEY;
-    if (!apiKey) {
-      console.warn("Weather API key missing");
-      return;
-    }
-
     setIsLoadingWeather(true);
     try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=metric`
-      );
-      if (!response.ok) throw new Error('Weather fetch failed');
+      const response = await fetch(`/api/weather?lat=${lat}&lon=${lng}`);
+      
+      if (!response.ok) {
+        throw new Error('Weather fetch failed');
+      }
+
       const data = await response.json();
+      
       setWeatherData({
         temp: Math.round(data.main.temp),
         feelsLike: Math.round(data.main.feels_like),
@@ -1606,6 +1603,7 @@ export default function AdventureMap() {
       });
     } catch (err) {
       console.error("Error fetching weather:", err);
+      // Fallback but with actual error context if needed
       setWeatherData(null);
     } finally {
       setIsLoadingWeather(false);
@@ -2795,6 +2793,7 @@ export default function AdventureMap() {
         isMinimized={isPointDetailsMinimized}
         onToggleMinimize={() => setIsPointDetailsMinimized(!isPointDetailsMinimized)}
         weatherData={weatherData}
+        isLoadingWeather={isLoadingWeather}
         onIntegrateRoute={(point) => {
           setRoutePoints(p => [...p, [point.lat, point.lng]]);
           setSelectedPoint(null);

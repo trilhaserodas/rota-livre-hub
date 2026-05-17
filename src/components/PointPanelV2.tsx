@@ -28,6 +28,7 @@ interface PointPanelV2Props {
     windSpeed: number;
     icon: string;
   } | null;
+  isLoadingWeather?: boolean;
   onIntegrateRoute?: (point: LocationPoint) => void;
 }
 
@@ -37,6 +38,7 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
   isMinimized, 
   onToggleMinimize,
   weatherData,
+  isLoadingWeather,
   onIntegrateRoute
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -422,7 +424,16 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                        </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 divide-y md:divide-y-0 md:grid-cols-4 divide-white/5">
+                    <div className="grid grid-cols-2 divide-y md:divide-y-0 md:grid-cols-4 divide-white/5 relative">
+                      {isLoadingWeather && (
+                        <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                           <div className="flex items-center gap-2">
+                              <Activity size={12} className="text-[#ff641d] animate-spin" />
+                              <span className="text-[8px] font-mono text-white/60 uppercase tracking-[0.2em]">FETCHING_WEATHER_DATA...</span>
+                           </div>
+                        </div>
+                      )}
+                      
                       {/* Weather Condition */}
                       <div className="p-4 flex flex-col items-center justify-center gap-2 group border-r border-white/5">
                         <div className="relative">
@@ -433,26 +444,29 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                               alt="weather"
                             />
                           ) : (
-                            <Cloud size={20} className="text-white/20" />
+                            <Cloud size={20} className={cn("text-white/20", isLoadingWeather && "animate-pulse")} />
                           )}
                         </div>
                         <div className="text-center">
-                          <span className="text-[9px] font-mono text-white/80 uppercase tracking-tighter block leading-none">
-                            {weatherData?.description || "CÉU LIMPO"}
+                          <span className="text-[9px] font-mono text-white/80 uppercase tracking-tighter block leading-none truncate max-w-[80px]">
+                            {weatherData?.description || (isLoadingWeather ? "SYNC..." : "N/A")}
                           </span>
-                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest">CONDIÇÕES_ATM</span>
+                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest leading-none">CONDIÇÕES_ATM</span>
                         </div>
                       </div>
 
                       {/* Temperature */}
                       <div className="p-4 flex flex-col items-center justify-center gap-1 group border-r border-white/5">
                         <div className="text-2xl font-display font-black text-white flex items-start">
-                          {weatherData?.temp || 26}
+                          {weatherData ? weatherData.temp : "--"}
                           <span className="text-[12px] text-[#ff641d] mt-0.5 ml-0.5">°C</span>
                         </div>
                         <div className="text-center">
                           <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block mb-1">TEMPERATURA</span>
-                          <span className="text-[8px] font-mono text-white/60 uppercase">FEELS: {weatherData?.feelsLike || 28}°C</span>
+                          <div className="flex items-center justify-center gap-1">
+                             <Thermometer size={8} className="text-[#ff641d]/40" />
+                             <span className="text-[8px] font-mono text-white/60 uppercase whitespace-nowrap">ST: {weatherData ? `${weatherData.feelsLike}°C` : "--"}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -461,9 +475,9 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                         <Wind size={20} className="text-white/20 group-hover:text-[#ff641d] transition-colors" />
                         <div className="text-center">
                           <span className="text-[12px] font-mono font-black text-white">
-                            {weatherData?.windSpeed || 7} <span className="text-[7px] font-normal text-white/40 uppercase">KM/H</span>
+                            {weatherData ? Math.round(weatherData.windSpeed * 3.6) : "--"} <span className="text-[7px] font-normal text-white/40 uppercase">KM/H</span>
                           </span>
-                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block">VENTOS_RAJADA</span>
+                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block leading-none">VENTOS_RAJADA</span>
                         </div>
                       </div>
 
@@ -472,9 +486,9 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                         <Droplets size={20} className="text-white/20 group-hover:text-blue-400 transition-colors" />
                         <div className="text-center">
                           <span className="text-[12px] font-mono font-black text-white">
-                            {weatherData?.humidity || 45}<span className="text-[7px] text-white/40 ml-0.5">%</span>
+                            {weatherData ? weatherData.humidity : "--"}<span className="text-[7px] text-white/40 ml-0.5">%</span>
                           </span>
-                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block">CHANCE_CHUVA</span>
+                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block leading-none">HUMIDADE_REL</span>
                         </div>
                       </div>
                     </div>
