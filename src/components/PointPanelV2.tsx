@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import { 
   X, MapPin, Navigation2, Zap, Globe, Clock, 
   Star, Phone, ChevronLeft, ChevronRight,
   Cloud, Wind, Droplets, Thermometer,
   ShieldAlert, Wifi, MessageSquare, Maximize2, Minimize2,
-  Share2, ArrowUpRight, Activity
+  Share2, ArrowUpRight, Activity, Trash2, Send
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
-import { LocationPoint } from '@/src/types';
+import { LocationPoint, CommunityReport } from '@/src/types';
+import { db, auth } from '@/src/lib/firebase';
+import { 
+  collection, query, where, orderBy, onSnapshot, 
+  addDoc, serverTimestamp, limit 
+} from 'firebase/firestore';
 
 interface PointPanelV2Props {
   point: LocationPoint | null;
@@ -17,6 +22,7 @@ interface PointPanelV2Props {
   onToggleMinimize: () => void;
   weatherData?: {
     temp: number;
+    feelsLike: number;
     description: string;
     humidity: number;
     windSpeed: number;
@@ -34,10 +40,66 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
   onIntegrateRoute
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [reports, setReports] = useState<CommunityReport[]>([]);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [newReport, setNewReport] = useState({
+    name: '',
+    text: '',
+    category: 'estrada' as CommunityReport['category'],
+    type: 'danger' as CommunityReport['type']
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setCurrentImageIndex(0);
+    
+    if (!point?.id) return;
+
+    // Fetch Tactical Reports for this point
+    const reportsQuery = query(
+      collection(db, 'reports'),
+      where('pointId', '==', point.id),
+      where('status', '==', 'APPROVED'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+
+    const unsubscribe = onSnapshot(reportsQuery, (snapshot) => {
+      const reportsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CommunityReport[];
+      setReports(reportsData);
+    });
+
+    return () => unsubscribe();
   }, [point?.id]);
+
+  const handleSubmitReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!point?.id || !newReport.text || !newReport.name) return;
+
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'reports'), {
+        pointId: point.id,
+        userName: newReport.name,
+        content: newReport.text,
+        category: newReport.category,
+        reportType: newReport.type,
+        status: 'PENDING',
+        createdAt: serverTimestamp(),
+        userId: auth.currentUser?.uid || 'anonymous'
+      });
+      setIsReportModalOpen(false);
+      setNewReport({ name: '', text: '', category: 'estrada', type: 'danger' });
+      // Suggestion: could add a toast here
+    } catch (error) {
+      console.error("Error submitting report:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Derived state that only makes sense if point exists
   const images = point ? (point.images && point.images.length > 0 
@@ -133,7 +195,13 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           transition={{ duration: 0.5 }}
-                          className="w-full h-full object-cover"
+                          drag="x"
+                          dragConstraints={{ left: 0, right: 0 }}
+                          onDragEnd={(_, info) => {
+                            if (info.offset.x < -50) nextImage({ stopPropagation: () => {} } as any);
+                            if (info.offset.x > 50) prevImage({ stopPropagation: () => {} } as any);
+                          }}
+                          className="w-full h-full object-cover cursor-grab active:cursor-grabbing"
                           referrerPolicy="no-referrer"
                         />
                       </AnimatePresence>
@@ -273,38 +341,76 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                     </div>
                   </div>
 
-                  {/* 4. Comments Section (DADOS DO SISTEMA) */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <MessageSquare size={16} className="text-[#ff641d]" />
-                      <h3 className="text-sm font-mono font-black text-white uppercase tracking-[0.2em]">COMENTÁRIOS DA COMUNIDADE</h3>
-                    </div>
-                    
-                    <div className="p-6 bg-white/[0.02] border border-white/10 rounded-sm space-y-6 relative overflow-hidden">
-                       <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff641d]/5 blur-3xl -mr-16 -mt-16 pointer-events-none" />
-                       
-                       {realExperience ? (
-                         <div className="space-y-4 relative z-10">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                               <span className="text-[9px] font-mono text-[#ff641d] font-bold uppercase tracking-widest">RELATO_OPERACIONAL_VERIFICADO</span>
-                               <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">ID: {point.id}</span>
-                            </div>
-                            <p className="text-[11px] font-mono text-white/60 leading-relaxed uppercase whitespace-pre-wrap italic">
-                              {realExperience}
-                            </p>
-                            <div className="pt-2 flex justify-between items-center text-[7px] font-mono text-white/30">
-                               <span>FONTE: EXPLORER_NETWORK</span>
-                               <span className="flex items-center gap-1">CERTIFICADO <ShieldAlert size={8} className="text-green-500" /></span>
-                            </div>
-                         </div>
-                       ) : (
-                         <div className="flex flex-col items-center justify-center py-8 opacity-40 grayscale group hover:opacity-100 transition-opacity">
-                            <MessageSquare size={32} className="mb-4 text-white/20 group-hover:text-[#ff641d] transition-colors" />
-                            <p className="text-[10px] font-mono text-white uppercase tracking-[0.3em] text-center">NENHUM RELATO CRÍTICO REGISTRADO POR ENQUANTO</p>
-                         </div>
-                       )}
-                    </div>
-                  </div>
+                   {/* 4. Comments Section (DADOS DO SISTEMA) */}
+                   <div className="space-y-4">
+                     <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-3">
+                         <MessageSquare size={16} className="text-[#ff641d]" />
+                         <h3 className="text-sm font-mono font-black text-white uppercase tracking-[0.2em]">DADOS_SISTEMA</h3>
+                       </div>
+                       <button 
+                         onClick={() => setIsReportModalOpen(true)}
+                         className="px-3 py-1 bg-[#ff641d]/10 border border-[#ff641d]/30 text-[#ff641d] text-[8px] font-mono font-bold uppercase tracking-widest rounded-sm hover:bg-[#ff641d] hover:text-white transition-all shadow-[0_0_10px_rgba(255,100,29,0.2)]"
+                       >
+                         ENVIAR RELATÓRIO
+                       </button>
+                     </div>
+                     
+                     <div className="p-6 bg-white/[0.02] border border-white/10 rounded-sm space-y-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff641d]/5 blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                        
+                        {realExperience ? (
+                          <div className="space-y-4 relative z-10">
+                             <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                                <span className="text-[9px] font-mono text-[#ff641d] font-bold uppercase tracking-widest">RELATO_OPERACIONAL_VERIFICADO</span>
+                             </div>
+                             <p className="text-[11px] font-mono text-white/60 leading-relaxed uppercase whitespace-pre-wrap italic">
+                               {realExperience}
+                             </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-4 opacity-40 grayscale">
+                             <p className="text-[8px] font-mono text-white uppercase tracking-[0.3em] text-center italic">SEM RELATOS DE SISTEMA</p>
+                          </div>
+                        )}
+                     </div>
+
+                     {/* Tactical Community Reports */}
+                     <div className="space-y-4 pt-4 border-t border-white/5">
+                        <div className="flex items-center gap-2">
+                           <Activity size={14} className="text-[#ff641d]" />
+                           <h3 className="text-[10px] font-mono font-black text-white/40 uppercase tracking-[0.3em]">Tactical Community Reports</h3>
+                        </div>
+
+                        <div className="space-y-3">
+                           {reports.length > 0 ? reports.map((report) => (
+                             <motion.div 
+                               initial={{ opacity: 0, y: 10 }}
+                               animate={{ opacity: 1, y: 0 }}
+                               key={report.id} 
+                               className="p-4 bg-white/[0.03] border border-white/10 rounded-sm relative group/report overflow-hidden"
+                             >
+                                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#ff641d] opacity-40 group-hover/report:opacity-100 transition-opacity" />
+                                <div className="flex justify-between items-start mb-2">
+                                   <div className="flex flex-col">
+                                      <span className="text-[10px] font-mono font-black text-white uppercase">{report.userName}</span>
+                                      <span className="text-[7px] font-mono text-[#ff641d] uppercase tracking-widest">CATEGORIA_{report.category}</span>
+                                   </div>
+                                   <span className="text-[7px] font-mono text-white/20">
+                                      {report.createdAt?.toDate ? report.createdAt.toDate().toLocaleDateString() : 'REAL_TIME'}
+                                   </span>
+                                </div>
+                                <p className="text-[10px] font-mono text-white/70 leading-relaxed uppercase">{report.content}</p>
+                             </motion.div>
+                           )) : (
+                             <div className="py-8 border border-dashed border-white/5 rounded-lg flex flex-col items-center justify-center opacity-30">
+                                <MessageSquare size={20} className="mb-2" />
+                                <span className="text-[8px] font-mono uppercase tracking-widest">AGUARDANDO_INTELIGÊNCIA_DRIVE</span>
+                             </div>
+                           )}
+                        </div>
+                     </div>
+                   </div>
 
                   {/* 5. Clima Local Tactical Widget */}
                   <div className="bg-[#0b0c0d] border border-white/10 rounded-lg overflow-hidden">
@@ -316,50 +422,59 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                        </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 divide-x divide-white/5">
-                      {/* Weather Info 1 */}
-                      <div className="p-6 flex flex-col items-center justify-center gap-3 group">
+                    <div className="grid grid-cols-2 divide-y md:divide-y-0 md:grid-cols-4 divide-white/5">
+                      {/* Weather Condition */}
+                      <div className="p-4 flex flex-col items-center justify-center gap-2 group border-r border-white/5">
                         <div className="relative">
                           {weatherData ? (
                             <img 
                               src={`https://openweathermap.org/img/wn/${weatherData.icon}@4x.png`} 
-                              className="w-12 h-12 drop-shadow-[0_0_10px_rgba(255,100,29,0.4)] group-hover:scale-110 transition-transform" 
+                              className="w-10 h-10 drop-shadow-[0_0_10px_rgba(255,100,29,0.4)] group-hover:scale-110 transition-transform" 
                               alt="weather"
                             />
                           ) : (
-                            <Cloud size={24} className="text-white/20" />
+                            <Cloud size={20} className="text-white/20" />
                           )}
                         </div>
                         <div className="text-center">
-                          <span className="text-[10px] font-mono text-white/80 uppercase tracking-tighter block mb-1">
+                          <span className="text-[9px] font-mono text-white/80 uppercase tracking-tighter block leading-none">
                             {weatherData?.description || "CÉU LIMPO"}
                           </span>
-                          <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest whitespace-nowrap">CONDIÇÕES_ATM</span>
+                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest">CONDIÇÕES_ATM</span>
                         </div>
                       </div>
 
-                      {/* Weather Info 2 */}
-                      <div className="p-6 flex flex-col items-center justify-center gap-2 group">
-                        <div className="text-3xl font-display font-black text-white flex items-start">
+                      {/* Temperature */}
+                      <div className="p-4 flex flex-col items-center justify-center gap-1 group border-r border-white/5">
+                        <div className="text-2xl font-display font-black text-white flex items-start">
                           {weatherData?.temp || 26}
-                          <span className="text-[14px] text-[#ff641d] mt-1 ml-0.5">°C</span>
+                          <span className="text-[12px] text-[#ff641d] mt-0.5 ml-0.5">°C</span>
                         </div>
-                        <div className="text-center space-y-1">
-                          <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest block">TEMPERATURA</span>
-                          <div className="flex h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                             <div className="w-[60%] bg-[#ff641d]" />
-                          </div>
+                        <div className="text-center">
+                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block mb-1">TEMPERATURA</span>
+                          <span className="text-[8px] font-mono text-white/60 uppercase">FEELS: {weatherData?.feelsLike || 28}°C</span>
                         </div>
                       </div>
 
-                      {/* Weather Info 3 */}
-                      <div className="p-6 flex flex-col items-center justify-center gap-3 group">
-                        <Wind size={24} className="text-white/20 group-hover:text-[#ff641d] transition-colors" />
+                      {/* Wind */}
+                      <div className="p-4 flex flex-col items-center justify-center gap-2 group border-r border-white/5">
+                        <Wind size={20} className="text-white/20 group-hover:text-[#ff641d] transition-colors" />
                         <div className="text-center">
-                          <span className="text-[14px] font-mono font-black text-white">
-                            {weatherData?.windSpeed || 7} <span className="text-[8px] font-normal text-white/40 uppercase">KM/H</span>
+                          <span className="text-[12px] font-mono font-black text-white">
+                            {weatherData?.windSpeed || 7} <span className="text-[7px] font-normal text-white/40 uppercase">KM/H</span>
                           </span>
-                          <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest block">VENTOS_RAJADA</span>
+                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block">VENTOS_RAJADA</span>
+                        </div>
+                      </div>
+
+                      {/* Stats (Rain/Humid) */}
+                      <div className="p-4 flex flex-col items-center justify-center gap-2 group">
+                        <Droplets size={20} className="text-white/20 group-hover:text-blue-400 transition-colors" />
+                        <div className="text-center">
+                          <span className="text-[12px] font-mono font-black text-white">
+                            {weatherData?.humidity || 45}<span className="text-[7px] text-white/40 ml-0.5">%</span>
+                          </span>
+                          <span className="text-[6px] font-mono text-white/20 uppercase tracking-widest block">CHANCE_CHUVA</span>
                         </div>
                       </div>
                     </div>
@@ -434,6 +549,129 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
           )}
         </motion.div>
       )}
+
+      {/* Tactical Report Modal */}
+      <AnimatePresence>
+        {isReportModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[4000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="w-full max-w-lg bg-[#0b0c0d] border border-white/10 rounded-xl overflow-hidden shadow-[0_0_100px_rgba(255,100,29,0.3)]"
+            >
+               <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                  <div>
+                    <h3 className="text-xl font-display font-black text-white uppercase tracking-tight">NOVO_RELATÓRIO_TÁTICO</h3>
+                    <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest mt-1">EMISSÃO_STATION: {point?.name}</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsReportModalOpen(false)}
+                    className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+               </div>
+
+               <form onSubmit={handleSubmitReport} className="p-8 space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.2em]">IDENTIFICAÇÃO_EXPLORADOR</label>
+                       <input 
+                         required
+                         value={newReport.name}
+                         onChange={e => setNewReport({...newReport, name: e.target.value})}
+                         placeholder="NOME / APELIDO"
+                         className="w-full h-12 bg-white/5 border border-white/10 rounded-sm px-4 font-mono text-xs text-white placeholder:text-white/20 focus:border-[#ff641d]/50 focus:outline-none focus:ring-0 transition-all"
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.2em]">CATEGORIA_RELATO</label>
+                       <select 
+                         value={newReport.category}
+                         onChange={e => setNewReport({...newReport, category: e.target.value as any})}
+                         className="w-full h-12 bg-white/5 border border-white/10 rounded-sm px-4 font-mono text-xs text-white focus:border-[#ff641d]/50 focus:outline-none transition-all appearance-none cursor-pointer"
+                       >
+                          <option value="segurança">SEGURANÇA</option>
+                          <option value="água">ÁGUA_RECAPE</option>
+                          <option value="camping">CAMPING_BASE</option>
+                          <option value="hostel">HOSTEL_MONITOR</option>
+                          <option value="oficina">OFICINA_TÉCNICA</option>
+                          <option value="estrada">CONDIÇÃO_VIA</option>
+                          <option value="clima">ATU_ATMOSFÉRICA</option>
+                          <option value="perigo">PONTO_CRÍTICO</option>
+                          <option value="fiscalização">POLICIAMENTO</option>
+                          <option value="fronteira">ZONA_ADUANEIRA</option>
+                       </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.2em]">DATA_REPORT (TEXTO_CURTO)</label>
+                    <textarea 
+                      required
+                      value={newReport.text}
+                      onChange={e => setNewReport({...newReport, text: e.target.value})}
+                      placeholder="DESCREVA A SITUAÇÃO TÁTICA ATUAL COM PRECISÃO..."
+                      rows={4}
+                      className="w-full bg-white/5 border border-white/10 rounded-sm p-4 font-mono text-xs text-white placeholder:text-white/20 focus:border-[#ff641d]/50 focus:outline-none transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                       <span className="text-[8px] font-mono text-white/20 uppercase">TIPO_OCORRÊNCIA</span>
+                       <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { id: 'flood', label: 'ENCHENTE', icon: Droplets },
+                            { id: 'danger', label: 'PERIGO', icon: ShieldAlert },
+                            { id: 'road_blocked', label: 'BLOQUEIO', icon: X },
+                            { id: 'storm', label: 'TEMPESTADE', icon: Cloud }
+                          ].map(item => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setNewReport({...newReport, type: item.id as any})}
+                              className={cn(
+                                "p-2 border rounded-sm flex items-center gap-2 transition-all",
+                                newReport.type === item.id 
+                                  ? "bg-[#ff641d]/20 border-[#ff641d] text-[#ff641d]" 
+                                  : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                              )}
+                            >
+                               <item.icon size={12} />
+                               <span className="text-[8px] font-mono uppercase">{item.label}</span>
+                            </button>
+                          ))}
+                       </div>
+                    </div>
+                    <div className="flex flex-col justify-end">
+                       <button 
+                         disabled={isSubmitting}
+                         type="submit"
+                         className="w-full h-16 bg-[#ff641d] text-white text-[12px] font-mono font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-white hover:text-[#ff641d] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                       >
+                         {isSubmitting ? (
+                           <Activity size={20} className="animate-spin" />
+                         ) : (
+                           <>
+                             <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                             ENVIAR_EMISSÃO
+                           </>
+                         )}
+                       </button>
+                    </div>
+                  </div>
+               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 };

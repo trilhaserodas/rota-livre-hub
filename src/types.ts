@@ -34,3 +34,13 @@ export interface LocationPoint {
   operationalStatus?: 'STABLE' | 'WARNING' | 'CRITICAL' | 'CLOSED';
   nextSupportDist?: string;
 }
+
+export interface CommunityReport {
+  id: string;
+  pointId: string;
+  authorName: string;
+  category: 'segurança' | 'água' | 'camping' | 'hostel' | 'oficina' | 'estrada' | 'clima' | 'perigo' | 'fiscalização' | 'fronteira';
+  text: string;
+  type: 'flood' | 'road_blocked' | 'danger' | 'abandoned_gas' | 'water' | 'wifi' | 'safe_camping' | 'storm' | 'strong_wind' | 'animal';
+  timestamp: any;
+}

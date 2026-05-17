@@ -7,13 +7,14 @@
       "properties": {
         "userId": { "type": "string", "description": "UID of the reporter" },
         "userName": { "type": "string", "description": "Name of the reporter" },
+        "pointId": { "type": "string", "description": "ID of the specific point/station" },
         "content": { "type": "string", "description": "The report message" },
-        "category": { "type": "string", "description": "Category of the report" },
-        "location": { "type": "string", "description": "Location description" },
+        "category": { "type": "string", "description": "Category (segurança, água, etc)" },
+        "reportType": { "type": "string", "description": "Specific tactical type (flood, danger, etc)" },
         "status": { "type": "string", "enum": ["PENDING", "APPROVED"], "description": "Moderation status" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
       },
-      "required": ["userName", "content", "createdAt", "status"]
+      "required": ["userName", "content", "createdAt", "status", "pointId"]
     },
     "trackingSession": {
       "title": "GPS Tracking Session",

@@ -39,8 +39,9 @@ service cloud.firestore {
     }
 
     function isValidReport(data) {
-      return data.keys().hasAll(['userName', 'content', 'createdAt', 'status']) &&
+      return data.keys().hasAll(['userName', 'content', 'createdAt', 'status', 'pointId']) &&
              data.keys().size() <= 12 &&
+             data.pointId is string &&
              data.userName is string && data.userName.size() <= 100 &&
              data.content is string && data.content.size() <= 1000 &&
              data.status in ['PENDING', 'APPROVED'] &&

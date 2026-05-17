@@ -32,6 +32,7 @@ import { db as offlineDb, saveRouteOffline, removeRouteOffline, exportToGPX } fr
 
 interface WeatherData {
   temp: number;
+  feelsLike: number;
   description: string;
   humidity: number;
   windSpeed: number;
@@ -1597,6 +1598,7 @@ export default function AdventureMap() {
       const data = await response.json();
       setWeatherData({
         temp: Math.round(data.main.temp),
+        feelsLike: Math.round(data.main.feels_like),
         description: data.weather[0].description,
         humidity: data.main.humidity,
         windSpeed: data.wind.speed,
