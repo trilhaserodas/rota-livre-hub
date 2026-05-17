@@ -1160,6 +1160,121 @@ const initialPoints: LocationPoint[] = [
     description: 'Risco de chuvas torrenciais. Nível dos rios em monitoramento.',
     isolationLevel: 'MEDIUM',
     operationalStatus: 'WARNING'
+  },
+  {
+    id: 'mkt-bh-1',
+    name: '🛒 MERCADO: Pompéia',
+    address: 'Av. dos Andradas, 3760',
+    lat: -19.9143,
+    lng: -43.9077,
+    category: 'market',
+    rating: '4.4 (8.915 avaliações)',
+    phone: '(31) 3488-4977',
+    hours: '8h–19h',
+    description: 'Mercado Pompéia com ampla variedade e excelente avaliação local.'
+  },
+  {
+    id: 'mkt-bh-2',
+    name: '🛒 MERCADO: Cachoeirinha',
+    address: 'Av. Pres. Antônio Carlos, 1880',
+    lat: -19.8956,
+    lng: -43.9487,
+    category: 'market',
+    rating: '4.5 (2.601 avaliações)',
+    hours: '8h as 19h',
+    description: 'Ponto de abastecimento na região da Cachoeirinha.'
+  },
+  {
+    id: 'mkt-bh-3',
+    name: '🛒 MERCADO: Prado',
+    address: 'Av. Silva Lobo, 577',
+    lat: -19.9287,
+    lng: -43.9715,
+    category: 'market',
+    rating: '4.4 (4.278 avaliações)',
+    phone: '(31) 3117-2600',
+    hours: '8h–14h',
+    description: 'Mercado Prado localizado na Av. Silva Lobo.'
+  },
+  {
+    id: 'mkt-bh-4',
+    name: '🛒 MERCADO: Santa Efigênia',
+    address: 'Av. Bernardo Monteiro, 432',
+    lat: -19.9222,
+    lng: -43.9273,
+    category: 'market',
+    rating: '4.4 (2.791 avaliações)',
+    phone: '(31) 3259-3201',
+    hours: '08h–14h',
+    description: 'Mercado estratégico no bairro Santa Efigênia.'
+  },
+  {
+    id: 'mkt-bh-5',
+    name: '🛒 MERCADO: Centro — Av. Paraná',
+    address: 'Av. Paraná, 470',
+    lat: -19.9199,
+    lng: -43.9432,
+    category: 'market',
+    rating: '4.1 (7.417 avaliações)',
+    phone: '(31) 3272-1725',
+    hours: 'FECHADO',
+    description: 'Mercado central na Av. Paraná. Verifique status de operação.'
+  },
+  {
+    id: 'mkt-bh-6',
+    name: '🛒 MERCADO: Centro — Andradas',
+    address: 'Av. dos Andradas, 302',
+    lat: -19.9180,
+    lng: -43.9351,
+    category: 'market',
+    rating: '4.1 (8.856 avaliações)',
+    hours: 'FECHADO',
+    description: 'Unidade central dos Andradas. Verifique status de operação.'
+  },
+  {
+    id: 'mkt-bh-7',
+    name: '🛒 MERCADO: Estoril',
+    address: 'Av. Barão Homem de Melo, 2424',
+    lat: -19.9579,
+    lng: -43.9659,
+    category: 'market',
+    rating: '4.4 (4.419 avaliações)',
+    phone: '(31) 3117-2600',
+    description: 'Ponto de apoio no bairro Estoril.'
+  },
+  {
+    id: 'mkt-bh-8',
+    name: '🛒 MERCADO: Parque Riachuelo',
+    address: 'Av. Américo Vespúcio, 1271',
+    lat: -19.8958,
+    lng: -43.9605,
+    rating: '4.2 (24.819 avaliações)',
+    category: 'market',
+    phone: '(31) 3428-9743',
+    hours: '7h30–14h',
+    description: 'Mercado na região do Parque Riachuelo.'
+  },
+  {
+    id: 'mkt-bh-9',
+    name: '🛒 MERCADO: Nova Suíça',
+    address: 'Av. Silva Lobo, 760',
+    lat: -19.9297,
+    lng: -43.9722,
+    category: 'market',
+    rating: '4.3 (2.209 avaliações)',
+    phone: '(31) 3313-2966',
+    hours: '7h30–14h',
+    description: 'Unidade Nova Suíça do mercado local.'
+  },
+  {
+    id: 'mkt-bh-10',
+    name: '🛒 MERCADO: Atacado — BR-262',
+    address: 'Anel Rodov. BR-262, KM 19 — Palmares',
+    lat: -19.8689,
+    lng: -43.9369,
+    category: 'market',
+    phone: '(31) 3426-7117',
+    description: 'Ponto de atacado no Anel Rodoviário.'
   }
 ];
 
