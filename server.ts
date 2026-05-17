@@ -125,31 +125,38 @@ Responda sempre em Português do Brasil.`,
     const { lat, lon } = req.query;
     const apiKey = process.env.WEATHER_API_KEY;
 
-    console.log(`[WeatherAPI] Request for lat: ${lat}, lon: ${lon}`);
+    console.log(`[WeatherAPI] Received proxy request: lat=${lat}, lon=${lon}`);
+
+    if (!lat || !lon) {
+      return res.status(400).json({ error: "Latitude and longitude are required" });
+    }
 
     if (!apiKey) {
-      console.error("[WeatherAPI] Missing API Key");
-      return res.status(500).json({ error: "WEATHER_API_KEY non-existent." });
+      console.error("[WeatherAPI] ERROR: WEATHER_API_KEY is not defined in environment");
+      return res.status(500).json({ error: "Configuração do servidor incompleta: Chave de API ausente." });
     }
 
     try {
-      // Use WeatherAPI.com instead of OpenWeatherMap as per user's specific mapping request
-      const response = await fetch(
-        `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&lang=pt`
-      );
+      const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&lang=pt`;
+      console.log(`[WeatherAPI] Fetching from: ${url.replace(apiKey, 'REDACTED')}`);
+
+      const response = await fetch(url);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[WeatherAPI] API Error: ${response.status}`, errorText);
-        return res.status(response.status).json({ error: "Failed to fetch from WeatherAPI", details: errorText });
+        console.error(`[WeatherAPI] External API error: ${response.status} - ${errorText}`);
+        return res.status(response.status).json({ 
+          error: "Falha na comunicação com serviço meteorológico",
+          details: errorText.substring(0, 100) 
+        });
       }
 
       const data = await response.json();
-      console.log("[WeatherAPI] Success response received");
+      console.log(`[WeatherAPI] Success for PIN at ${lat},${lon}`);
       res.json(data);
     } catch (error) {
-      console.error("Weather Proxy Error:", error);
-      res.status(500).json({ error: "Internal server error fetching weather" });
+      console.error("[WeatherAPI] Proxy Exception:", error);
+      res.status(500).json({ error: "Erro interno ao processar dados climáticos" });
     }
   });
 

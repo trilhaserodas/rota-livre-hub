@@ -1581,39 +1581,56 @@ export default function AdventureMap() {
     }
   }, [isExpeditionMode, weatherData]);
 
-  // Weather Fetching
+  // Weather Cache & Fetching
+  const weatherCache = useRef<Record<string, { data: any, timestamp: number }>>({});
+  const isCurrentlyFetching = useRef(false);
+
   const fetchWeather = useCallback(async (lat: number, lng: number) => {
-    console.log(`[Frontend] Fetching weather for PIN coordinates: ${lat}, ${lng}`);
+    if (!lat || !lng || isCurrentlyFetching.current) return;
+    
+    const cacheKey = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+    const now = Date.now();
+    
+    if (weatherCache.current[cacheKey] && (now - weatherCache.current[cacheKey].timestamp < 600000)) {
+      setWeatherData(weatherCache.current[cacheKey].data);
+      return;
+    }
+
+    isCurrentlyFetching.current = true;
     setIsLoadingWeather(true);
     try {
       const response = await fetch(`/api/weather?lat=${lat}&lon=${lng}`);
       
       if (!response.ok) {
-        throw new Error('Weather fetch failed');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Error ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("[Frontend] Weather API Raw Response:", data);
       
       if (!data || !data.current) {
-        throw new Error('Invalid weather data structure from WeatherAPI');
+        throw new Error('ESTRUTURA_DADOS_INVÁLIDA');
       }
 
-      setWeatherData({
+      const mappedData = {
         temp: Math.round(data.current.temp_c),
         feelsLike: Math.round(data.current.feelslike_c),
-        description: data.current.condition.text || "CONDIÇÕES_N/A",
+        description: data.current.condition.text || "CONDIÇÃO_N/A",
         humidity: data.current.humidity,
-        windSpeed: data.current.wind_kph,
+        windSpeed: Math.round(data.current.wind_kph),
         icon: data.current.condition.icon.startsWith('//') 
           ? `https:${data.current.condition.icon}` 
           : data.current.condition.icon
-      });
+      };
+
+      setWeatherData(mappedData);
+      weatherCache.current[cacheKey] = { data: mappedData, timestamp: now };
     } catch (err) {
-      console.error("[Frontend] Error fetching weather:", err);
+      console.error("[Clima] Falha na integração:", err);
       setWeatherData(null);
     } finally {
       setIsLoadingWeather(false);
+      isCurrentlyFetching.current = false;
     }
   }, []);
 
