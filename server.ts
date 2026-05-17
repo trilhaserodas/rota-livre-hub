@@ -138,25 +138,25 @@ Responda sempre em Português do Brasil.`,
 
     try {
       const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=pt_br`;
-      console.log(`[WeatherAPI] Fetching from OpenWeatherMap: ${url.replace(apiKey, 'REDACTED')}`);
+      console.log(`[WeatherAPI] Fetching OWM for: ${lat},${lon}`);
 
       const response = await fetch(url);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[WeatherAPI] OpenWeatherMap error: ${response.status} - ${errorText}`);
+        console.error(`[WeatherAPI] OWM Error ${response.status}: ${errorText}`);
         return res.status(response.status).json({ 
-          error: "Falha na comunicação com OpenWeatherMap",
-          details: errorText.substring(0, 100) 
+          error: `Erro OWM ${response.status}`,
+          details: errorText.substring(0, 50) 
         });
       }
 
       const data = await response.json();
-      console.log(`[WeatherAPI] Success for PIN at ${lat},${lon}`);
+      console.log(`[WeatherAPI] Data received for ${lat},${lon}: ${data.weather?.[0]?.description}`);
       res.json(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[WeatherAPI] Proxy Exception:", error);
-      res.status(500).json({ error: "Erro interno ao processar dados climáticos" });
+      res.status(500).json({ error: "Erro na conexão com serviço meteorológico", details: error?.message });
     }
   });
 

@@ -1208,13 +1208,18 @@ function userLocationIcon() {
   });
 }
 
-function otherUserIcon(color: string = '#00d4ff') {
+function otherUserIcon(color: string = '#00d4ff', name: string = 'Explorador') {
   return L.divIcon({
     className: 'other-user-icon',
     html: `
-      <div class="relative">
+      <div class="relative group">
         <div style="background-color: ${color}" class="w-4 h-4 rounded-full border-2 border-white shadow-[0_0_10px_${color}] relative z-10"></div>
         <div style="background-color: ${color}" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 opacity-20 rounded-full animate-ping"></div>
+        <div class="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[3000]">
+           <div class="bg-black/90 border border-white/10 px-2 py-1 rounded-sm whitespace-nowrap">
+              <span class="text-[8px] font-mono text-white font-black uppercase tracking-widest">${name}</span>
+           </div>
+        </div>
       </div>
     `,
     iconSize: [32, 32],
@@ -1432,7 +1437,10 @@ export default function AdventureMap() {
   }, []);
 
   useEffect(() => {
-    if (isExpeditionMode) handleLocateUser();
+    if (isExpeditionMode) {
+      handleLocateUser();
+      setIsSharing(true);
+    }
   }, [isExpeditionMode, handleLocateUser]);
 
   // Real-time sharing
@@ -1586,15 +1594,17 @@ export default function AdventureMap() {
   const isCurrentlyFetching = useRef(false);
 
   const fetchWeather = useCallback(async (lat: number, lng: number) => {
-    if (!lat || !lng || isCurrentlyFetching.current) return;
+    if (lat === undefined || lng === undefined) return;
     
-    const cacheKey = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
     const now = Date.now();
     
-    if (weatherCache.current[cacheKey] && (now - weatherCache.current[cacheKey].timestamp < 600000)) {
+    if (weatherCache.current[cacheKey] && (now - weatherCache.current[cacheKey].timestamp < 300000)) {
       setWeatherData(weatherCache.current[cacheKey].data);
       return;
     }
+
+    if (isCurrentlyFetching.current) return;
 
     isCurrentlyFetching.current = true;
     setIsLoadingWeather(true);
@@ -1602,29 +1612,34 @@ export default function AdventureMap() {
       const response = await fetch(`/api/weather?lat=${lat}&lon=${lng}`);
       
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Error ${response.status}`);
+        const errText = await response.text();
+        let errorMessage = `Erro ${response.status}`;
+        try {
+          const errJson = JSON.parse(errText);
+          errorMessage = errJson.error || errorMessage;
+        } catch(e) {}
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       
       if (!data || !data.main || !data.weather || !data.weather[0]) {
-        throw new Error('ESTRUTURA_DADOS_OWM_INVÁLIDA');
+        throw new Error('DADOS_CLIMA_ESTRUTURA_INVÁLIDA');
       }
       
       const mappedData = {
         temp: Math.round(data.main.temp),
-        feelsLike: Math.round(data.main.feels_like),
+        feelsLike: data.main.feels_like !== undefined ? Math.round(data.main.feels_like) : Math.round(data.main.temp),
         description: data.weather[0].description || "CONDIÇÃO_N/A",
-        humidity: data.main.humidity,
-        windSpeed: Math.round(data.wind.speed * 3.6), // OpenWeatherMap m/s to km/h
+        humidity: data.main.humidity || 0,
+        windSpeed: data.wind ? Math.round(data.wind.speed * 3.6) : 0, 
         icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`
       };
 
       setWeatherData(mappedData);
       weatherCache.current[cacheKey] = { data: mappedData, timestamp: now };
-    } catch (err) {
-      console.error("[Clima] Falha na integração:", err);
+    } catch (err: any) {
+      console.error("[Clima] Falha:", err.message);
       setWeatherData(null);
     } finally {
       setIsLoadingWeather(false);
@@ -2307,6 +2322,54 @@ export default function AdventureMap() {
                            </div>
                         </div>
 
+                        {/* Active Explorers Awareness */}
+                        <div className="bg-blue-500/5 border border-blue-500/20 p-5 rounded-sm">
+                           <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                 <Radio size={12} className="text-blue-400 animate-pulse" />
+                                 <span className="text-[9px] font-mono font-black text-blue-400 tracking-[0.3em] uppercase">REDE_DE_EXPLORADORES</span>
+                              </div>
+                              <button 
+                                onClick={() => setIsSharing(!isSharing)}
+                                className={cn(
+                                  "px-3 py-1 text-[8px] font-mono border rounded-xs transition-all uppercase font-black",
+                                  isSharing ? "bg-blue-500 border-blue-400 text-white" : "bg-white/5 border-white/10 text-white/40"
+                                )}
+                              >
+                                {isSharing ? "COMPARTILHANDO" : "INVISÍVEL"}
+                              </button>
+                           </div>
+                           
+                           <div className="space-y-3">
+                              {otherSessions.length > 0 ? (
+                                otherSessions.slice(0, 3).map(session => (
+                                   <div key={session.id} className="flex items-center justify-between p-2 bg-white/[0.02] border border-white/5 rounded-xs">
+                                      <div className="flex items-center gap-3">
+                                         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping" />
+                                         <span className="text-[10px] font-mono text-white uppercase font-black">{session.userName}</span>
+                                      </div>
+                                      <button 
+                                        onClick={() => {
+                                           setMapCenter([session.lat, session.lng]);
+                                           setMapZoom(14);
+                                        }}
+                                        className="text-[7px] font-mono text-blue-400/60 hover:text-blue-400 underline uppercase"
+                                      >
+                                        LOCALIZAR
+                                      </button>
+                                   </div>
+                                ))
+                              ) : (
+                                <div className="text-center py-2">
+                                   <span className="text-[8px] font-mono text-white/20 uppercase tracking-widest">NENHUM_EXPLORADOR_PROXIMO</span>
+                                </div>
+                              )}
+                              {otherSessions.length > 3 && (
+                                <div className="text-[7px] font-mono text-white/10 uppercase text-center">+ {otherSessions.length - 3} OUTROS_EM_CAMPO</div>
+                              )}
+                           </div>
+                        </div>
+
                         {/* Weather HUD */}
                         <AnimatePresence>
                           {weatherData && (
@@ -2551,7 +2614,31 @@ export default function AdventureMap() {
               )}
 
               {otherSessions.map(session => (
-                <Marker key={session.id} position={[session.lat, session.lng]} icon={otherUserIcon()}>
+                <Marker 
+                  key={session.id} 
+                  position={[session.lat, session.lng]} 
+                  icon={otherUserIcon('#00d4ff', session.userName)}
+                >
+                  <Popup className="tactical-popup">
+                    <div className="p-3 bg-[#0b0c0d] border border-white/5 min-w-[200px]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+                        <span className="text-[10px] font-mono font-black text-cyan-400 uppercase tracking-widest">EXPLORADOR_ATIVO</span>
+                      </div>
+                      <div className="text-sm font-mono font-black text-white uppercase mb-1">{session.userName}</div>
+                      <div className="text-[8px] font-mono text-white/40 uppercase tracking-tighter mb-3">SINAL_RECUPERADO: {session.updatedAt?.toDate ? session.updatedAt.toDate().toLocaleTimeString() : 'RECENTE'}</div>
+                      <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
+                         <div>
+                            <div className="text-[6px] font-mono text-white/20 uppercase">LAT_COORD</div>
+                            <div className="text-[9px] font-mono text-white/60">{session.lat.toFixed(4)}</div>
+                         </div>
+                         <div>
+                            <div className="text-[6px] font-mono text-white/20 uppercase">LNG_COORD</div>
+                            <div className="text-[9px] font-mono text-white/60">{session.lng.toFixed(4)}</div>
+                         </div>
+                      </div>
+                    </div>
+                  </Popup>
                 </Marker>
               ))}
 

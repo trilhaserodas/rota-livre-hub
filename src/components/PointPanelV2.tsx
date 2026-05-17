@@ -395,14 +395,14 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                                 <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#ff641d] opacity-40 group-hover/report:opacity-100 transition-opacity" />
                                 <div className="flex justify-between items-start mb-2">
                                    <div className="flex flex-col">
-                                      <span className="text-[10px] font-mono font-black text-white uppercase">{report.userName}</span>
+                                      <span className="text-[10px] font-mono font-black text-white uppercase">{report.authorName}</span>
                                       <span className="text-[7px] font-mono text-[#ff641d] uppercase tracking-widest">CATEGORIA_{report.category}</span>
                                    </div>
                                    <span className="text-[7px] font-mono text-white/20">
-                                      {report.createdAt?.toDate ? report.createdAt.toDate().toLocaleDateString() : 'REAL_TIME'}
+                                      {report.timestamp?.toDate ? report.timestamp.toDate().toLocaleDateString() : 'REAL_TIME'}
                                    </span>
                                 </div>
-                                <p className="text-[10px] font-mono text-white/70 leading-relaxed uppercase">{report.content}</p>
+                                <p className="text-[10px] font-mono text-white/70 leading-relaxed uppercase">{report.text}</p>
                              </motion.div>
                            )) : (
                              <div className="py-8 border border-dashed border-white/5 rounded-lg flex flex-col items-center justify-center opacity-30">
