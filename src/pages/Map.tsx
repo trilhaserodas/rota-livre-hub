@@ -1608,19 +1608,17 @@ export default function AdventureMap() {
 
       const data = await response.json();
       
-      if (!data || !data.current) {
-        throw new Error('ESTRUTURA_DADOS_INVÁLIDA');
+      if (!data || !data.main || !data.weather || !data.weather[0]) {
+        throw new Error('ESTRUTURA_DADOS_OWM_INVÁLIDA');
       }
-
+      
       const mappedData = {
-        temp: Math.round(data.current.temp_c),
-        feelsLike: Math.round(data.current.feelslike_c),
-        description: data.current.condition.text || "CONDIÇÃO_N/A",
-        humidity: data.current.humidity,
-        windSpeed: Math.round(data.current.wind_kph),
-        icon: data.current.condition.icon.startsWith('//') 
-          ? `https:${data.current.condition.icon}` 
-          : data.current.condition.icon
+        temp: Math.round(data.main.temp),
+        feelsLike: Math.round(data.main.feels_like),
+        description: data.weather[0].description || "CONDIÇÃO_N/A",
+        humidity: data.main.humidity,
+        windSpeed: Math.round(data.wind.speed * 3.6), // OpenWeatherMap m/s to km/h
+        icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`
       };
 
       setWeatherData(mappedData);

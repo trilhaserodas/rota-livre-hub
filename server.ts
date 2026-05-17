@@ -137,16 +137,16 @@ Responda sempre em Português do Brasil.`,
     }
 
     try {
-      const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&lang=pt`;
-      console.log(`[WeatherAPI] Fetching from: ${url.replace(apiKey, 'REDACTED')}`);
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=pt_br`;
+      console.log(`[WeatherAPI] Fetching from OpenWeatherMap: ${url.replace(apiKey, 'REDACTED')}`);
 
       const response = await fetch(url);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[WeatherAPI] External API error: ${response.status} - ${errorText}`);
+        console.error(`[WeatherAPI] OpenWeatherMap error: ${response.status} - ${errorText}`);
         return res.status(response.status).json({ 
-          error: "Falha na comunicação com serviço meteorológico",
+          error: "Falha na comunicação com OpenWeatherMap",
           details: errorText.substring(0, 100) 
         });
       }

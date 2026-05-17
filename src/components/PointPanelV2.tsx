@@ -449,7 +449,7 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                           </div>
                           <div className="text-center">
                             <span className="text-[12px] font-mono text-white font-black uppercase tracking-tight block leading-none truncate max-w-[100px]">
-                              {weatherData?.description || (isLoadingWeather ? "SINCRONIZANDO..." : "SINAL_INDISPONÍVEL")}
+                              {weatherData?.description || (isLoadingWeather ? "SINCRONIZANDO..." : "SINAL CLIMÁTICO INDISPONÍVEL")}
                             </span>
                             <span className="text-[9px] font-mono text-white/40 uppercase tracking-[0.2em] leading-none mt-1.5 font-bold group-hover:text-[#ff641d] transition-colors">CONDIÇÕES_ATM</span>
                           </div>
