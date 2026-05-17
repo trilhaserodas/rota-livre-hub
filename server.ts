@@ -127,38 +127,88 @@ Responda sempre em Português do Brasil.`,
 
     console.log(`[WeatherAPI] Received proxy request: lat=${lat}, lon=${lon}`);
 
-    if (!lat || !lon) {
+    if (lat === undefined || lon === undefined || lat === "" || lon === "") {
       return res.status(400).json({ error: "Latitude and longitude are required" });
     }
 
-    if (!apiKey) {
-      console.error("[WeatherAPI] ERROR: WEATHER_API_KEY is not defined in environment");
-      return res.status(500).json({ error: "Configuração do servidor incompleta: Chave de API ausente." });
-    }
-
     try {
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=pt_br`;
-      console.log(`[WeatherAPI] Fetching OWM for: ${lat},${lon}`);
-
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[WeatherAPI] OWM Error ${response.status}: ${errorText}`);
-        return res.status(response.status).json({ 
-          error: `Erro OWM ${response.status}`,
-          details: errorText.substring(0, 50) 
-        });
+      // 1. Try OpenWeatherMap if API Key exists
+      if (apiKey) {
+        try {
+          const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=pt_br`;
+          console.log(`[WeatherAPI] Try OWM: ${url.split('appid=')[0]}`);
+          const response = await fetch(url);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`[WeatherAPI] OWM Success`);
+            return res.json(data);
+          }
+          console.warn(`[WeatherAPI] OWM Failed (${response.status}), falling back to Open-Meteo`);
+        } catch (owmErr) {
+          console.error(`[WeatherAPI] OWM Fetch Exception, falling back:`, owmErr);
+        }
+      } else {
+        console.warn(`[WeatherAPI] Missing API Key, using Open-Meteo as primary source`);
       }
 
-      const data = await response.json();
-      console.log(`[WeatherAPI] Data received for ${lat},${lon}: ${data.weather?.[0]?.description}`);
-      res.json(data);
+      // 2. Fallback to Open-Meteo (Free, No Key)
+      const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+      console.log(`[WeatherAPI] Fetching Open-Meteo: ${openMeteoUrl}`);
+      const omResponse = await fetch(openMeteoUrl);
+      
+      if (!omResponse.ok) {
+        throw new Error(`Open-Meteo failed with status ${omResponse.status}`);
+      }
+
+      const omData = await omResponse.json();
+      
+      // Adapt Open-Meteo structure to match what the frontend expects from OWM
+      const adaptedData = {
+        main: {
+          temp: omData.current_weather.temperature,
+          feels_like: omData.current_weather.temperature,
+          humidity: 65 // Fallback humidity
+        },
+        weather: [
+          {
+            description: getWmoDescription(omData.current_weather.weathercode),
+            icon: getWmoIcon(omData.current_weather.weathercode)
+          }
+        ],
+        wind: {
+          speed: omData.current_weather.windspeed / 3.6 
+        }
+      };
+
+      console.log(`[WeatherAPI] Open-Meteo Success (Adapted)`);
+      res.json(adaptedData);
+
     } catch (error: any) {
-      console.error("[WeatherAPI] Proxy Exception:", error);
+      console.error("[WeatherAPI] Final Exception:", error);
       res.status(500).json({ error: "Erro na conexão com serviço meteorológico", details: error?.message });
     }
   });
+
+  // Helper functions for Open-Meteo adaptation
+  function getWmoDescription(code: number): string {
+    const codes: Record<number, string> = {
+      0: 'Céu Limpo', 1: 'Predom. Limpo', 2: 'Parcial. Nublado', 3: 'Nublado',
+      45: 'Nevoeiro', 48: 'Nevoeiro Escarchante', 51: 'Chuvisco Leve',
+      61: 'Chuva Leve', 63: 'Chuva Moderada', 65: 'Chuva Forte',
+      71: 'Neve Leve', 95: 'Trovoada'
+    };
+    return codes[code] || 'Condições Variáveis';
+  }
+
+  function getWmoIcon(code: number): string {
+    if (code === 0) return '01d';
+    if (code <= 3) return '02d';
+    if (code <= 48) return '50d';
+    if (code <= 67) return '10d';
+    if (code <= 77) return '13d';
+    return '11d';
+  }
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

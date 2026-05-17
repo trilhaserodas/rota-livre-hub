@@ -1606,6 +1606,7 @@ export default function AdventureMap() {
 
     if (isCurrentlyFetching.current) return;
 
+    console.log(`[Clima] DIAGNÓSTICO FRONTEND - LAT: ${lat}, LON: ${lng}`);
     isCurrentlyFetching.current = true;
     setIsLoadingWeather(true);
     try {
@@ -1622,17 +1623,18 @@ export default function AdventureMap() {
       }
 
       const data = await response.json();
+      console.log(`[Clima] DIAGNÓSTICO FRONTEND - RESPOSTA JSON COMPLETA:`, data);
       
       if (!data || !data.main || !data.weather || !data.weather[0]) {
         throw new Error('DADOS_CLIMA_ESTRUTURA_INVÁLIDA');
       }
       
-      const mappedData = {
-        temp: Math.round(data.main.temp),
-        feelsLike: data.main.feels_like !== undefined ? Math.round(data.main.feels_like) : Math.round(data.main.temp),
+      const mappedData: WeatherData = {
+        temp: Math.round(data.main.temp ?? 0),
+        feelsLike: Math.round(data.main.feels_like ?? data.main.temp ?? 0),
         description: data.weather[0].description || "CONDIÇÃO_N/A",
-        humidity: data.main.humidity || 0,
-        windSpeed: data.wind ? Math.round(data.wind.speed * 3.6) : 0, 
+        humidity: data.main.humidity ?? 0,
+        windSpeed: data.wind ? Math.round((data.wind.speed ?? 0) * 3.6) : 0, 
         icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`
       };
 
