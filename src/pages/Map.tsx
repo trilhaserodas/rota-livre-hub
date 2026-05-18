@@ -1447,6 +1447,7 @@ export default function AdventureMap() {
   const [isBottomPanelMinimized, setIsBottomPanelMinimized] = useState(false);
   const [isPointDetailsMinimized, setIsPointDetailsMinimized] = useState(false);
   const [showSidebarMobile, setShowSidebarMobile] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
   const dragControls = useDragControls();
 
   useEffect(() => {
@@ -2091,7 +2092,7 @@ export default function AdventureMap() {
   }, [selectedCategory, searchQuery, autoDiscoveredPoints]);
 
   return (
-    <div className="h-screen bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
+    <div className="h-screen bg-[#0b0c0d] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden isolate relative no-scrollbar">
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* Mobile Sidebar Overlay */}
@@ -2108,11 +2109,11 @@ export default function AdventureMap() {
       </AnimatePresence>
 
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
-      <aside className={cn(
-         "w-full h-full lg:h-full lg:w-[420px] flex-shrink-0 flex flex-col bg-[#0b0c0d] z-[5000] border-r border-white/10 relative shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300",
-         "fixed lg:static top-0 right-0",
-         !showSidebarMobile && "translate-x-full lg:translate-x-0 hidden lg:flex",
-         showSidebarMobile && "translate-x-0 flex"
+      <aside ref={sidebarRef} className={cn(
+         "w-full lg:h-full lg:w-[420px] flex-shrink-0 flex flex-col bg-[#0b0c0d] z-[5000] border-t lg:border-t-0 lg:border-r border-white/10 relative shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300",
+         "static lg:static h-auto lg:h-full order-last lg:order-first",
+         !showSidebarMobile && "hidden lg:flex",
+         showSidebarMobile && "flex"
       )}>
          {/* Close Button Mobile */}
          <button 
@@ -2834,7 +2835,7 @@ export default function AdventureMap() {
       </aside>
 
       {/* --- MAP MAIN VIEWPORT --- */}
-      <div className="flex-1 lg:h-full relative flex flex-col min-h-0 bg-[#0b0c0d] border-l border-white/5 isolate">
+      <div className="w-full h-[75vh] lg:h-full relative flex flex-col flex-shrink-0 lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last">
           {/* --- MAP CORE (Layer 0) --- */}
           <div className="absolute inset-0 z-0">
             <MapContainer 
@@ -3783,7 +3784,12 @@ export default function AdventureMap() {
       <div className="absolute right-4 bottom-4 lg:top-1/2 lg:-translate-y-1/2 z-[4000] flex flex-col gap-2 pointer-events-auto">
          {/* Tactical Mobile Menu Trigger */}
          <button 
-           onClick={() => setShowSidebarMobile(true)}
+           onClick={() => {
+             setShowSidebarMobile(true);
+             setTimeout(() => {
+               sidebarRef.current?.scrollIntoView({ behavior: 'smooth' });
+             }, 100);
+           }}
            className="lg:hidden w-10 h-10 bg-black/80 border border-[#ff641d]/50 text-[#ff641d] rounded-sm transition-all shadow-xl flex items-center justify-center animate-pulse"
            title="MENU TÁTICO"
          >
