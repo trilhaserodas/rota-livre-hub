@@ -2090,11 +2090,11 @@ export default function AdventureMap() {
   }, [selectedCategory, searchQuery, autoDiscoveredPoints]);
 
   return (
-    <div className="h-[calc(100dvh-6rem)] lg:h-[calc(100dvh-6rem)] bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
+    <div className="h-screen bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
-      <aside className="w-full h-1/2 lg:h-full lg:w-[450px] flex flex-col bg-[#0b0c0d] z-[2010] border-r border-white/10 order-2 lg:order-1 relative shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden">
+      <aside className="w-full h-1/2 lg:h-full lg:w-[420px] flex-shrink-0 flex flex-col bg-[#0b0c0d] z-[2010] border-r border-white/10 order-2 lg:order-1 relative shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden">
 
          {/* Brand Section */}
          <div className="p-6 border-b border-white/5 flex flex-col gap-1 bg-gradient-to-br from-black to-[#ff641d]/10">
@@ -2939,17 +2939,6 @@ export default function AdventureMap() {
 
                <div className="flex gap-2 pointer-events-auto">
                   <button 
-                    onClick={handleAIAnalysis}
-                    className={cn(
-                      "h-10 px-4 rounded-sm font-mono font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border shadow-xl overflow-hidden relative group",
-                      showAIPanel ? "bg-cyan-500 border-cyan-400 text-white" : "bg-black/80 border-cyan-500/30 text-cyan-400/60 hover:text-cyan-400"
-                    )}
-                  >
-                    <Activity size={12} className={isAnalyzingAI ? "animate-spin" : ""} /> 
-                    <span className="hidden sm:inline">AI_INTEL</span>
-                  </button>
-
-                  <button 
                     onClick={() => setIsExpeditionMode(!isExpeditionMode)}
                     className={cn(
                       "h-10 px-4 rounded-sm font-mono font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border shadow-xl overflow-hidden relative group",
@@ -2997,42 +2986,6 @@ export default function AdventureMap() {
 
 
 
-      {/* --- SELECTED POINT INTEL PANEL --- */}
-
-
-
-             <div className="flex-1 overflow-y-auto no-scrollbar p-6">
-                {!aiIntelligence && isAnalyzingAI ? (
-                  <div className="h-full flex flex-col items-center justify-center gap-6">
-                     <div className="relative">
-                        <div className="w-16 h-16 border-2 border-cyan-500/20 rounded-full border-t-cyan-500 animate-spin" />
-                        <Activity className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-500 animate-pulse" size={24} />
-                     </div>
-                     <div className="text-center space-y-2">
-                        <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-[0.3em] animate-pulse">SINCRO_DADOS_SATÉLITE...</div>
-                        <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">PROCESSANDO_MODELO_GEMINI_PRO</div>
-                     </div>
-                  </div>
-                ) : aiIntelligence && (
-                  <div className="space-y-8">
-                     {/* Summary Header */}
-
-
-
-
-
-
-
-
-
-
-
-                  </div>
-                )}
-             </div>
-
-
-
       <PointPanelV2 
         point={selectedPoint}
         onClose={() => {
@@ -3049,6 +3002,70 @@ export default function AdventureMap() {
           setIsPointDetailsMinimized(false);
         }}
       />
+
+      {/* --- RIGHT TACTICAL STACK (Desktop Only) --- */}
+      <div className="hidden lg:flex fixed right-6 top-24 bottom-24 w-80 flex-col gap-6 pointer-events-none z-[3000]">
+        <div className="pointer-events-auto">
+          <WeatherWidget data={weatherData} isLoading={isLoadingWeather} />
+        </div>
+
+        <div className="bg-black/80 backdrop-blur-3xl border border-white/10 p-5 rounded-sm shadow-2xl pointer-events-auto space-y-6">
+           <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <Activity size={14} className="text-cyan-400" />
+              <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.2em]">OPERATIONAL_STATUS</span>
+           </div>
+
+           <div className="grid grid-cols-2 gap-4">
+              <OperationalMetric label="SISTEMA" value="ATIVO" icon={ShieldCheck} color="text-green-500" />
+              <OperationalMetric label="LATÊNCIA" value="12ms" icon={Zap} color="text-cyan-400" />
+              <OperationalMetric label="NODES" value={filteredPoints.length} icon={Database} color="text-white/40" />
+              <OperationalMetric label="CLIMA" value={weatherData ? weatherData.description : 'SINC...'} icon={Cloud} color="text-blue-400" />
+           </div>
+
+           <div className="p-3 bg-[#ff641d]/5 border border-[#ff641d]/10 rounded-xs">
+              <div className="flex items-center gap-2 mb-2">
+                 <ShieldAlert size={10} className="text-[#ff641d]" />
+                 <span className="text-[8px] font-mono text-[#ff641d] uppercase font-black">ÁREA_DE_VIGILÂNCIA</span>
+              </div>
+              <p className="text-[9px] font-mono text-white/40 leading-relaxed uppercase">
+                 MONITORAMENTO_SATELITAL_RESTRITO. TODOS_OS_PONTOS_VERIFICADOS_PELA_COMUNIDADE.
+              </p>
+           </div>
+        </div>
+
+        {/* Live Expedition Feed if active */}
+        {isExpeditionMode && (
+          <div className="bg-black/80 backdrop-blur-3xl border border-white/10 p-5 rounded-sm shadow-2xl pointer-events-auto flex-1 overflow-hidden flex flex-col">
+             <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                   <Radio size={12} className="text-[#ff641d] animate-pulse" />
+                   <span className="text-[9px] font-mono font-black text-white uppercase tracking-widest">TACTICAL_FEED</span>
+                </div>
+                <div className="flex gap-1">
+                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                </div>
+             </div>
+             
+             <div className="flex-1 overflow-y-auto no-scrollbar space-y-3">
+                <div className="p-2 border-l border-white/10 bg-white/[0.02]">
+                   <div className="text-[7px] font-mono text-white/20 uppercase mb-1">{new Date().toLocaleTimeString()}</div>
+                   <div className="text-[9px] font-mono text-white/60 uppercase">ROTA_INICIADA_COM_SUCESSO</div>
+                </div>
+                <div className="p-2 border-l border-white/10 bg-white/[0.02]">
+                   <div className="text-[7px] font-mono text-white/20 uppercase mb-1">{new Date().toLocaleTimeString()}</div>
+                   <div className="text-[9px] font-mono text-white/60 uppercase">SINC_BANCO_DADOS_OFFLINE</div>
+                </div>
+                {autoDiscoveredPoints.slice(0, 3).map((p, i) => (
+                  <div key={i} className="p-2 border-l border-[#ff641d]/30 bg-[#ff641d]/5">
+                    <div className="text-[7px] font-mono text-[#ff641d]/40 uppercase mb-1">NODE_DETECTADO</div>
+                    <div className="text-[9px] font-mono text-white/80 uppercase truncate">{p.name}</div>
+                  </div>
+                ))}
+             </div>
+          </div>
+        )}
+      </div>
+
       {/* HUD OVERLAYS */}
 
       {/* Left Sidebar HUD (Categories - Universal) */}
@@ -3738,6 +3755,18 @@ export default function AdventureMap() {
       {/* Right Action Stack (Vertical controls) - Repositioned for Mobile to bottom-right */}
       <div className="absolute right-4 bottom-4 lg:top-1/2 lg:-translate-y-1/2 z-[2000] flex flex-col gap-2 pointer-events-auto">
          <button 
+           onClick={handleAIAnalysis}
+           className={cn(
+             "w-10 h-10 lg:w-12 lg:h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center group relative",
+             showAIPanel ? "bg-cyan-500 border-cyan-500 text-white shadow-[0_0_15px_#22d3ee]" : "bg-black/80 border-cyan-500/30 text-cyan-400 hover:border-cyan-500"
+           )}
+           title="AI_TACTICAL_ANALYSIS"
+         >
+            <Zap size={18} className={isAnalyzingAI ? "animate-spin text-white" : ""} />
+            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">AI_TACTICAL</div>
+         </button>
+
+         <button 
            onClick={handleLocateUser} 
            title="MINHA LOCALIZAÇÃO"
            className="w-10 h-10 lg:w-12 lg:h-12 bg-black/80 border border-white/10 rounded-sm text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all shadow-xl flex items-center justify-center group relative"
@@ -3880,10 +3909,10 @@ export default function AdventureMap() {
       <AnimatePresence>
         {showAIPanel && (
           <motion.div
-            initial={{ x: -400, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -400, opacity: 0 }}
-            className="fixed left-4 lg:left-8 top-24 bottom-24 w-[calc(100%-32px)] max-w-[360px] bg-[#0b0c0d]/95 backdrop-blur-3xl border border-cyan-500/20 z-[9999] flex flex-col shadow-[0_0_80px_rgba(34,211,238,0.3)] pointer-events-auto overflow-hidden rounded-sm"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="fixed left-4 lg:left-[440px] top-24 bottom-24 w-[calc(100%-32px)] max-w-[380px] bg-[#0b0c0d]/98 backdrop-blur-3xl border border-cyan-500/30 z-[10000] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8),0_0_40px_rgba(34,211,238,0.2)] pointer-events-auto overflow-hidden rounded-sm"
           >
              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-cyan-500/[0.03]">
                 <div className="flex items-center gap-2">
