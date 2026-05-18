@@ -2090,7 +2090,7 @@ export default function AdventureMap() {
   }, [selectedCategory, searchQuery, autoDiscoveredPoints]);
 
   return (
-    <div className="h-[calc(100vh-96px)] bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
+    <div className="h-screen bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
