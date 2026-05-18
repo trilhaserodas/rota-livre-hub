@@ -2090,11 +2090,11 @@ export default function AdventureMap() {
   }, [selectedCategory, searchQuery, autoDiscoveredPoints]);
 
   return (
-    <div className="h-screen bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
+    <div className="h-[calc(100vh-96px)] bg-[#0b0c0d] flex flex-col lg:flex-row overflow-hidden isolate relative">
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
-      <aside className="w-full h-1/2 lg:h-full lg:w-[420px] flex-shrink-0 flex flex-col bg-[#0b0c0d] z-[2010] border-r border-white/10 order-2 lg:order-1 relative shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden">
+      <aside className="w-full h-1/2 lg:h-full lg:w-[420px] flex-shrink-0 flex flex-col bg-[#0b0c0d] z-[5000] border-r border-white/10 relative shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden">
 
          {/* Brand Section */}
          <div className="p-6 border-b border-white/5 flex flex-col gap-1 bg-gradient-to-br from-black to-[#ff641d]/10">
@@ -2147,7 +2147,7 @@ export default function AdventureMap() {
             ))}
          </div>
 
-         <div className="flex-1 overflow-hidden flex flex-col">
+         <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
             <AnimatePresence mode="wait">
                {activeTab === 'explore' && (
                  <motion.div 
@@ -2771,6 +2771,31 @@ export default function AdventureMap() {
                   </motion.div>
                )}
             </AnimatePresence>
+
+            {/* Tactical Sidebar Ops Gadget */}
+            <div className="bg-black/40 border-t border-white/5 p-6 space-y-6 mt-auto">
+               <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                  <Activity size={14} className="text-cyan-400" />
+                  <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.2em]">OPERATIONAL_STATUS</span>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <OperationalMetric label="SISTEMA" value="ATIVO" icon={ShieldCheck} color="text-green-500" />
+                  <OperationalMetric label="LATÊNCIA" value="12ms" icon={Zap} color="text-cyan-400" />
+                  <OperationalMetric label="NODES" value={filteredPoints.length} icon={Database} color="text-white/40" />
+                  <OperationalMetric label="CLIMA" value={weatherData ? weatherData.description : 'SINC...'} icon={Cloud} color="text-blue-400" />
+               </div>
+
+               <div className="p-3 bg-[#ff641d]/5 border border-[#ff641d]/10 rounded-xs">
+                  <div className="flex items-center gap-2 mb-2">
+                     <ShieldAlert size={10} className="text-[#ff641d]" />
+                     <span className="text-[8px] font-mono text-[#ff641d] uppercase font-black">ÁREA_DE_VIGILÂNCIA</span>
+                  </div>
+                  <p className="text-[9px] font-mono text-white/40 leading-relaxed uppercase">
+                     MONITORAMENTO_SATELITAL_RESTRITO. TODOS_OS_PONTOS_VERIFICADOS_PELA_COMUNIDADE.
+                  </p>
+               </div>
+            </div>
          </div>
 
          {/* Sidebar Navigation Footer (PC ONLY) */}
@@ -2783,7 +2808,7 @@ export default function AdventureMap() {
       </aside>
 
       {/* --- MAP MAIN VIEWPORT --- */}
-      <main className="flex-1 lg:h-full relative flex flex-col min-h-0 bg-[#0b0c0d] border-l border-white/5 isolate order-1 lg:order-2">
+      <div className="flex-1 lg:h-full relative flex flex-col min-h-0 bg-[#0b0c0d] border-l border-white/5 isolate">
           {/* --- MAP CORE (Layer 0) --- */}
           <div className="absolute inset-0 z-0">
             <MapContainer 
@@ -3004,33 +3029,9 @@ export default function AdventureMap() {
       />
 
       {/* --- RIGHT TACTICAL STACK (Desktop Only) --- */}
-      <div className="hidden lg:flex fixed right-6 top-24 bottom-24 w-80 flex-col gap-6 pointer-events-none z-[3000]">
+      <div className="hidden lg:flex fixed right-6 top-32 bottom-24 w-80 flex-col gap-6 pointer-events-none z-[6000]">
         <div className="pointer-events-auto">
-          <WeatherWidget data={weatherData} isLoading={isLoadingWeather} />
-        </div>
-
-        <div className="bg-black/80 backdrop-blur-3xl border border-white/10 p-5 rounded-sm shadow-2xl pointer-events-auto space-y-6">
-           <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-              <Activity size={14} className="text-cyan-400" />
-              <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.2em]">OPERATIONAL_STATUS</span>
-           </div>
-
-           <div className="grid grid-cols-2 gap-4">
-              <OperationalMetric label="SISTEMA" value="ATIVO" icon={ShieldCheck} color="text-green-500" />
-              <OperationalMetric label="LATÊNCIA" value="12ms" icon={Zap} color="text-cyan-400" />
-              <OperationalMetric label="NODES" value={filteredPoints.length} icon={Database} color="text-white/40" />
-              <OperationalMetric label="CLIMA" value={weatherData ? weatherData.description : 'SINC...'} icon={Cloud} color="text-blue-400" />
-           </div>
-
-           <div className="p-3 bg-[#ff641d]/5 border border-[#ff641d]/10 rounded-xs">
-              <div className="flex items-center gap-2 mb-2">
-                 <ShieldAlert size={10} className="text-[#ff641d]" />
-                 <span className="text-[8px] font-mono text-[#ff641d] uppercase font-black">ÁREA_DE_VIGILÂNCIA</span>
-              </div>
-              <p className="text-[9px] font-mono text-white/40 leading-relaxed uppercase">
-                 MONITORAMENTO_SATELITAL_RESTRITO. TODOS_OS_PONTOS_VERIFICADOS_PELA_COMUNIDADE.
-              </p>
-           </div>
+          <WeatherWidget lat={mapCenter[0]} lng={mapCenter[1]} />
         </div>
 
         {/* Live Expedition Feed if active */}
@@ -3903,7 +3904,7 @@ export default function AdventureMap() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
-      </main>
+      </div>
 
       {/* --- AI TACTICAL INTELLIGENCE PANEL (OVERLAY) --- */}
       <AnimatePresence>
