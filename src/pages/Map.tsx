@@ -597,6 +597,28 @@ const initialPoints: LocationPoint[] = [
     description: 'Mucugê, BA. Chapada Diamantina. Lavanderia, cozinha coletiva, banho quente.',
   },
   {
+    id: 'mercado-pompeia',
+    name: 'Supermercado Pompéia',
+    lat: -19.9143,
+    lng: -43.9077,
+    category: 'market',
+    address: 'Av. dos Andradas, 3760',
+    rating: '4.4 (8,915 reviews)',
+    phone: '(31) 3488-4977',
+    hours: '8h–19h',
+    description: 'Ampla variedade de suprimentos para expedição estrategicamente localizado na Av. dos Andradas.'
+  },
+  {
+    id: 'mercado-cachoeirinha',
+    name: 'Supermercado Cachoeirinha',
+    lat: -19.8956,
+    lng: -43.9487,
+    category: 'market',
+    address: 'Av. Pres. Antônio Carlos, 1880',
+    rating: '4.5 (2,601 reviews)',
+    description: 'Ponto de reabastecimento estratégico no corredor da Antônio Carlos.'
+  },
+  {
     id: 'brazil-camping-5',
     name: 'Chapada.camping',
     lat: -12.4641,
@@ -2072,39 +2094,65 @@ export default function AdventureMap() {
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
-      <div className="w-full h-1/2 lg:h-full lg:w-[400px] lg:flex lg:flex-col bg-[#0b0c0d] z-[2000] border-r border-white/5 order-2 lg:order-1 relative shadow-[20px_0_60px_rgba(0,0,0,0.5)]">
+      <aside className="w-full h-1/2 lg:h-full lg:w-[450px] flex flex-col bg-[#0b0c0d] z-[2010] border-r border-white/10 order-2 lg:order-1 relative shadow-[20px_0_60px_rgba(0,0,0,0.8)] overflow-hidden">
 
          {/* Brand Section */}
-         <div className="hidden lg:flex p-6 border-b border-white/5 flex-col gap-1 bg-[#ff641d]/5">
-            <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.5</div>
-            <h1 className="text-xl font-display font-black text-white uppercase tracking-tighter leading-none flex items-center gap-2">
-               <Navigation2 size={24} className={isExpeditionMode ? "animate-pulse text-[#ff641d]" : "text-white"} />
+         <div className="p-6 border-b border-white/5 flex flex-col gap-1 bg-gradient-to-br from-black to-[#ff641d]/10">
+            <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.6.9</div>
+            <h1 className="text-xl font-display font-black text-white uppercase tracking-tighter leading-none flex items-center gap-3">
+               <Navigation2 size={24} className={isExpeditionMode ? "animate-pulse text-[#ff641d]" : "text-white/40"} />
                GPS_TACTICAL<span className="text-[#ff641d]">.</span>SYSTEM
             </h1>
+            <div className="flex gap-2 mt-2">
+               <button 
+                 onClick={handleAIAnalysis}
+                 className={cn(
+                   "flex-1 h-10 border rounded-xs font-mono font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2",
+                   showAIPanel 
+                     ? "bg-cyan-500 border-cyan-400 text-white shadow-[0_0_15px_rgba(34,211,238,0.4)]" 
+                     : "bg-black/40 border-cyan-500/30 text-cyan-400/60 hover:border-cyan-400"
+                 )}
+               >
+                 <Activity size={12} className={isAnalyzingAI ? "animate-spin" : "animate-pulse"} /> 
+                 <span>{isAnalyzingAI ? "SINCRO_AI" : "AI-INTEL"}</span>
+               </button>
+               <button 
+                 onClick={() => setIsExpeditionMode(!isExpeditionMode)}
+                 className={cn(
+                   "w-12 h-10 border rounded-xs transition-all flex items-center justify-center",
+                   isExpeditionMode 
+                     ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.4)]" 
+                     : "bg-black/40 border-white/10 text-white/20 hover:border-[#ff641d]/40"
+                 )}
+               >
+                 <Zap size={12} className={isExpeditionMode ? "animate-pulse" : ""} /> 
+               </button>
+            </div>
          </div>
 
          {/* Sidebar Tabs */}
          <div className="flex border-b border-white/5 bg-black/40">
             {[
-              { id: 'explore', label: 'EXPLORAR', icon: Search },
-              { id: 'saved', label: 'SALVOS', icon: Heart },
-              { id: 'expedition', label: 'EXPEDIÇÃO', icon: Zap, disabled: !selectedPreDefinedRoute },
-              { id: 'routing', label: 'TRAÇAR', icon: Navigation }
+              { id: 'explore', label: 'EXPLORADOR', icon: Search },
+              { id: 'saved', label: 'CÉLULA_SAVED', icon: Heart },
+              { id: 'expedition', label: 'OPERACIONAL', icon: Zap },
+              { id: 'routing', label: 'TRAJETO', icon: Navigation }
             ].map(tab => (
               <button 
                 key={tab.id}
-                disabled={tab.disabled}
+                disabled={tab.id === 'expedition' && !selectedPreDefinedRoute}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={cn(
-                  "flex-1 h-12 flex items-center justify-center gap-2 transition-all border-b-2 relative",
-                  tab.disabled ? "opacity-20 cursor-not-allowed" : "hover:bg-white/5",
-                  activeTab === tab.id ? "border-[#ff641d] text-[#ff641d] bg-[#ff641d]/5" : "border-transparent text-white/20"
+                  "flex-1 h-16 flex flex-col items-center justify-center gap-1.5 transition-all relative border-b-2",
+                  activeTab === tab.id 
+                    ? "bg-[#ff641d]/10 border-[#ff641d] text-[#ff641d]" 
+                    : "bg-transparent border-transparent text-white/20 hover:bg-white/5 hover:text-white/40 disabled:opacity-20 disabled:cursor-not-allowed"
                 )}
               >
-                <tab.icon size={14} />
-                <span className="text-[8px] font-mono font-black uppercase tracking-widest">{tab.label}</span>
-                {tab.id === 'expedition' && selectedPreDefinedRoute && (
-                  <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#ff641d] rounded-full animate-pulse shadow-[0_0_8px_#ff641d]" />
+                <tab.icon size={16} />
+                <span className="text-[7px] font-mono font-black uppercase tracking-widest">{tab.label}</span>
+                {activeTab === tab.id && (
+                  <motion.div layoutId="active-tab-glow" className="absolute inset-0 bg-[#ff641d]/5 blur-xl" />
                 )}
               </button>
             ))}
@@ -2115,22 +2163,26 @@ export default function AdventureMap() {
                {activeTab === 'explore' && (
                  <motion.div 
                    key="explore"
-                   initial={{ opacity: 0, x: -20 }}
+                   initial={{ opacity: 0, x: -10 }}
                    animate={{ opacity: 1, x: 0 }}
-                   exit={{ opacity: 0, x: 20 }}
+                   exit={{ opacity: 0, x: 10 }}
                    className="flex-1 flex flex-col overflow-hidden"
                  >
-                    <div className="p-4 md:p-6 space-y-6">
-                       <form onSubmit={handleSearch} className="relative group">
-                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#ff641d] transition-colors" size={18} />
-                          <input 
-                            type="text" 
-                            placeholder="ROTA, PAÍS OU PONTO..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white/[0.03] border border-white/10 rounded-sm h-12 pl-12 pr-4 text-[10px] font-mono tracking-[0.2em] focus:outline-none focus:border-[#ff641d] transition-all text-white placeholder:text-white/10 uppercase"
-                          />
-                       </form>
+                    <div className="p-5 lg:p-8 space-y-8 overflow-y-auto no-scrollbar">
+                       {/* Integrated Search */}
+                       <div className="space-y-4">
+                          <label className="text-[8px] font-mono text-white/20 uppercase tracking-[0.4em]">LOCALIZAR_VETOR_DE_COORDENADAS</label>
+                          <form onSubmit={handleSearch} className="relative group">
+                             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-[#ff641d] transition-colors" size={20} />
+                             <input 
+                               type="text" 
+                               placeholder="DESTINO, PAÍS, PONTO..."
+                               value={searchQuery}
+                               onChange={(e) => setSearchQuery(e.target.value)}
+                               className="w-full bg-white/[0.02] border border-white/5 rounded-sm h-14 pl-14 pr-6 text-[11px] font-mono tracking-[0.3em] focus:outline-none focus:border-[#ff641d]/50 transition-all text-white placeholder:text-white/5 uppercase font-bold"
+                             />
+                          </form>
+                       </div>
 
                        <div className="space-y-4">
                           <div className="flex items-center justify-between">
@@ -2228,6 +2280,72 @@ export default function AdventureMap() {
                              {/* Country */}
                              <div className="space-y-2">
                                 <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">LATITUDE_NACIONAL</label>
+                                 {/* INTEGRATED AI INTEL PANEL */}
+                                 <AnimatePresence>
+                                   {showAIPanel && (
+                                     <motion.div 
+                                       initial={{ height: 0, opacity: 0 }}
+                                       animate={{ height: "auto", opacity: 1 }}
+                                       exit={{ height: 0, opacity: 0 }}
+                                       className="overflow-hidden space-y-4 pt-4 border-t border-cyan-500/20"
+                                     >
+                                        <div className="flex items-center gap-2 mb-2">
+                                           <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#22d3ee]" />
+                                           <span className="text-[8px] font-mono font-black text-cyan-400 tracking-[0.3em]">AI_TACTICAL_DATA</span>
+                                        </div>
+
+                                        {(!aiIntelligence && isAnalyzingAI) ? (
+                                          <div className="py-8 flex flex-col items-center justify-center gap-4 bg-cyan-500/5 rounded-xs border border-cyan-500/10">
+                                             <Activity className="text-cyan-500 animate-spin" size={20} />
+                                             <div className="text-[7px] font-mono text-cyan-400/60 uppercase animate-pulse">ANALISANDO_VETORES_GEMINI...</div>
+                                          </div>
+                                        ) : aiIntelligence && (
+                                          <div className="space-y-6">
+                                             <div className="space-y-1">
+                                                <div className="text-[7px] font-mono text-cyan-500/40 uppercase">STATUS_OPERACIONAL</div>
+                                                <div className="text-sm font-display font-black text-white uppercase tracking-tight">{aiIntelligence.difficulty}_RISK_PROTOCOL</div>
+                                                <p className="text-[9px] font-mono text-white/40 uppercase leading-tight italic mt-2">"{aiIntelligence.summary}"</p>
+                                             </div>
+
+                                             <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                   <span className="text-[7px] font-mono text-white/20 uppercase">RISK_LEVEL</span>
+                                                   <div className="text-lg font-mono font-black text-cyan-400">{aiIntelligence.riskLevel}%</div>
+                                                </div>
+                                                <div className="flex flex-col justify-center">
+                                                   <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                                      <div className="h-full bg-cyan-500" style={{ width: `${aiIntelligence.riskLevel}%` }} />
+                                                   </div>
+                                                </div>
+                                             </div>
+
+                                             <div className="space-y-2">
+                                                <div className="text-[7px] font-mono text-red-500/60 uppercase">VETORES_DE_ALERTA</div>
+                                                {aiIntelligence.alerts.map((alert, i) => (
+                                                  <div key={i} className="text-[8px] font-mono text-white/70 uppercase pl-3 border-l border-red-500/40">{alert}</div>
+                                                ))}
+                                             </div>
+
+                                             <div className="space-y-3">
+                                                <div className="text-[7px] font-mono text-cyan-500/60 uppercase">EQUIPAMENTO_RECOMENDADO</div>
+                                                <div className="flex flex-wrap gap-1">
+                                                   {aiIntelligence.equipment.map((item, i) => (
+                                                     <span key={i} className="px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/20 text-[6px] font-mono text-cyan-400 rounded-full uppercase">{item}</span>
+                                                   ))}
+                                                </div>
+                                             </div>
+
+                                             <button 
+                                               onClick={() => setShowAIPanel(false)}
+                                               className="w-full py-2 bg-white/5 border border-white/10 text-[7px] font-mono text-white/20 hover:text-white uppercase tracking-widest transition-all"
+                                             >
+                                               FECHAR_PAINEL_INTEL
+                                             </button>
+                                          </div>
+                                        )}
+                                     </motion.div>
+                                   )}
+                                 </AnimatePresence>
                                 <div className="relative group">
                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 p-1 border-r border-white/10 pr-2">
                                       <Globe size={10} className={countryFilter !== 'all' ? "text-[#ff641d]" : "text-white/20"} />
@@ -2430,6 +2548,63 @@ export default function AdventureMap() {
                         </div>
                       </div>
                     </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'saved' && (
+                  <motion.div 
+                    key="saved"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex-1 flex flex-col overflow-hidden"
+                  >
+                     <div className="p-8 space-y-6">
+                        <div className="flex items-center justify-between border-l-2 border-red-500 pl-4 py-1">
+                           <div className="space-y-1">
+                              <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.3em]">CÉLULA_SAVED_DATA</span>
+                              <div className="text-[7px] font-mono text-white/20 uppercase">FILTRANDO_DADOS_PONTO_A_PONTO</div>
+                           </div>
+                           <Heart size={16} className="text-red-500 animate-pulse" />
+                        </div>
+
+                        <div className="space-y-3">
+                           {savedRoutes.length > 0 ? (
+                             savedRoutes.map(route => (
+                               <button
+                                 key={route.id}
+                                 onClick={() => selectRoute(route)}
+                                 className="w-full p-5 bg-black/40 border border-white/5 hover:border-white/20 rounded-sm flex flex-col gap-3 group transition-all text-left"
+                               >
+                                  <div className="flex justify-between items-start w-full">
+                                     <span className="text-[11px] font-mono font-black text-white group-hover:text-red-500 transition-colors uppercase tracking-widest">{route.name}</span>
+                                     <button 
+                                        onClick={(e) => { e.stopPropagation(); toggleFavoriteRoute(route); }}
+                                        className="text-red-500 hover:scale-110 transition-transform"
+                                     >
+                                        <Trash2 size={12} />
+                                     </button>
+                                  </div>
+                                  <div className="flex items-center gap-4 text-[8px] font-mono text-white/30 uppercase font-black">
+                                     <div className="flex items-center gap-1">
+                                       <Globe size={10} className="text-red-500" />
+                                       {route.country}
+                                     </div>
+                                     <div className="px-2 py-0.5 border border-white/10 rounded-full">{route.difficulty}</div>
+                                  </div>
+                               </button>
+                             ))
+                           ) : (
+                             <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-sm flex flex-col items-center gap-6">
+                                <Heart size={32} className="text-white/5" />
+                                <div className="space-y-2">
+                                   <div className="text-[9px] font-mono text-white/20 uppercase tracking-[0.3em]">BANCO_DE_DADOS_VAZIO</div>
+                                   <div className="text-[7px] font-mono text-white/10 uppercase">FAVORITE_ROTAS_PARA_REFERÊNCIA_RÁPIDA</div>
+                                </div>
+                             </div>
+                           )}
+                        </div>
+                     </div>
                   </motion.div>
                 )}
 
@@ -2682,12 +2857,10 @@ export default function AdventureMap() {
             </div>
             <div className="text-[8px] font-mono text-white/10 uppercase tracking-widest">EXPLORER_TAC_V2</div>
          </div>
-      </div>
+      </aside>
 
       {/* --- MAP MAIN VIEWPORT --- */}
-      <div className="flex-1 lg:h-full relative order-1 lg:order-2 flex flex-col min-h-0 bg-[#0b0c0d]">
-
-
+      <main className="flex-1 lg:h-full relative flex flex-col min-h-0 bg-[#0b0c0d] border-l border-white/5 isolate order-1 lg:order-2">
           {/* --- MAP CORE (Layer 0) --- */}
           <div className="absolute inset-0 z-0">
             <MapContainer 
@@ -2695,7 +2868,9 @@ export default function AdventureMap() {
               zoom={mapZoom} 
               style={{ width: '100%', height: '100%', background: '#0b0c0d' }}
               zoomControl={false}
+              className="z-0"
             >
+
               <MapController center={mapCenter} zoom={mapZoom} bounds={mapBounds || undefined} />
               <MapEventsHandler active={isTracing} onMapClick={(latlng) => {
                 setRoutePoints(prev => [...prev, [latlng.lat, latlng.lng]]);
@@ -2900,14 +3075,14 @@ export default function AdventureMap() {
 
 
       {/* --- SELECTED POINT INTEL PANEL --- */}
-      {/* --- AI TACTICAL INTELLIGENCE PANEL --- */}
+      {/* --- AI TACTICAL INTELLIGENCE PANEL (OVERLAY) --- */}
       <AnimatePresence>
         {showAIPanel && (
           <motion.div
             initial={{ x: -400, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -400, opacity: 0 }}
-            className="fixed left-4 md:left-20 top-24 bottom-24 w-full max-w-[340px] bg-[#0b0c0d]/90 backdrop-blur-3xl border border-cyan-500/20 z-[2500] flex flex-col shadow-[0_0_60px_rgba(34,211,238,0.1)] pointer-events-auto overflow-hidden rounded-sm"
+            className="fixed left-4 lg:left-6 top-24 bottom-24 w-full max-w-[340px] bg-[#0b0c0d]/90 backdrop-blur-3xl border border-cyan-500/20 z-[3000] flex flex-col shadow-[0_0_60px_rgba(34,211,238,0.2)] pointer-events-auto overflow-hidden rounded-sm lg:hidden"
           >
              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-cyan-500/[0.03]">
                 <div className="flex items-center gap-2">
@@ -3894,7 +4069,7 @@ export default function AdventureMap() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
-      </div>
+      </main>
     </div>
   );
 }
