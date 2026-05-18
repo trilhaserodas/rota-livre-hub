@@ -2105,27 +2105,16 @@ export default function AdventureMap() {
             </h1>
             <div className="flex gap-2 mt-2">
                <button 
-                 onClick={handleAIAnalysis}
-                 className={cn(
-                   "flex-1 h-10 border rounded-xs font-mono font-black text-[9px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2",
-                   showAIPanel 
-                     ? "bg-cyan-500 border-cyan-400 text-white shadow-[0_0_15px_rgba(34,211,238,0.4)]" 
-                     : "bg-black/40 border-cyan-500/30 text-cyan-400/60 hover:border-cyan-400"
-                 )}
-               >
-                 <Activity size={12} className={isAnalyzingAI ? "animate-spin" : "animate-pulse"} /> 
-                 <span>{isAnalyzingAI ? "SINCRO_AI" : "AI-INTEL"}</span>
-               </button>
-               <button 
                  onClick={() => setIsExpeditionMode(!isExpeditionMode)}
                  className={cn(
-                   "w-12 h-10 border rounded-xs transition-all flex items-center justify-center",
+                   "w-full h-10 border rounded-xs transition-all flex items-center justify-center gap-2 font-mono font-black text-[9px] uppercase tracking-[0.2em]",
                    isExpeditionMode 
                      ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.4)]" 
                      : "bg-black/40 border-white/10 text-white/20 hover:border-[#ff641d]/40"
                  )}
                >
                  <Zap size={12} className={isExpeditionMode ? "animate-pulse" : ""} /> 
+                 <span>{isExpeditionMode ? "MODO_EXP_ATIVO" : "INICIAR_EXP_MODO"}</span>
                </button>
             </div>
          </div>
@@ -2280,73 +2269,7 @@ export default function AdventureMap() {
                              {/* Country */}
                              <div className="space-y-2">
                                 <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">LATITUDE_NACIONAL</label>
-                                 {/* INTEGRATED AI INTEL PANEL */}
-                                 <AnimatePresence>
-                                   {showAIPanel && (
-                                     <motion.div 
-                                       initial={{ height: 0, opacity: 0 }}
-                                       animate={{ height: "auto", opacity: 1 }}
-                                       exit={{ height: 0, opacity: 0 }}
-                                       className="overflow-hidden space-y-4 pt-4 border-t border-cyan-500/20"
-                                     >
-                                        <div className="flex items-center gap-2 mb-2">
-                                           <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#22d3ee]" />
-                                           <span className="text-[8px] font-mono font-black text-cyan-400 tracking-[0.3em]">AI_TACTICAL_DATA</span>
-                                        </div>
-
-                                        {(!aiIntelligence && isAnalyzingAI) ? (
-                                          <div className="py-8 flex flex-col items-center justify-center gap-4 bg-cyan-500/5 rounded-xs border border-cyan-500/10">
-                                             <Activity className="text-cyan-500 animate-spin" size={20} />
-                                             <div className="text-[7px] font-mono text-cyan-400/60 uppercase animate-pulse">ANALISANDO_VETORES_GEMINI...</div>
-                                          </div>
-                                        ) : aiIntelligence && (
-                                          <div className="space-y-6">
-                                             <div className="space-y-1">
-                                                <div className="text-[7px] font-mono text-cyan-500/40 uppercase">STATUS_OPERACIONAL</div>
-                                                <div className="text-sm font-display font-black text-white uppercase tracking-tight">{aiIntelligence.difficulty}_RISK_PROTOCOL</div>
-                                                <p className="text-[9px] font-mono text-white/40 uppercase leading-tight italic mt-2">"{aiIntelligence.summary}"</p>
-                                             </div>
-
-                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-1">
-                                                   <span className="text-[7px] font-mono text-white/20 uppercase">RISK_LEVEL</span>
-                                                   <div className="text-lg font-mono font-black text-cyan-400">{aiIntelligence.riskLevel}%</div>
-                                                </div>
-                                                <div className="flex flex-col justify-center">
-                                                   <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                                      <div className="h-full bg-cyan-500" style={{ width: `${aiIntelligence.riskLevel}%` }} />
-                                                   </div>
-                                                </div>
-                                             </div>
-
-                                             <div className="space-y-2">
-                                                <div className="text-[7px] font-mono text-red-500/60 uppercase">VETORES_DE_ALERTA</div>
-                                                {aiIntelligence.alerts.map((alert, i) => (
-                                                  <div key={i} className="text-[8px] font-mono text-white/70 uppercase pl-3 border-l border-red-500/40">{alert}</div>
-                                                ))}
-                                             </div>
-
-                                             <div className="space-y-3">
-                                                <div className="text-[7px] font-mono text-cyan-500/60 uppercase">EQUIPAMENTO_RECOMENDADO</div>
-                                                <div className="flex flex-wrap gap-1">
-                                                   {aiIntelligence.equipment.map((item, i) => (
-                                                     <span key={i} className="px-1.5 py-0.5 bg-cyan-500/10 border border-cyan-500/20 text-[6px] font-mono text-cyan-400 rounded-full uppercase">{item}</span>
-                                                   ))}
-                                                </div>
-                                             </div>
-
-                                             <button 
-                                               onClick={() => setShowAIPanel(false)}
-                                               className="w-full py-2 bg-white/5 border border-white/10 text-[7px] font-mono text-white/20 hover:text-white uppercase tracking-widest transition-all"
-                                             >
-                                               FECHAR_PAINEL_INTEL
-                                             </button>
-                                          </div>
-                                        )}
-                                     </motion.div>
-                                   )}
-                                 </AnimatePresence>
-                                <div className="relative group">
+                                 <div className="relative group">
                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 p-1 border-r border-white/10 pr-2">
                                       <Globe size={10} className={countryFilter !== 'all' ? "text-[#ff641d]" : "text-white/20"} />
                                    </div>
@@ -3075,27 +2998,8 @@ export default function AdventureMap() {
 
 
       {/* --- SELECTED POINT INTEL PANEL --- */}
-      {/* --- AI TACTICAL INTELLIGENCE PANEL (OVERLAY) --- */}
-      <AnimatePresence>
-        {showAIPanel && (
-          <motion.div
-            initial={{ x: -400, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -400, opacity: 0 }}
-            className="fixed left-4 lg:left-6 top-24 bottom-24 w-full max-w-[340px] bg-[#0b0c0d]/90 backdrop-blur-3xl border border-cyan-500/20 z-[3000] flex flex-col shadow-[0_0_60px_rgba(34,211,238,0.2)] pointer-events-auto overflow-hidden rounded-sm lg:hidden"
-          >
-             <div className="p-4 border-b border-white/5 flex items-center justify-between bg-cyan-500/[0.03]">
-                <div className="flex items-center gap-2">
-                   <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_#22d3ee]" />
-                   <span className="text-[10px] font-mono font-black text-cyan-400 tracking-[0.3em]">AI_OPERATIONAL_HUB</span>
-                </div>
-                <button 
-                  onClick={() => setShowAIPanel(false)}
-                  className="text-white/20 hover:text-white transition-colors"
-                >
-                   <Plus size={16} className="rotate-45" />
-                </button>
-             </div>
+
+
 
              <div className="flex-1 overflow-y-auto no-scrollbar p-6">
                 {!aiIntelligence && isAnalyzingAI ? (
@@ -3112,121 +3016,22 @@ export default function AdventureMap() {
                 ) : aiIntelligence && (
                   <div className="space-y-8">
                      {/* Summary Header */}
-                     <section>
-                        <div className="text-[8px] font-mono text-cyan-500/60 uppercase tracking-[0.2em] mb-2">STATUS_OPERACIONAL</div>
-                        <h2 className="text-xl font-display font-black text-white uppercase tracking-tighter leading-none mb-3">
-                           {aiIntelligence.difficulty}_RISK_PROTOCOL
-                        </h2>
-                        <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xs">
-                           <p className="text-[10px] text-white/60 font-mono uppercase leading-relaxed italic">
-                              "{aiIntelligence.summary}"
-                           </p>
-                        </div>
-                     </section>
 
-                     {/* Intelligence Radar */}
-                     <section className="h-48 -mx-4">
-                        <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em] mb-4 text-center">RADAR_DE_DIFICULDADE</div>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <RadarChart data={[
-                            { subject: 'TERRAIN', A: aiIntelligence.radarStats.terrain },
-                            { subject: 'ISOLATION', A: aiIntelligence.radarStats.isolation },
-                            { subject: 'WEATHER', A: aiIntelligence.radarStats.weather },
-                            { subject: 'TECH', A: aiIntelligence.radarStats.tech },
-                          ]}>
-                            <PolarGrid stroke="rgba(255,255,255,0.05)" />
-                            <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 7, fontWeight: 900 }} />
-                            <Radar
-                              name="Intel"
-                              dataKey="A"
-                              stroke="#22d3ee"
-                              fill="#22d3ee"
-                              fillOpacity={0.3}
-                            />
-                          </RadarChart>
-                        </ResponsiveContainer>
-                     </section>
 
-                     {/* Risk Level Meter */}
-                     <section className="space-y-2">
-                        <div className="flex justify-between items-end">
-                           <span className="text-[8px] font-mono text-white/20 uppercase tracking-widest">NÍVEL_DE_RISCO</span>
-                           <span className={cn(
-                             "text-[12px] font-mono font-black",
-                             aiIntelligence.riskLevel > 70 ? "text-red-500" : "text-cyan-400"
-                           )}>{aiIntelligence.riskLevel}%</span>
-                        </div>
-                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                           <motion.div 
-                             initial={{ width: 0 }}
-                             animate={{ width: `${aiIntelligence.riskLevel}%` }}
-                             className={cn(
-                               "h-full transition-all duration-1000",
-                               aiIntelligence.riskLevel > 70 ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "bg-cyan-500 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
-                             )}
-                           />
-                        </div>
-                     </section>
 
-                     {/* Intelligent Alerts */}
-                     <section className="space-y-4">
-                        <div className="flex items-center gap-2">
-                           <ShieldAlert size={10} className="text-[#ff641d]" />
-                           <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">ALERTAS_INTELIGENTES</span>
-                        </div>
-                        <div className="space-y-2">
-                           {aiIntelligence.alerts.map((alert, i) => (
-                             <div key={i} className="flex gap-3 p-3 bg-red-500/5 border border-red-500/10 rounded-xs">
-                                <div className="w-1 h-auto bg-red-500" />
-                                <span className="text-[9px] font-mono text-white/80 leading-tight uppercase">{alert}</span>
-                             </div>
-                           ))}
-                        </div>
-                     </section>
 
-                     {/* Operational Conditions */}
-                     <section className="space-y-2">
-                        <div className="flex items-center gap-2">
-                           <Database size={10} className="text-cyan-400" />
-                           <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">CONDIÇÕES_OPERACIONAIS</span>
-                        </div>
-                        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xs">
-                           <p className="text-[10px] text-white/60 font-mono uppercase leading-relaxed">
-                              {aiIntelligence.operationalConditions}
-                           </p>
-                        </div>
-                     </section>
 
-                     {/* Recommended Gear */}
-                     <section className="space-y-3">
-                        <div className="flex items-center gap-2">
-                           <Hammer size={10} className="text-cyan-400" />
-                           <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">EQUIPAMENTOS_RECOMENDADOS</span>
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                           {aiIntelligence.equipment.map((item, i) => (
-                             <div key={i} className="px-3 py-2 bg-white/[0.03] border border-white/10 rounded-sm flex items-center justify-between group hover:border-cyan-500/30 transition-all">
-                                <span className="text-[8px] font-mono text-white/40 group-hover:text-cyan-400 transition-colors uppercase">{item}</span>
-                                <Plus size={8} className="text-white/10" />
-                             </div>
-                           ))}
-                        </div>
-                     </section>
+
+
+
+
+
+
                   </div>
                 )}
              </div>
 
-              {/* Footer Operational Status */}
-              <div className="p-4 bg-cyan-500/[0.02] border-t border-cyan-500/10 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                   <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">AI_LOGIC_ACTIVE</span>
-                </div>
-                <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">SYNC_TIME: {new Date().toLocaleTimeString()}</div>
-              </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       <PointPanelV2 
         point={selectedPoint}
@@ -4070,6 +3875,139 @@ export default function AdventureMap() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
       </main>
+
+      {/* --- AI TACTICAL INTELLIGENCE PANEL (OVERLAY) --- */}
+      <AnimatePresence>
+        {showAIPanel && (
+          <motion.div
+            initial={{ x: -400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -400, opacity: 0 }}
+            className="fixed left-4 lg:left-8 top-24 bottom-24 w-[calc(100%-32px)] max-w-[360px] bg-[#0b0c0d]/95 backdrop-blur-3xl border border-cyan-500/20 z-[9999] flex flex-col shadow-[0_0_80px_rgba(34,211,238,0.3)] pointer-events-auto overflow-hidden rounded-sm"
+          >
+             <div className="p-4 border-b border-white/5 flex items-center justify-between bg-cyan-500/[0.03]">
+                <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_#22d3ee]" />
+                   <span className="text-[10px] font-mono font-black text-cyan-400 tracking-[0.3em]">AI_OPERATIONAL_HUB</span>
+                </div>
+                <button 
+                  onClick={() => setShowAIPanel(false)}
+                  className="text-white/20 hover:text-white transition-colors p-2"
+                >
+                   <Plus size={18} className="rotate-45" />
+                </button>
+             </div>
+
+             <div className="flex-1 overflow-y-auto no-scrollbar p-6">
+                {!aiIntelligence && isAnalyzingAI ? (
+                   <div className="h-full flex flex-col items-center justify-center gap-6">
+                      <div className="relative">
+                         <div className="w-16 h-16 border-2 border-cyan-500/20 rounded-full border-t-cyan-500 animate-spin" />
+                         <Activity className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-500 animate-pulse" size={24} />
+                      </div>
+                      <div className="text-center space-y-2">
+                         <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-[0.3em] animate-pulse">SINCRO_DADOS_SATÉLITE...</div>
+                         <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">PROCESSANDO_MODELO_GEMINI_PRO</div>
+                      </div>
+                   </div>
+                ) : aiIntelligence && (
+                   <div className="space-y-8">
+                      {/* Summary Header */}
+                      <section>
+                         <div className="text-[8px] font-mono text-cyan-500/60 uppercase tracking-[0.2em] mb-2">STATUS_OPERACIONAL</div>
+                         <h2 className="text-xl font-display font-black text-white uppercase tracking-tighter leading-none mb-3">
+                            {aiIntelligence.difficulty}_RISK_PROTOCOL
+                         </h2>
+                         <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xs text-[10px] text-white/60 font-mono uppercase leading-relaxed italic">
+                            "{aiIntelligence.summary}"
+                         </div>
+                      </section>
+
+                      {/* Intelligence Radar */}
+                      <section className="h-48 -mx-4">
+                         <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em] mb-4 text-center">RADAR_DE_DIFICULDADE</div>
+                         <ResponsiveContainer width="100%" height="100%">
+                           <RadarChart data={[
+                             { subject: 'TERRAIN', A: aiIntelligence.radarStats.terrain },
+                             { subject: 'ISOLATION', A: aiIntelligence.radarStats.isolation },
+                             { subject: 'WEATHER', A: aiIntelligence.radarStats.weather },
+                             { subject: 'TECH', A: aiIntelligence.radarStats.tech },
+                           ]}>
+                             <PolarGrid stroke="rgba(255,255,255,0.05)" />
+                             <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 7, fontWeight: 900 }} />
+                             <Radar
+                               name="Intel"
+                               dataKey="A"
+                               stroke="#22d3ee"
+                               fill="#22d3ee"
+                               fillOpacity={0.3}
+                             />
+                           </RadarChart>
+                         </ResponsiveContainer>
+                      </section>
+
+                      {/* Risk Level Meter */}
+                      <section className="space-y-2">
+                         <div className="flex justify-between items-end">
+                            <span className="text-[8px] font-mono text-white/20 uppercase tracking-widest">NÍVEL_DE_RISCO</span>
+                            <span className={cn(
+                              "text-[12px] font-mono font-black",
+                              aiIntelligence.riskLevel > 70 ? "text-red-500" : "text-cyan-400"
+                            )}>{aiIntelligence.riskLevel}%</span>
+                         </div>
+                         <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${aiIntelligence.riskLevel}%` }}
+                              className={cn(
+                                "h-full transition-all duration-1000",
+                                aiIntelligence.riskLevel > 70 ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "bg-cyan-500 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+                              )}
+                            />
+                         </div>
+                      </section>
+
+                      {/* Intelligent Alerts */}
+                      <section className="space-y-4">
+                         <div className="flex items-center gap-2">
+                            <ShieldAlert size={10} className="text-[#ff641d]" />
+                            <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">ALERTAS_INTELIGENTES</span>
+                         </div>
+                         <div className="space-y-2">
+                            {aiIntelligence.alerts.map((alert, i) => (
+                              <div key={i} className="flex gap-3 p-3 bg-red-500/5 border border-red-500/10 rounded-xs">
+                                 <div className="w-1 h-auto bg-red-500" />
+                                 <span className="text-[9px] font-mono text-white/80 leading-tight uppercase">{alert}</span>
+                              </div>
+                            ))}
+                         </div>
+                      </section>
+
+                      {/* Operational Conditions */}
+                      <section className="space-y-2">
+                         <div className="flex items-center gap-2">
+                            <Database size={10} className="text-cyan-400" />
+                            <span className="text-[8px] font-mono text-white/20 uppercase tracking-[0.3em]">CONDIÇÕES_OPERACIONAIS</span>
+                         </div>
+                         <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xs text-[10px] text-white/60 font-mono uppercase leading-relaxed text-left">
+                            {aiIntelligence.operationalConditions}
+                         </div>
+                      </section>
+                   </div>
+                )}
+             </div>
+
+              {/* Footer Operational Status */}
+              <div className="p-4 bg-cyan-500/[0.02] border-t border-cyan-500/10 flex items-center justify-between mt-auto">
+                <div className="flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                   <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">AI_LOGIC_ACTIVE</span>
+                </div>
+                <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">SYNC_TIME: {new Date().toLocaleTimeString()}</div>
+              </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
