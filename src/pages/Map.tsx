@@ -2041,6 +2041,10 @@ export default function AdventureMap() {
     return Array.from(set).sort();
   }, []);
 
+  const savedRoutes = useMemo(() => {
+    return preDefinedRoutes.filter(r => savedRouteIds.includes(r.id));
+  }, [savedRouteIds]);
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery) return;
@@ -2429,9 +2433,12 @@ export default function AdventureMap() {
                     exit={{ opacity: 0, x: 20 }}
                     className="flex-1 flex flex-col overflow-hidden"
                   >
-                    <div className="p-4 border-b border-white/5 bg-[#ff641d]/5 flex items-center justify-between">
-                       <span className="text-[9px] font-mono font-black text-[#ff641d] tracking-[0.3em] uppercase">ROTAS_MEMORIZADAS</span>
-                       <Heart size={14} className="text-[#ff641d]" />
+                    <div className="p-5 border-b border-white/5 bg-[#ff641d]/5 flex items-center justify-between">
+                       <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-mono font-black text-[#ff641d] tracking-[0.3em] uppercase">CÉLULA_SAVED_DATA</span>
+                          <span className="text-[7px] font-mono text-white/20 uppercase tracking-widest">SINC_SENTINELA_ATIVO</span>
+                       </div>
+                       <Heart size={16} className="text-[#ff641d] animate-pulse" />
                     </div>
                     
                     <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
@@ -2488,73 +2495,16 @@ export default function AdventureMap() {
                                     </button>
                                  </div>
                                  <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">{route.country}</span>
-                              </button>
-                           ))}
-                           {offlineRoutes.length === 0 && (
-                             <div className="py-10 text-center opacity-20">
-                                <span className="text-[8px] font-mono uppercase tracking-widest">ARMAZENAMENTO_VAZIO</span>
-                             </div>
-                           )}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'saved' && (
-                  <motion.div 
-                    key="saved"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex-1 flex flex-col overflow-hidden"
-                  >
-                     <div className="p-8 space-y-6">
-                        <div className="flex items-center justify-between border-l-2 border-red-500 pl-4 py-1">
-                           <div className="space-y-1">
-                              <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.3em]">CÉLULA_SAVED_DATA</span>
-                              <div className="text-[7px] font-mono text-white/20 uppercase">FILTRANDO_DADOS_PONTO_A_PONTO</div>
-                           </div>
-                           <Heart size={16} className="text-red-500 animate-pulse" />
-                        </div>
-
-                        <div className="space-y-3">
-                           {savedRoutes.length > 0 ? (
-                             savedRoutes.map(route => (
-                               <button
-                                 key={route.id}
-                                 onClick={() => selectRoute(route)}
-                                 className="w-full p-5 bg-black/40 border border-white/5 hover:border-white/20 rounded-sm flex flex-col gap-3 group transition-all text-left"
-                               >
-                                  <div className="flex justify-between items-start w-full">
-                                     <span className="text-[11px] font-mono font-black text-white group-hover:text-red-500 transition-colors uppercase tracking-widest">{route.name}</span>
-                                     <button 
-                                        onClick={(e) => { e.stopPropagation(); toggleFavoriteRoute(route); }}
-                                        className="text-red-500 hover:scale-110 transition-transform"
-                                     >
-                                        <Trash2 size={12} />
-                                     </button>
-                                  </div>
-                                  <div className="flex items-center gap-4 text-[8px] font-mono text-white/30 uppercase font-black">
-                                     <div className="flex items-center gap-1">
-                                       <Globe size={10} className="text-red-500" />
-                                       {route.country}
-                                     </div>
-                                     <div className="px-2 py-0.5 border border-white/10 rounded-full">{route.difficulty}</div>
-                                  </div>
                                </button>
-                             ))
-                           ) : (
-                             <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-sm flex flex-col items-center gap-6">
-                                <Heart size={32} className="text-white/5" />
-                                <div className="space-y-2">
-                                   <div className="text-[9px] font-mono text-white/20 uppercase tracking-[0.3em]">BANCO_DE_DADOS_VAZIO</div>
-                                   <div className="text-[7px] font-mono text-white/10 uppercase">FAVORITE_ROTAS_PARA_REFERÊNCIA_RÁPIDA</div>
-                                </div>
-                             </div>
-                           )}
-                        </div>
-                     </div>
+                            ))}
+                            {offlineRoutes.length === 0 && (
+                              <div className="py-10 text-center opacity-20">
+                                 <span className="text-[8px] font-mono uppercase tracking-widest">ARMAZENAMENTO_VAZIO</span>
+                              </div>
+                            )}
+                         </div>
+                       </div>
+                    </div>
                   </motion.div>
                 )}
 
@@ -2805,6 +2755,9 @@ export default function AdventureMap() {
                   <Activity size={14} className="text-cyan-400" />
                   <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.2em]">OPERATIONAL_STATUS</span>
                </div>
+
+               {/* Integrated Weather Widget */}
+               <WeatherWidget lat={mapCenter[0]} lng={mapCenter[1]} />
 
                <div className="grid grid-cols-2 gap-4">
                   <OperationalMetric label="SISTEMA" value="ATIVO" icon={ShieldCheck} color="text-green-500" />
@@ -3057,10 +3010,7 @@ export default function AdventureMap() {
 
       {/* --- RIGHT TACTICAL STACK (Desktop Only) --- */}
       <div className="hidden lg:flex fixed right-6 top-32 bottom-24 w-80 flex-col gap-6 pointer-events-none z-[6000]">
-        <div className="pointer-events-auto">
-          <WeatherWidget lat={mapCenter[0]} lng={mapCenter[1]} />
-        </div>
-
+        
         {/* Live Expedition Feed if active */}
         {isExpeditionMode && (
           <div className="bg-black/80 backdrop-blur-3xl border border-white/10 p-5 rounded-sm shadow-2xl pointer-events-auto flex-1 overflow-hidden flex flex-col">
