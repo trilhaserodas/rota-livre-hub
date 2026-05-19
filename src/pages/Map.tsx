@@ -1670,6 +1670,25 @@ export default function AdventureMap() {
     return () => unsubscribe();
   }, [isSignedIn]);
 
+  const handleClearRoute = useCallback(() => {
+    setRoutePoints([]);
+    setAutoDiscoveredPoints([]);
+    setSelectedPreDefinedRoute(null);
+    setShowAIPanel(false);
+    setAiIntelligence(null);
+    setIsExpeditionMode(false);
+    setIsTracing(false);
+    setOriginQuery('');
+    setDestinationQuery('');
+    // Ensure weather is reset to prevent "stale" route weather
+    setWeatherData(null);
+    setActiveTab('explore');
+    setSearchQuery('');
+    setShowSuggestions(false);
+    setShowRoutesMenu(false);
+    setSelectedPoint(null);
+  }, []);
+
   const toggleFavoriteRoute = async (route: typeof preDefinedRoutes[0]) => {
     if (!isSignedIn || !auth.currentUser) return;
     
@@ -1961,7 +1980,6 @@ export default function AdventureMap() {
   };
 
   const selectRoute = async (route: typeof preDefinedRoutes[0]) => {
-    setAutoDiscoveredPoints([]);
     setRoutePoints([]); // Clear immediately for visual feedback
     setSelectedPreDefinedRoute(route);
     setSearchQuery(route.name);
@@ -1998,17 +2016,6 @@ export default function AdventureMap() {
       setActiveTab('expedition');
     }
   }, [selectedPreDefinedRoute]);
-
-  const clearExpedition = () => {
-    setRoutePoints([]);
-    setAutoDiscoveredPoints([]);
-    setSelectedPreDefinedRoute(null);
-    setSearchQuery('');
-    setIsExpeditionMode(false);
-    setAiIntelligence(null);
-    setWeatherData(null);
-    setActiveTab('explore');
-  };
 
   const handleDownloadRoute = async (e: React.MouseEvent, route: any) => {
     e.stopPropagation();
@@ -2345,7 +2352,7 @@ export default function AdventureMap() {
                                      <span className="text-[8px] font-mono font-black text-[#ff641d] tracking-[0.3em] uppercase">MÉTRICAS_DA_ROTA</span>
                                   </div>
                                   <button 
-                                    onClick={(e) => { e.stopPropagation(); setRoutePoints([]); }}
+                                    onClick={(e) => { e.stopPropagation(); handleClearRoute(); }}
                                     className="text-white/20 hover:text-red-500 transition-colors"
                                   >
                                      <Trash2 size={12} />
@@ -2538,7 +2545,7 @@ export default function AdventureMap() {
                               <span className="text-[10px] font-mono font-black text-[#ff641d] tracking-[0.4em] uppercase">EXPEDIÇÃO_ATIVA</span>
                            </div>
                            <button 
-                             onClick={clearExpedition}
+                             onClick={handleClearRoute}
                              className="p-2 text-white/20 hover:text-red-500 hover:bg-white/5 rounded-sm transition-all"
                              title="PARAR_EXPEDIÇÃO"
                            >
@@ -2764,41 +2771,43 @@ export default function AdventureMap() {
                )}
             </AnimatePresence>
 
-            {/* Tactical Sidebar Ops Gadget */}
-            <div className="bg-black/40 border-t border-white/5 p-6 space-y-6 mt-auto">
-               <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-                  <Activity size={14} className="text-cyan-400" />
-                  <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.2em]">OPERATIONAL_STATUS</span>
-               </div>
+            {/* Tactical Sidebar Ops Gadget - Only visible when there's an active route, expedition or selected point */}
+            {(routePoints.length > 0 || !!selectedPreDefinedRoute || !!selectedPoint || isExpeditionMode) && (
+              <div className="bg-black/40 border-t border-white/5 p-6 space-y-6 mt-auto">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                    <Activity size={14} className="text-cyan-400" />
+                    <span className="text-[10px] font-mono font-black text-white uppercase tracking-[0.2em]">OPERATIONAL_STATUS</span>
+                </div>
 
-               {/* Integrated Weather Widget */}
-               <WeatherWidget lat={mapCenter[0]} lng={mapCenter[1]} />
+                {/* Integrated Weather Widget */}
+                <WeatherWidget lat={mapCenter[0]} lng={mapCenter[1]} />
 
-               {/* New Risk Radar Gadget */}
-               <RiskRadar 
-                 lat={mapCenter[0]} 
-                 lng={mapCenter[1]} 
-                 selectedPointName={selectedPoint?.name}
-                 hasActiveRoute={!!selectedPreDefinedRoute || routePoints.length > 0}
-               />
+                {/* New Risk Radar Gadget */}
+                <RiskRadar 
+                  lat={mapCenter[0]} 
+                  lng={mapCenter[1]} 
+                  selectedPointName={selectedPoint?.name}
+                  hasActiveRoute={!!selectedPreDefinedRoute || routePoints.length > 0}
+                />
 
-               <div className="grid grid-cols-2 gap-4">
-                  <OperationalMetric label="SISTEMA" value="ATIVO" icon={ShieldCheck} color="text-green-500" />
-                  <OperationalMetric label="LATÊNCIA" value="12ms" icon={Zap} color="text-cyan-400" />
-                  <OperationalMetric label="NODES" value={filteredPoints.length} icon={Database} color="text-white/40" />
-                  <OperationalMetric label="CLIMA" value={weatherData ? weatherData.description : 'SINC...'} icon={Cloud} color="text-blue-400" />
-               </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <OperationalMetric label="SISTEMA" value="ATIVO" icon={ShieldCheck} color="text-green-500" />
+                    <OperationalMetric label="LATÊNCIA" value="12ms" icon={Zap} color="text-cyan-400" />
+                    <OperationalMetric label="NODES" value={filteredPoints.length} icon={Database} color="text-white/40" />
+                    <OperationalMetric label="CLIMA" value={weatherData ? weatherData.description : 'SINC...'} icon={Cloud} color="text-blue-400" />
+                </div>
 
-               <div className="p-3 bg-[#ff641d]/5 border border-[#ff641d]/10 rounded-xs">
-                  <div className="flex items-center gap-2 mb-2">
-                     <ShieldAlert size={10} className="text-[#ff641d]" />
-                     <span className="text-[8px] font-mono text-[#ff641d] uppercase font-black">ÁREA_DE_VIGILÂNCIA</span>
-                  </div>
-                  <p className="text-[9px] font-mono text-white/40 leading-relaxed uppercase">
-                     MONITORAMENTO_SATELITAL_RESTRITO. TODOS_OS_PONTOS_VERIFICADOS_PELA_COMUNIDADE.
-                  </p>
-               </div>
-            </div>
+                <div className="p-3 bg-[#ff641d]/5 border border-[#ff641d]/10 rounded-xs">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShieldAlert size={10} className="text-[#ff641d]" />
+                      <span className="text-[8px] font-mono text-[#ff641d] uppercase font-black">ÁREA_DE_VIGILÂNCIA</span>
+                    </div>
+                    <p className="text-[9px] font-mono text-white/40 leading-relaxed uppercase">
+                      MONITORAMENTO_SATELITAL_RESTRITO. TODOS_OS_PONTOS_VERIFICADOS_PELA_COMUNIDADE.
+                    </p>
+                </div>
+              </div>
+            )}
          </div>
 
          {/* Sidebar Navigation Footer (PC ONLY) */}
@@ -3248,7 +3257,7 @@ export default function AdventureMap() {
                              <button 
                                onClick={(e) => {
                                  e.stopPropagation();
-                                 clearExpedition();
+                                 handleClearRoute();
                                  setShowRoutesMenu(false);
                                }}
                                className="text-white/20 hover:text-red-500 transition-colors"
@@ -3896,7 +3905,7 @@ export default function AdventureMap() {
                       >
                          <Minimize2 size={14} />
                       </button>
-                      <button onClick={() => setRoutePoints([])} className="h-10 px-4 border border-white/10 text-white/40 hover:text-red-500 hover:border-red-500/30 text-[8px] font-mono uppercase font-black tracking-widest transition-all">LIMPAR</button>
+                      <button onClick={handleClearRoute} className="h-10 px-4 border border-white/10 text-white/40 hover:text-red-500 hover:border-red-500/30 text-[8px] font-mono uppercase font-black tracking-widest transition-all">LIMPAR</button>
                       <button className="h-10 px-6 bg-[#ff641d] text-white text-[8px] font-mono uppercase font-black tracking-widest hover:bg-white hover:text-[#ff641d] transition-all">INICIAR_EXP</button>
                    </div>
                 </div>
