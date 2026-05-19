@@ -1583,37 +1583,50 @@ export default function AdventureMap() {
     }
   }, [isExpeditionMode, handleLocateUser]);
 
-  // Real-time sharing
+  // Real-time tracking logic
   useEffect(() => {
     let watchId: number | null = null;
-    if (isSharing && auth.currentUser) {
-      const id = auth.currentUser.uid;
-      setTrackingId(id);
-      
-      const updateTracking = async (latitude: number, longitude: number) => {
-        try {
-          await setDoc(doc(db, 'trackingSessions', id), {
-            userId: id,
-            userName: auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Explorer',
-            lat: latitude,
-            lng: longitude,
-            updatedAt: serverTimestamp(),
-            active: true
-          }, { merge: true });
-        } catch (err) {
-          console.error("Tracking update failed:", err);
-        }
-      };
+    
+    const updateLocalLocation = (latitude: number, longitude: number) => {
+      setUserLocation([latitude, longitude]);
+    };
 
-      watchId = navigator.geolocation.watchPosition((pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation([latitude, longitude]);
-        updateTracking(latitude, longitude);
-      }, (err) => {
-        console.error("Geolocation error:", err);
-      }, { enableHighAccuracy: true });
-    } else if (trackingId) {
-      // Mark as inactive when stopping
+    const updateFirestoreTracking = async (latitude: number, longitude: number) => {
+      if (!auth.currentUser || !isSharing) return;
+      
+      const id = auth.currentUser.uid;
+      try {
+        await setDoc(doc(db, 'trackingSessions', id), {
+          userId: id,
+          userName: auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Explorer',
+          lat: latitude,
+          lng: longitude,
+          updatedAt: serverTimestamp(),
+          active: true
+        }, { merge: true });
+        setTrackingId(id);
+      } catch (err) {
+        console.error("Tracking update failed:", err);
+      }
+    };
+
+    // Always watch position to show user on map
+    watchId = navigator.geolocation.watchPosition((pos) => {
+      const { latitude, longitude } = pos.coords;
+      updateLocalLocation(latitude, longitude);
+      if (isSharing) {
+        updateFirestoreTracking(latitude, longitude);
+      }
+    }, (err) => {
+      console.error("Geolocation error:", err);
+    }, { 
+      enableHighAccuracy: true,
+      maximumAge: 10000,
+      timeout: 5000
+    });
+
+    // Handle deactivation in Firestore
+    if (!isSharing && trackingId) {
       updateDoc(doc(db, 'trackingSessions', trackingId), {
         active: false,
         updatedAt: serverTimestamp()
@@ -2793,6 +2806,9 @@ export default function AdventureMap() {
           {/* Real-Time GPS Tracking Widget */}
           <GPSTracker 
             className="absolute bottom-6 right-6 z-[3500] hidden lg:block"
+            isSharing={isSharing}
+            onToggleSharing={setIsSharing}
+            isSignedIn={isSignedIn}
             onCenterMe={(lat, lng) => {
               setMapCenter([lat, lng]);
               setMapZoom(12);
@@ -2801,6 +2817,9 @@ export default function AdventureMap() {
           />
           <GPSTracker 
             className="absolute bottom-6 right-[60px] z-[3500] lg:hidden"
+            isSharing={isSharing}
+            onToggleSharing={setIsSharing}
+            isSignedIn={isSignedIn}
             onCenterMe={(lat, lng) => {
               setMapCenter([lat, lng]);
               setMapZoom(12);

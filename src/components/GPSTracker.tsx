@@ -12,10 +12,19 @@ interface GPSStatus {
 
 interface GPSTrackerProps {
   onCenterMe?: (lat: number, lng: number) => void;
+  isSharing?: boolean;
+  onToggleSharing?: (active: boolean) => void;
+  isSignedIn?: boolean;
   className?: string;
 }
 
-const GPSTracker: React.FC<GPSTrackerProps> = ({ onCenterMe, className }) => {
+const GPSTracker: React.FC<GPSTrackerProps> = ({ 
+  onCenterMe, 
+  isSharing = false, 
+  onToggleSharing,
+  isSignedIn = false,
+  className 
+}) => {
   const [status, setStatus] = useState<GPSStatus>({
     lat: null,
     lng: null,
@@ -24,9 +33,10 @@ const GPSTracker: React.FC<GPSTrackerProps> = ({ onCenterMe, className }) => {
   });
 
   const updatePosition = useCallback((position: GeolocationPosition) => {
+    const { latitude, longitude } = position.coords;
     setStatus({
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
+      lat: latitude,
+      lng: longitude,
       error: null,
       isActive: true,
     });
@@ -68,50 +78,79 @@ const GPSTracker: React.FC<GPSTrackerProps> = ({ onCenterMe, className }) => {
   return (
     <div className={cn("pointer-events-auto", className)}>
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-black/40 backdrop-blur-sm border border-white/5 rounded-xs p-2 min-w-[120px] shadow-xl"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-sm p-3 min-w-[160px] shadow-2xl"
       >
-        <div className="flex items-center justify-between mb-1.5 px-0.5">
-           <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between mb-2 px-0.5">
+           <div className="flex items-center gap-1.5">
               <div className={cn(
-                "w-1 h-1 rounded-full",
+                "w-1.5 h-1.5 rounded-full",
                 status.isActive ? "bg-[#ff641d] animate-pulse" : "bg-red-500"
               )} />
-              <span className="text-[7px] font-mono font-black text-white/30 uppercase tracking-[0.1em]">
-                {status.isActive ? "📍 GPS ACTIVE" : "⚠️ SIGNAL LOST"}
-              </span>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-mono font-black text-white uppercase tracking-[0.2em]">
+                  {status.isActive ? "📍 GPS ACTIVE" : "⚠️ NO SIGNAL"}
+                </span>
+                {isSharing && (
+                  <span className="text-[6px] font-mono text-[#00d4ff] uppercase tracking-widest animate-pulse">LIVE_SHARING</span>
+                )}
+              </div>
            </div>
            
-           {status.isActive && (
-             <button 
-               onClick={handleCenter}
-               className="text-[#ff641d]/60 hover:text-[#ff641d] transition-all p-0.5"
-               title="Centralizar em mim"
-             >
-                <Target size={10} />
-             </button>
-           )}
+           <div className="flex items-center gap-2">
+             {status.isActive && (
+               <button 
+                 onClick={handleCenter}
+                 className="text-[#ff641d] hover:text-white transition-all p-1 bg-white/5 rounded-xs"
+                 title="Centralizar em mim"
+               >
+                  <Target size={12} />
+               </button>
+             )}
+           </div>
         </div>
 
         {status.error ? (
-          <div className="text-[7px] font-mono text-red-500/80 uppercase tracking-tight font-black px-0.5">
+          <div className="text-[7px] font-mono text-red-500/80 uppercase tracking-tight font-black px-0.5 py-1">
             {status.error}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 px-0.5">
-             <div className="flex items-center gap-1.5">
-                <span className="text-[6px] font-mono text-white/10 uppercase">LA</span>
-                <span className="text-[9px] font-mono font-black text-[#ff641d] tracking-tighter">
-                  {status.lat?.toFixed(5) || "0.00000"}
-                </span>
-             </div>
-             <div className="flex items-center gap-1.5">
-                <span className="text-[6px] font-mono text-white/10 uppercase">LO</span>
-                <span className="text-[9px] font-mono font-black text-[#ff641d] tracking-tighter">
-                  {status.lng?.toFixed(5) || "0.00000"}
-                </span>
-             </div>
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 px-0.5">
+               <div className="flex flex-col">
+                  <span className="text-[6px] font-mono text-white/20 uppercase">LATITUDE</span>
+                  <span className="text-[10px] font-mono font-black text-[#ff641d] tracking-tighter">
+                    {status.lat?.toFixed(5) || "0.00000"}
+                  </span>
+               </div>
+               <div className="flex flex-col">
+                  <span className="text-[6px] font-mono text-white/20 uppercase">LONGITUDE</span>
+                  <span className="text-[10px] font-mono font-black text-[#ff641d] tracking-tighter">
+                    {status.lng?.toFixed(5) || "0.00000"}
+                  </span>
+               </div>
+            </div>
+
+            {isSignedIn && onToggleSharing && (
+              <button
+                onClick={() => onToggleSharing(!isSharing)}
+                className={cn(
+                  "w-full py-1.5 rounded-xs text-[8px] font-mono font-black uppercase tracking-widest transition-all border",
+                  isSharing 
+                    ? "bg-[#00d4ff]/10 text-[#00d4ff] border-[#00d4ff]/20 hover:bg-[#00d4ff]/20" 
+                    : "bg-white/5 text-white/40 border-white/10 hover:bg-white/10"
+                )}
+              >
+                {isSharing ? "PARAR COMPARTILHAMENTO" : "COMPARTILHAR LOCAL"}
+              </button>
+            )}
+            
+            {!isSignedIn && (
+              <div className="text-[6px] font-mono text-white/10 uppercase tracking-widest text-center pt-1 border-t border-white/5">
+                FAÇA LOGIN PARA COMPARTILHAR
+              </div>
+            )}
           </div>
         )}
       </motion.div>
