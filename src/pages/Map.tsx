@@ -19,6 +19,7 @@ import {
 import PointPanelV2 from '@/src/components/PointPanelV2';
 import WeatherWidget from '@/src/components/WeatherWidget';
 import SEO from '@/src/components/SEO';
+import GPSTracker from '@/src/components/GPSTracker';
 import { cn } from '@/src/lib/utils';
 import { LocationPoint } from '@/src/types';
 import { db, auth } from '@/src/lib/firebase';
@@ -2789,6 +2790,24 @@ export default function AdventureMap() {
 
       {/* --- MAP MAIN VIEWPORT --- */}
       <div className="w-full h-[75vh] lg:h-full relative flex flex-col flex-shrink-0 lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last">
+          {/* Real-Time GPS Tracking Widget */}
+          <GPSTracker 
+            className="absolute bottom-6 right-6 z-[3500] hidden lg:block"
+            onCenterMe={(lat, lng) => {
+              setMapCenter([lat, lng]);
+              setMapZoom(12);
+              setUserLocation([lat, lng]);
+            }}
+          />
+          <GPSTracker 
+            className="absolute bottom-6 right-[60px] z-[3500] lg:hidden"
+            onCenterMe={(lat, lng) => {
+              setMapCenter([lat, lng]);
+              setMapZoom(12);
+              setUserLocation([lat, lng]);
+            }}
+          />
+
           {/* --- MAP CORE (Layer 0) --- */}
           <div className="absolute inset-0 z-0">
             <MapContainer 
