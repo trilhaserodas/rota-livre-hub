@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import PointPanelV2 from '@/src/components/PointPanelV2';
 import WeatherWidget from '@/src/components/WeatherWidget';
+import RiskRadar from '@/src/components/RiskRadar';
 import SEO from '@/src/components/SEO';
 import GPSTracker from '@/src/components/GPSTracker';
 import { cn } from '@/src/lib/utils';
@@ -2772,6 +2773,14 @@ export default function AdventureMap() {
 
                {/* Integrated Weather Widget */}
                <WeatherWidget lat={mapCenter[0]} lng={mapCenter[1]} />
+
+               {/* New Risk Radar Gadget */}
+               <RiskRadar 
+                 lat={mapCenter[0]} 
+                 lng={mapCenter[1]} 
+                 selectedPointName={selectedPoint?.name}
+                 hasActiveRoute={!!selectedPreDefinedRoute || routePoints.length > 0}
+               />
 
                <div className="grid grid-cols-2 gap-4">
                   <OperationalMetric label="SISTEMA" value="ATIVO" icon={ShieldCheck} color="text-green-500" />
