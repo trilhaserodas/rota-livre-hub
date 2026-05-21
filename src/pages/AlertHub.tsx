@@ -443,6 +443,7 @@ const ADMIN_EMAIL = "trilhaserodas@gmail.com";
 
 export default function AlertHub() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
@@ -469,16 +470,25 @@ export default function AlertHub() {
     return () => unsubscribe();
   }, []);
 
+  // Debouncing typing search in AlertHub (500ms delay)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
   const filteredAlerts = useMemo(() => {
     return ALERTS.filter(alert => {
       const matchesSearch = 
-        alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        alert.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        alert.country.toLowerCase().includes(searchTerm.toLowerCase());
+        alert.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        alert.region.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        alert.country.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       const matchesCategory = activeCategory === 'all' || alert.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, activeCategory]);
+  }, [debouncedSearchTerm, activeCategory]);
 
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10 antialiased">

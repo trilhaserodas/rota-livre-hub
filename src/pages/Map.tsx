@@ -1043,6 +1043,23 @@ const initialPoints: LocationPoint[] = [
     description: 'Buenos Aires, Argentina. DJs, churrasco no rooftop, aulas de tango.',
   },
   {
+    id: 'ar-hostel-kathmandu',
+    name: 'Hostel Kathmandú',
+    lat: -35.4673183,
+    lng: -69.5815584,
+    category: 'hostel',
+    address: 'Av. Rufino Ortega 158, M5613 Malargüe, Mendoza, Argentina',
+    phone: '+54 260 441-4899',
+    plusCode: 'GCM9+38 Malargüe, Mendoza Province, Argentina',
+    description: '💰 Destaque: Melhor relação preço-qualidade do centro. Perto do Planetário, Observatório Pierre Auger e da praça. Popular entre motociclistas e mochileiros na rota para o Chile. Atendimento da Amanda muito elogiado.',
+    image: 'https://i.ibb.co/RG5dJpQq/unnamed.jpg',
+    images: [
+      'https://i.ibb.co/RG5dJpQq/unnamed.jpg',
+      'https://i.ibb.co/NnHCFpWw/unnamed-2.jpg',
+      'https://i.ibb.co/ks0DmhSx/unnamed-1.jpg'
+    ]
+  },
+  {
     id: 'pr-hostel-1',
     name: 'Social Hostel Coffee Bar',
     lat: -25.4464,
@@ -1753,6 +1770,53 @@ export default function AdventureMap() {
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
+  // Synchronous cache for Nominatim Geocoding (Osm)
+  const nominatimCacheRef = useRef<Record<string, any>>({});
+  
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nominatim_search_cache_v1');
+      if (saved) {
+        nominatimCacheRef.current = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn("[MapClient] Falha ao ler cache nominatim:", e);
+    }
+  }, []);
+
+  const fetchGeocodingCached = async (queryText: string): Promise<any> => {
+    const qClean = queryText.trim().toLowerCase();
+    if (!qClean) return null;
+
+    if (nominatimCacheRef.current[qClean]) {
+      const cached = nominatimCacheRef.current[qClean];
+      const now = Date.now();
+      const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 dias de validade
+      if (now - cached.timestamp < CACHE_TTL) {
+        console.log(`[Nominatim Cache HIT] Resolvendo "${qClean}" localmente`);
+        return cached.data;
+      }
+    }
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}&limit=1`);
+      const data = await res.json();
+      
+      nominatimCacheRef.current[qClean] = {
+        data,
+        timestamp: Date.now()
+      };
+      try {
+        localStorage.setItem('nominatim_search_cache_v1', JSON.stringify(nominatimCacheRef.current));
+      } catch (err) {}
+
+      return data;
+    } catch (e) {
+      console.error("Geocoding API failed:", e);
+      return null;
+    }
+  };
+
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -2336,13 +2400,11 @@ export default function AdventureMap() {
     setMapBounds(null); // Clear previous bounds
     
     try {
-      // Geocode point A
-      const resA = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(originQuery)}&limit=1`);
-      const dataA = await resA.json();
+      // Geocode point A using local cache layer
+      const dataA = await fetchGeocodingCached(originQuery);
       
-      // Geocode point B
-      const resB = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destinationQuery)}&limit=1`);
-      const dataB = await resB.json();
+      // Geocode point B using local cache layer
+      const dataB = await fetchGeocodingCached(destinationQuery);
 
       if (dataA?.[0] && dataB?.[0]) {
         const start = [parseFloat(dataA[0].lat), parseFloat(dataA[0].lon)] as [number, number];
@@ -2665,10 +2727,9 @@ export default function AdventureMap() {
       return;
     }
 
-    // 3. Geocoding Fallback
+    // 3. Geocoding Fallback using local cache layer
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
-      const data = await res.json();
+      const data = await fetchGeocodingCached(searchQuery);
       if (data?.[0]) {
         setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
         setMapZoom(16);

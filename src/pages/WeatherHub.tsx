@@ -203,15 +203,74 @@ export default function WeatherHub() {
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+  // Cache key for Geocoding searches
+  const GEO_CACHE_KEY = 'weather_geo_search_cache_v1';
+
+  // Load cache in a ref for synchronous, instant lookups
+  const geoCacheRef = useRef<Record<string, { result: any, timestamp: number }>>({});
+
+  useEffect(() => {
+    try {
+      const savedCache = localStorage.getItem(GEO_CACHE_KEY);
+      if (savedCache) {
+        geoCacheRef.current = JSON.parse(savedCache);
+      }
+    } catch (e) {
+      console.warn("[WeatherClient] Falha ao carregar cache de busca local (Geo):", e);
+    }
+  }, []);
+
+  // Helper to execute search with cache check and storage save
+  const executeSearch = async (queryText: string) => {
+    const qClean = queryText.trim().toLowerCase();
+    if (!qClean) return;
+
+    // Check preloaded regions list first for local matching
+    const localRegion = REGIONS.find(r => r.name.toLowerCase() === qClean);
+    if (localRegion) {
+      const formattedResult = {
+        name: localRegion.name,
+        latitude: localRegion.lat,
+        longitude: localRegion.lng,
+        country: localRegion.country
+      };
+      setSearchResult(formattedResult);
+      fetchLocationWeather(localRegion.lat, localRegion.lng, localRegion.name);
+      return;
+    }
+
+    // Check Local Cache to avoid API quota depletion (24 hour TTL)
+    if (geoCacheRef.current[qClean]) {
+      const cached = geoCacheRef.current[qClean];
+      const now = Date.now();
+      const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 horas de validade para localização geocodificada
+      if (now - cached.timestamp < CACHE_TTL_MS) {
+        console.log(`[GeoSearch Cache HIT] Carregando resultado local para: "${qClean}"`);
+        setSearchResult(cached.result);
+        fetchLocationWeather(cached.result.latitude, cached.result.longitude, cached.result.name);
+        return;
+      }
+    }
+
     setIsSearching(true);
     try {
-      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=pt&format=json`);
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(queryText)}&count=1&language=pt&format=json`);
       const data = await res.json();
       if (data.results && data.results[0]) {
         const result = data.results[0];
         setSearchResult(result);
+        
+        // Save to cache
+        geoCacheRef.current[qClean] = {
+          result,
+          timestamp: Date.now()
+        };
+        try {
+          localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(geoCacheRef.current));
+        } catch (saveError) {
+          console.warn("[WeatherClient] Não foi possível salvar busca no cache local (Geo):", saveError);
+        }
+
         fetchLocationWeather(result.latitude, result.longitude, result.name);
       }
     } catch (err) {
@@ -220,6 +279,23 @@ export default function WeatherHub() {
       setIsSearching(false);
     }
   };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    await executeSearch(searchQuery);
+  };
+
+  // Debounce hook using useEffect (500ms delay) on searchQuery changes
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed || trimmed.length < 3) return;
+
+    const timer = setTimeout(() => {
+      executeSearch(trimmed);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleUseLocation = () => {
     if (!navigator.geolocation) {
