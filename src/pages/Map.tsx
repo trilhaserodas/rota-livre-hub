@@ -1713,6 +1713,7 @@ export default function AdventureMap() {
   const [isLoadingElevation, setIsLoadingElevation] = useState(false);
   const [isPointDetailsMinimized, setIsPointDetailsMinimized] = useState(false);
   const [showSidebarMobile, setShowSidebarMobile] = useState(false);
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -2674,10 +2675,72 @@ export default function AdventureMap() {
       <motion.aside 
         ref={sidebarRef as any}
         className={cn(
-          "w-full lg:w-[420px] flex-shrink-0 flex flex-col bg-[#0b0c0d]/98 backdrop-blur-3xl lg:backdrop-blur-none border-t lg:border-t-0 lg:border-r border-white/10 overflow-hidden shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)]",
-          "relative lg:static lg:order-first order-last h-[85vh] lg:h-full z-[1000] lg:z-[5000]"
+          "w-full flex-shrink-0 flex flex-col bg-[#0b0c0d]/98 backdrop-blur-3xl lg:backdrop-blur-none border-t lg:border-t-0 lg:border-r border-white/10 overflow-hidden lg:overflow-visible shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)]",
+          "relative lg:static lg:order-first order-last h-[85vh] lg:h-full z-[1000] lg:z-[5000]",
+          isSidebarMinimized ? "lg:w-[52px]" : "lg:w-[420px]"
         )}
+        initial={false}
+        animate={isMobile ? {} : { width: isSidebarMinimized ? 52 : 420 }}
+        transition={{ type: "spring", damping: 25, stiffness: 220 }}
       >
+        {/* Toggle Minimize Desktop Button - Rendered only on PC */}
+        {!isMobile && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsSidebarMinimized(!isSidebarMinimized);
+            }}
+            className={cn(
+              "hidden lg:flex absolute top-1/2 -translate-y-1/2 -right-3 z-[6000] w-6 h-12 bg-black border border-white/10 rounded-r-md items-center justify-center hover:bg-[#ff641d]/15 hover:border-[#ff641d]/40 text-white/40 hover:text-[#ff641d] active:scale-95 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.9),_0_0_12px_rgba(255,100,29,0.15)] cursor-pointer focus:outline-none"
+            )}
+            title={isSidebarMinimized ? "EXPANDIR_SISTEMA" : "MINIMIZAR_SISTEMA"}
+          >
+            {isSidebarMinimized ? (
+              <ChevronRight size={14} className="animate-pulse" />
+            ) : (
+              <ChevronLeft size={14} />
+            )}
+          </button>
+        )}
+
+        {/* DESKTOP MINIMIZED STATE VIEW */}
+        {isSidebarMinimized && !isMobile ? (
+          <div 
+            onClick={() => setIsSidebarMinimized(false)}
+            className="hidden lg:flex flex-col items-center py-6 h-full justify-between cursor-pointer select-none hover:bg-white/[0.02] transition-colors group relative w-full overflow-hidden"
+          >
+            {/* Top Icon */}
+            <div className="flex flex-col items-center gap-4 shrink-0">
+               <div className="w-8 h-8 rounded-xs border border-[#ff641d]/30 flex items-center justify-center bg-[#ff641d]/5 text-[#ff641d] shadow-[0_0_10px_rgba(255,100,29,0.1)] group-hover:border-[#ff641d] transition-colors">
+                  <Navigation2 size={14} className={isExpeditionMode ? "animate-pulse" : ""} />
+               </div>
+               <div className="flex flex-col gap-1 items-center">
+                 <span className="w-1.5 h-1.5 rounded-full bg-[#ff641d] animate-ping" />
+                 <span className="text-[6px] font-mono text-[#ff641d] font-bold">LIVE</span>
+               </div>
+            </div>
+
+            {/* Rotated Vertical Title */}
+            <div className="h-0 flex items-center justify-center relative my-auto shrink-0 select-none">
+               <div className="-rotate-90 font-display font-black text-[10px] tracking-[0.2em] text-white/60 group-hover:text-white transition-colors whitespace-nowrap uppercase">
+                  GPS_TACTICAL<span className="text-[#ff641d]">.</span>SYSTEM
+               </div>
+            </div>
+
+            {/* Bottom Arrow/Indicators */}
+            <div className="flex flex-col items-center gap-1 text-[8px] font-mono text-white/20 select-none shrink-0">
+               <ChevronRight size={14} className="text-[#ff641d] animate-bounce" />
+               <span className="uppercase tracking-widest text-[6px]">EXP_OS</span>
+            </div>
+            
+            {/* Hover tooltip */}
+            <div className="absolute left-[64px] top-1/2 -translate-y-1/2 bg-black/95 border border-[#ff641d]/20 px-3 py-1.5 rounded-sm shadow-xl z-[6000] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              <span className="text-[9px] font-mono font-bold text-[#ff641d] tracking-widest">CLIQUE PARA EXPANDIR</span>
+            </div>
+          </div>
+        ) : (
+          /* FULL SIDEBAR CONTENT */
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
          {/* Decorative Drag Handle Mobile */}
          <div 
            className="lg:hidden w-full flex flex-col items-center pt-4 pb-3 cursor-pointer select-none shrink-0"
@@ -3431,6 +3494,8 @@ export default function AdventureMap() {
             </div>
             <div className="text-[8px] font-mono text-white/10 uppercase tracking-widest">EXPLORER_TAC_V2</div>
          </div>
+          </div>
+        )}
       </motion.aside>
 
       {/* --- MAP MAIN VIEWPORT --- */}
