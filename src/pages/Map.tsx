@@ -1593,7 +1593,7 @@ function otherUserIcon(color: string = '#00d4ff', name: string = 'Explorador') {
 
 // --- Map Controllers ---
 
-function MapController({ center, zoom, bounds }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression }) {
+function MapController({ center, zoom, bounds, isSidebarMinimized }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression, isSidebarMinimized?: boolean }) {
   const map = useMap();
   useEffect(() => {
     // Force map to recalculate its container size - critical for mobile/responsive fixes
@@ -1609,6 +1609,21 @@ function MapController({ center, zoom, bounds }: { center?: [number, number], zo
       console.error("Map perspective shift failed", err);
     }
   }, [center, zoom, bounds, map]);
+
+  useEffect(() => {
+    // Repeatedly invalidate size during standard Framer Motion spring duration to avoid gray/unrendered areas
+    const timings = [50, 150, 300, 500];
+    const timers = timings.map(ms => setTimeout(() => {
+      try {
+        map.invalidateSize();
+      } catch (e) {}
+    }, ms));
+
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [isSidebarMinimized, map]);
+
   return null;
 }
 
@@ -1713,7 +1728,20 @@ export default function AdventureMap() {
   const [isLoadingElevation, setIsLoadingElevation] = useState(false);
   const [isPointDetailsMinimized, setIsPointDetailsMinimized] = useState(false);
   const [showSidebarMobile, setShowSidebarMobile] = useState(false);
-  const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
+  const [isSidebarMinimized, setIsSidebarMinimizedState] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('gps_sidebar_minimized') === 'true';
+    }
+    return false;
+  });
+
+  const setIsSidebarMinimized = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
+    setIsSidebarMinimizedState(prev => {
+      const nextValue = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('gps_sidebar_minimized', String(nextValue));
+      return nextValue;
+    });
+  }, []);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -2676,7 +2704,7 @@ export default function AdventureMap() {
         ref={sidebarRef as any}
         className={cn(
           "w-full flex-shrink-0 flex flex-col bg-[#0b0c0d]/98 backdrop-blur-3xl lg:backdrop-blur-none border-t lg:border-t-0 lg:border-r border-white/10 overflow-hidden lg:overflow-visible shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)]",
-          "relative lg:static lg:order-first order-last h-[85vh] lg:h-full z-[1000] lg:z-[5000]",
+          "relative lg:relative lg:order-first order-last h-[85vh] lg:h-full z-[1000] lg:z-[5000]",
           isSidebarMinimized ? "lg:w-[52px]" : "lg:w-[420px]"
         )}
         initial={false}
@@ -2691,14 +2719,14 @@ export default function AdventureMap() {
               setIsSidebarMinimized(!isSidebarMinimized);
             }}
             className={cn(
-              "hidden lg:flex absolute top-1/2 -translate-y-1/2 -right-3 z-[6000] w-6 h-12 bg-black border border-white/10 rounded-r-md items-center justify-center hover:bg-[#ff641d]/15 hover:border-[#ff641d]/40 text-white/40 hover:text-[#ff641d] active:scale-95 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.9),_0_0_12px_rgba(255,100,29,0.15)] cursor-pointer focus:outline-none"
+              "hidden lg:flex absolute top-1/2 -translate-y-1/2 -right-3 z-[10000] w-6 h-12 bg-[#0b0c0d]/95 backdrop-blur-md border border-white/10 border-l-0 rounded-r-md items-center justify-center text-[#ff641d]/70 hover:text-[#ff641d] active:scale-95 transition-all duration-300 shadow-[4px_0_15px_rgba(0,0,0,0.5),_0_0_10px_rgba(255,100,29,0.1)] hover:shadow-[4px_0_20px_rgba(0,0,0,0.7),_0_0_15px_rgba(255,100,29,0.35)] hover:border-[#ff641d]/30 cursor-pointer focus:outline-none"
             )}
             title={isSidebarMinimized ? "EXPANDIR_SISTEMA" : "MINIMIZAR_SISTEMA"}
           >
             {isSidebarMinimized ? (
-              <ChevronRight size={14} className="animate-pulse" />
+              <ChevronRight size={12} className="animate-pulse text-[#ff641d]" />
             ) : (
-              <ChevronLeft size={14} />
+              <ChevronLeft size={12} />
             )}
           </button>
         )}
@@ -3534,7 +3562,7 @@ export default function AdventureMap() {
               className="z-0"
             >
 
-              <MapController center={mapCenter} zoom={mapZoom} bounds={mapBounds || undefined} />
+              <MapController center={mapCenter} zoom={mapZoom} bounds={mapBounds || undefined} isSidebarMinimized={isSidebarMinimized} />
               <MapEventsHandler active={isTracing} onMapClick={(latlng) => {
                 setRoutePoints(prev => [...prev, [latlng.lat, latlng.lng]]);
               }} />
@@ -4685,7 +4713,10 @@ export default function AdventureMap() {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="fixed left-4 lg:left-[440px] top-24 bottom-24 w-[calc(100%-32px)] max-w-[380px] bg-[#0b0c0d]/98 backdrop-blur-3xl border border-cyan-500/30 z-[10000] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8),0_0_40px_rgba(34,211,238,0.2)] pointer-events-auto overflow-hidden rounded-sm"
+            className={cn(
+              "fixed left-4 top-24 bottom-24 w-[calc(100%-32px)] max-w-[380px] bg-[#0b0c0d]/98 backdrop-blur-3xl border border-cyan-500/30 z-[10000] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8),_0_0_40px_rgba(34,211,238,0.2)] pointer-events-auto overflow-hidden rounded-sm transition-all duration-300",
+              isSidebarMinimized ? "lg:left-[72px]" : "lg:left-[440px]"
+            )}
           >
              <div className="p-4 border-b border-white/5 flex items-center justify-between bg-cyan-500/[0.03]">
                 <div className="flex items-center gap-2">
