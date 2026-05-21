@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   Lock,
   Wifi,
+  WifiOff,
   Smartphone,
   Eye,
   Zap,
@@ -446,6 +447,20 @@ export default function AlertHub() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -474,9 +489,27 @@ export default function AlertHub() {
 
       {/* Header Section */}
       <div className="mb-12">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-2 h-2 rounded-full bg-[#ff641d] animate-pulse shadow-[0_0_10px_#ff641d]" />
-          <span className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-bold">In_Live_Monitoring</span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full animate-pulse ${isOnline ? 'bg-[#ff641d] shadow-[0_0_10px_#ff641d]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'}`} />
+            <span className={`text-[10px] font-mono uppercase tracking-[0.4em] font-bold ${isOnline ? 'text-[#ff641d]' : 'text-red-500'}`}>
+              {isOnline ? 'In_Live_Monitoring' : 'Satellite_Signal_Lost'}
+            </span>
+          </div>
+          
+          <AnimatePresence>
+            {!isOnline && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-500 text-[10px] font-mono font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(239,68,68,0.1)] self-start sm:self-auto"
+              >
+                <WifiOff size={12} className="animate-pulse" />
+                <span>Modo Offline Ativo // Relatórios em Cache</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <h1 className="text-4xl md:text-6xl font-display font-black text-white uppercase tracking-tighter mb-4">
           HUB <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">ALERTA</span>
