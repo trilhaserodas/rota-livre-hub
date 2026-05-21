@@ -3434,7 +3434,7 @@ export default function AdventureMap() {
       </motion.aside>
 
       {/* --- MAP MAIN VIEWPORT --- */}
-      <div className="w-full h-[75vh] lg:h-full relative flex flex-col lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last overflow-hidden lg:overflow-visible">
+      <div className="w-full h-[85vh] lg:h-full relative flex flex-col lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last overflow-hidden lg:overflow-visible">
           {/* Real-Time GPS Tracking Widget */}
           <GPSTracker 
             className="absolute bottom-6 right-6 z-[3500] hidden lg:block"
@@ -3621,7 +3621,7 @@ export default function AdventureMap() {
           </div>
 
           <div 
-            className="lg:hidden w-full bg-[#0b0c0d]/95 backdrop-blur-md border-t border-white/10 px-4 py-2 flex flex-col gap-2 shrink-0 z-[3600] shadow-[0_-10px_35px_rgba(0,0,0,0.8)]"
+            className="lg:hidden mx-4 mb-4.5 mt-2 bg-[#0b0c0d]/92 backdrop-blur-xl border border-[#ff641d]/15 rounded-xl px-4 py-3.5 flex flex-col gap-2.5 shrink-0 z-[3600] shadow-[0_10px_40px_rgba(0,0,0,0.95)]"
           >
              {/* Categories / Pin Filters Row */}
              <div className="flex flex-col gap-1">
@@ -4351,7 +4351,7 @@ export default function AdventureMap() {
       {/* Responsive Categories Bar - REMOVED */}
 
       {/* Right Action Stack (Vertical controls) - Positioned as floating OVERLAY over the map on both Mobile (top) and Desktop (centered) */}
-      <div className="flex absolute right-4 top-[110px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto z-[4000] flex-col gap-1.5 pointer-events-auto">
+      <div className="flex absolute right-4 top-[94px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto z-[4000] flex-col gap-1 lg:gap-1.5 pointer-events-auto">
          {/* Tactical Mobile Menu Trigger */}
          <button 
            onClick={() => {
