@@ -4444,7 +4444,10 @@ export default function AdventureMap() {
       {/* Responsive Categories Bar - REMOVED */}
 
       {/* Right Action Stack (Vertical controls) - Positioned as floating OVERLAY over the map on both Mobile (top) and Desktop (centered) */}
-      <div className="flex absolute right-4 top-[94px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto z-[4000] flex-col gap-1 lg:gap-1.5 pointer-events-auto">
+      <div className={cn(
+        "flex absolute right-4 top-[94px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto flex-col gap-1 lg:gap-1.5 pointer-events-auto transition-all",
+        selectedPoint && !isPointDetailsMinimized ? "z-[3000]" : "z-[4000]"
+      )}>
          {/* Tactical Mobile Menu Trigger */}
          <button 
            onClick={() => {

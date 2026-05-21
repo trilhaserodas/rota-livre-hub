@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, Loader2, Zap, ExternalLink } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/src/lib/utils';
 
@@ -32,7 +31,15 @@ export default function RadarIA() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0); // Bloqueio adaptativo de spam
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -41,7 +48,7 @@ export default function RadarIA() {
   }, [messages, isOpen]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || cooldown > 0) return;
 
     const userMessage = input.trim();
     setInput('');
@@ -55,20 +62,40 @@ export default function RadarIA() {
         parts: [{ text: m.content }]
       }));
 
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessage,
-          history: history,
-        }),
-      });
+      // Retry inteligente no cliente para combater oscilações de rede
+      let res: Response | null = null;
+      let attempt = 0;
+      const maxAttempts = 2;
+      let lastError: any = null;
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.details || errorData.error || 'Falha na resposta do servidor');
+      while (attempt < maxAttempts) {
+        try {
+          res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: userMessage,
+              history: history,
+            }),
+          });
+          if (res.ok) break;
+          const errorData = await res.json().catch(() => ({}));
+          lastError = new Error(errorData.details || errorData.error || `Erro de rede (Status ${res.status})`);
+        } catch (fetchErr: any) {
+          lastError = fetchErr;
+        }
+
+        attempt++;
+        if (attempt < maxAttempts) {
+          console.warn(`Tentativa ${attempt} falhou no cliente. Tentando reconectar scanner em 1.5s...`);
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+      }
+
+      if (!res || !res.ok) {
+        throw lastError || new Error('Falha total ao conectar com o canal satelital.');
       }
       
       const data = await res.json();
@@ -83,7 +110,7 @@ export default function RadarIA() {
       let errorMessage = `ERRO_SISTEMA: ${error.message || "Conexão de satélite interrompida. Tente novamente."}`;
       
       if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED')) {
-        errorMessage = "RADAR ALERTA: Sobrecarga nos servidores de busca. Nossa quota diária foi atingida. Por favor, tente novamente em alguns instantes ou retorne em breve.";
+         errorMessage = "SINAL_RESTRITO // Protocolo de Contingência RADAR_IA ativo.\n\nIdentificamos uma sobrecarga temporária nos canais de satélite (quota diária de busca restrita). No momento, estou operando com o banco de dados tático local offline de emergência.\n\nComo guia de contingência para sua viagem:\n\n*   **Manutenção de Emergência:** Priorize terreno plano, tenha espátulas, remendos e câmara reserva sempre de fácil acesso.\n*   **Segurança na Serra:** Mantenha os faróis sempre ativos e evite paradas sem acostamento em curvas cegas.\n\n*Os sistemas climáticos secundários ao lado continuam operacionais com cache dinâmico de segurança.*";
       } else if (error.message.includes('API_KEY_INVALID') || error.message.includes('GEMINI_API_KEY')) {
         errorMessage = "ERRO_SISTEMA: Chave de API não configurada corretamente. Verifique as configurações de Secrets.";
       }
@@ -91,6 +118,7 @@ export default function RadarIA() {
       setMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
     } finally {
       setIsLoading(false);
+      setCooldown(3); // 3 segundos de cooldown tático anti-spam após processar
     }
   };
 
@@ -220,11 +248,12 @@ export default function RadarIA() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="DIGITE SEU COMANDO..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white placeholder:text-white/10 focus:outline-none focus:border-[#ff641d]/50 pr-12 transition-all"
+                  placeholder={cooldown > 0 ? `AGUARDE CLARA_CALIBRAGEM (${cooldown}s)...` : "DIGITE SEU COMANDO..."}
+                  disabled={isLoading || cooldown > 0}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-white placeholder:text-white/20 focus:outline-none focus:border-[#ff641d]/50 pr-12 transition-all disabled:opacity-50"
                 />
                 <button
-                  disabled={isLoading || !input.trim()}
+                  disabled={isLoading || !input.trim() || cooldown > 0}
                   onClick={handleSend}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-[#ff641d] disabled:text-white/10 transition-colors"
                 >

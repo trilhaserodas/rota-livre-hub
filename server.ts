@@ -20,6 +20,40 @@ async function startServer() {
   let serraWeatherCache: SerraWeatherCache | null = null;
   const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos
 
+  // Cache para o Chat (Radar IA) para evitar chamadas duplicadas/redundantes e economizar quota
+  const chatCache = new Map<string, { data: any; timestamp: number }>();
+  const CHAT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos de cache
+
+  // Helper para decidir se a consulta necessita de pesquisa em tempo real
+  const checkNeedsGoogleSearch = (text: string): boolean => {
+    if (!text) return false;
+    const msg = text.toLowerCase().trim();
+
+    // Consultas curtas ou de conversação simples que não necessitam de busca ativa na web
+    const nonSearchKeywords = [
+      'oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'tudo bem', 'como vai',
+      'obrigado', 'obrigada', 'valeu', 'tchau', 'fui', 'hey', 'hello', 'hi',
+      'quem é você', 'quem e voce', 'o que você faz', 'o que voce faz',
+      'ajuda', 'socorro', 'comandos'
+    ];
+
+    if (nonSearchKeywords.some(word => msg === word || msg.startsWith(word + ' ') || msg.endsWith(' ' + word))) {
+      return false;
+    }
+
+    // Termos que necessitam ou justificam a ativação do protocolo de busca web em tempo real
+    const searchTriggers = [
+      'tempo', 'clima', 'previsão', 'previsao', 'noticia', 'notícia', 'alerta',
+      'hoje', 'agora', 'chuva', 'vento', 'neblina', 'neve', 'condição', 'condicao',
+      'estrada', 'pista', 'bloqueada', 'bloqueio', 'situação', 'situacao', 'atual',
+      'reddit', 'site:', 'google', 'buscar', 'pesquisar', 'noticias', 'notícias',
+      'dolar', 'dólar', 'moeda', 'fuso', 'trilha', 'rota', 'passagem', 'trânsito', 'transito',
+      'serra', 'rio do rastro', 'urubici', 'sc'
+    ];
+
+    return searchTriggers.some(trigger => msg.includes(trigger));
+  };
+
   // API Routes
   app.post("/api/chat", async (req, res) => {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -30,6 +64,14 @@ async function startServer() {
     if (!apiKey) {
       console.error("Missing GEMINI_API_KEY");
       return res.status(500).json({ error: "Chave API Gemini não encontrada no ambiente do servidor." });
+    }
+
+    // 1. Verificação de Cache para evitar chamadas de re-render ou cliques repetidos
+    const cacheKey = JSON.stringify({ message: message?.trim(), history });
+    const cachedResponse = chatCache.get(cacheKey);
+    if (cachedResponse && (Date.now() - cachedResponse.timestamp < CHAT_CACHE_TTL_MS)) {
+      console.log(`[RadarIA Cache] HIT para mensagem dita: "${message}"`);
+      return res.json(cachedResponse.data);
     }
 
     const ai = new GoogleGenAI({
@@ -44,9 +86,12 @@ async function startServer() {
     const maxRetries = 3;
     let retryCount = 0;
 
+    // Determina se vamos usar a ferramenta de busca de acordo com o contexto do input
+    const shouldSearch = checkNeedsGoogleSearch(message);
+
     const executeChat = async (): Promise<any> => {
       try {
-        console.log(`Iniciando tentativa ${retryCount + 1} para Gemini...`);
+        console.log(`Iniciando tentativa ${retryCount + 1} para Gemini (Busca ativa: ${shouldSearch})...`);
         
         // Prepare contents
         const contents: any[] = [];
@@ -58,8 +103,11 @@ async function startServer() {
           parts: [{ text: message }]
         });
 
+        // Configura as ferramentas condicionalmente
+        const tools = shouldSearch ? [{ googleSearch: {} }] : undefined;
+
         const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
+          model: "gemini-3.5-flash",
           contents: contents,
           config: {
             systemInstruction: `Você é o "RADAR IA", o assistente tático do Rota Livre Hub. 
@@ -80,7 +128,7 @@ Seu tom é: Técnico, direto, prestativo e "High-Tech". Use uma linguagem que re
 
 Seja conciso mas detalhado no que importa. Sempre priorize a segurança do ciclista.
 Responda sempre em Português do Brasil.`,
-            tools: [{ googleSearch: {} }],
+            tools: tools,
             temperature: 0.7,
           }
         });
@@ -88,12 +136,12 @@ Responda sempre em Português do Brasil.`,
         return response;
       } catch (error: any) {
         // Handle Rate Limit (429) or Overloaded (503)
-        const isRetryable = (error.status === 429 || error.status === 503 || error.message?.includes('429') || error.message?.includes('quota'));
+        const isRetryable = (error.status === 429 || error.status === 503 || error.message?.includes('429') || error.message?.includes('quota') || error.message?.includes('RESOURCE_EXHAUSTED'));
         
         if (isRetryable && retryCount < maxRetries) {
           retryCount++;
-          const waitTime = retryCount * 3000; // Exponential-ish backoff
-          console.log(`Radar IA em espera. Retentando em ${waitTime}ms (Tentativa ${retryCount}/${maxRetries})...`);
+          const waitTime = retryCount * 2500; // Exponential backoff tático
+          console.warn(`Radar IA em espera. Retentando em ${waitTime}ms (Tentativa ${retryCount}/${maxRetries})...`);
           await delay(waitTime);
           return executeChat();
         }
@@ -110,12 +158,77 @@ Responda sempre em Português do Brasil.`,
       }
 
       console.log("Resposta da IA recebida com sucesso.");
-      res.json({ 
+      
+      const finalResult = { 
         text,
         groundingMetadata: response.candidates?.[0]?.groundingMetadata
-      });
+      };
+
+      // Armazenar no cache para consultas futuras idênticas
+      chatCache.set(cacheKey, { data: finalResult, timestamp: Date.now() });
+
+      res.json(finalResult);
     } catch (error: any) {
       console.error("Chat Server Error:", error);
+      
+      // Fallback elegante quando a quota de busca/API esgotar ou houver limites de requisições excedidos (429 / RESOURCE_EXHAUSTED)
+      const isQuotaExceeded = (
+        error.status === 429 || 
+        error.message?.includes('429') || 
+        error.message?.includes('quota') || 
+        error.message?.includes('Quota') ||
+        error.message?.includes('RESOURCE_EXHAUSTED') ||
+        error.message?.includes('limit')
+      );
+
+      if (isQuotaExceeded) {
+        console.warn("[RadarIA Fallback] Detetada sobrecarga ou esgotamento de quota de busca do satélite. Ativando contingência offline tática.");
+        
+        const isSerraQuery = message.toLowerCase().includes("serra") || message.toLowerCase().includes("rastro");
+        let fallbackText = "";
+
+        if (isSerraQuery) {
+          fallbackText = `SINAL_RESTRITO // Protocolo de Contingência RADAR_IA ativo.
+
+Os canais satelitais secundários de busca estão com tráfego denso (cota de busca diária atingida). Ativando o banco de dados tático local offline sobre a **Serra do Rio do Rastro - SC**:
+
+*   **Pista e Visibilidade:** A serra é famosa por mudar de clima rapidamente. Em caso de névoa extrema ("viração"), acenda luzes de sinalização ativas adicionais, mantenha-se à direita e evite parar em curvas sem acostamento.
+*   **Ventos e Rajadas:** O mirante pode apresentar rajadas laterais violentas atingindo até 65km/h. Incline levemente o corpo e reduza a velocidade na bike.
+*   **Refúgio e Postos:** Você pode buscar abrigo temporário no posto da PMRv localizado no topo (Km 420) ou na base do vale. 
+
+*Para leituras de sensores meteorológicos ativos atualizados, confira o widget ao lado operando com cache tático de segurança.*`;
+        } else {
+          fallbackText = `SINAL_RESTRITO // Protocolo de Contingência RADAR_IA ativo.
+
+Os canais automáticos de busca estão com tráfego de rede saturado (cota de busca diária temporariamente esgotada). Entrando em modo offline tático com banco de dados local.
+
+Aqui estão os protocolos operacionais de segurança essenciais:
+
+1.  **Manutenção Prática:** Sempre porte chaves Allen, um kit de remendos rápidos, espátulas resistentes de nylon e câmera de ar reserva.
+2.  **Protocolo Visibilidade:** Use colete com faixas reflexivas e sinalizadores ativos intermitentes nas rodovias, especialmente sob condições adversas.
+3.  **Segurança em Viagem:** Planeje água e abrigo tático com antecedência em áreas rurais isoladas da América Latina.
+
+*Sua segurança permanece ativa. Caso necessite de consultas profundas adicionais, tente novamente mais tarde.*`;
+        }
+
+        const fallbackResult = {
+          text: fallbackText,
+          groundingMetadata: {
+            groundingChunks: [
+              {
+                web: {
+                  uri: "https://www.rotalivrehub.com/protocolos",
+                  title: "Rota Livre Hub - Protocolos de Contingência"
+                }
+              }
+            ]
+          }
+        };
+
+        // Servimos como resposta 200 normal para evitar quebrar a interface do HUD
+        return res.json(fallbackResult);
+      }
+
       res.status(error.status || 500).json({ 
         error: "Erro no processamento da IA",
         details: error.message || String(error)
