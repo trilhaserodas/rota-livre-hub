@@ -6,7 +6,6 @@ import { cn } from '@/src/lib/utils';
 import { auth, db } from '@/src/lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import RadarIA from './RadarIA';
 
 const ADMIN_EMAIL = "trilhaserodas@gmail.com";
 
@@ -423,7 +422,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
-      {location.pathname !== '/mapa' && <RadarIA />}
     </div>
   );
 }
