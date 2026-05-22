@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check } from 'lucide-react';
+import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check, Send } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { useSearchParams } from 'react-router-dom';
 import AdSense from '@/src/components/AdSense';
@@ -543,7 +543,7 @@ export default function Blog() {
                     <p className="text-[11px] text-white/30 font-mono uppercase tracking-widest">Disseminar inteligência na rede</p>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button 
                       onClick={() => {
                         const url = `https://wa.me/?text=${encodeURIComponent(`${selectedPost.title} - Rota Livre Hub: ${window.location.href}`)}`;
@@ -566,6 +566,18 @@ export default function Blog() {
                     >
                       <Share2 size={18} className="group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Facebook</span>
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        const url = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`${selectedPost.title} - Rota Livre Hub`)}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-[#0088cc]/10 text-[#0088cc] hover:bg-[#0088cc] hover:text-white transition-all border border-[#0088cc]/20 group"
+                      title="Compartilhar no Telegram"
+                    >
+                      <Send size={18} className="group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Telegram</span>
                     </button>
 
                     <button 
