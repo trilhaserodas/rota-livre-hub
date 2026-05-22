@@ -1719,6 +1719,7 @@ export default function AdventureMap() {
   const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [mapStyle, setMapStyle] = useState<'tactical' | 'google_roadmap' | 'google_satellite' | 'google_hybrid'>('tactical');
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-34.603, -58.381]);
   const [mapZoom, setMapZoom] = useState(4);
@@ -1909,12 +1910,36 @@ export default function AdventureMap() {
       const now = Date.now();
       const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 dias de validade
       if (now - cached.timestamp < CACHE_TTL) {
-        console.log(`[Nominatim Cache HIT] Resolvendo "${qClean}" localmente`);
+        console.log(`[Cache HIT] Resolvendo "${qClean}" localmente`);
         return cached.data;
       }
     }
 
+    // Tenta primeiro utilizar a Geocodificação de Alta Precisão do Google Maps via proxy seguro de backend
     try {
+      console.log(`[Google Geocode TRY] Buscando "${qClean}" via Google Maps Plataforma`);
+      const googleRes = await fetch(`/api/google-geocode?q=${encodeURIComponent(queryText)}`);
+      if (googleRes.ok) {
+        const googleData = await googleRes.json();
+        if (googleData.status === "OK" && googleData.results && googleData.results.length > 0) {
+          console.log(`[Google Geocode HIT] Sucesso obtendo dados precisos do Google Maps`);
+          nominatimCacheRef.current[qClean] = {
+            data: googleData.results,
+            timestamp: Date.now()
+          };
+          try {
+            localStorage.setItem('nominatim_search_cache_v1', JSON.stringify(nominatimCacheRef.current));
+          } catch (err) {}
+          return googleData.results;
+        }
+      }
+    } catch (err) {
+      console.warn("[Google Geocode FALLBACK] Falha ou indisponível, recorrendo ao Nominatim:", err);
+    }
+
+    // Fallback gracioso para a API Nominatim (OpenStreetMap)
+    try {
+      console.log(`[OSM Geocode Fallback] Buscando "${qClean}" via Nominatim`);
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}&limit=1`);
       const data = await res.json();
       
@@ -4266,6 +4291,52 @@ export default function AdventureMap() {
 
       {/* --- MAP MAIN VIEWPORT --- */}
       <div className="w-full h-[85vh] lg:h-full relative flex flex-col lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last overflow-hidden lg:overflow-visible">
+          
+          {/* Provedor de Mapas RTC (Google & Tactical HUD) */}
+          <div className="absolute bottom-6 left-6 z-[3500] hidden lg:block select-none pointer-events-auto">
+             <div className="bg-[#0b0c0d]/95 backdrop-blur-md border border-white/10 p-2.5 rounded-sm shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_15px_rgba(255,100,29,0.05)] w-[180px] border-l-2 border-l-[#ff641d]">
+                <div className="flex items-center justify-between border-b border-white/5 pb-1 mb-2">
+                   <div className="flex items-center gap-1.5">
+                      <Globe size={11} className="text-[#ff641d] animate-pulse" />
+                      <span className="text-[8px] font-mono font-black text-white/50 tracking-wider font-bold">SUPORTE_DADOS_RTC</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-[#ff641d] rounded-full animate-ping"></span>
+                      <span className="text-[7px] font-mono text-[#ff641d] font-bold">GOOGLE</span>
+                   </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                   {[
+                     { id: 'tactical', label: 'HUD TÁTICO', desc: 'CARTO_DARK_DB' },
+                     { id: 'google_roadmap', label: 'GOOGLE TRÂFEGO', desc: 'DADOS_TEMPO_REAL' },
+                     { id: 'google_satellite', label: 'GOOGLE SATÉLITE', desc: 'ALTA_RESOLUÇÃO' },
+                     { id: 'google_hybrid', label: 'GOOGLE HÍBRIDO', desc: 'VETOR_MAIS_IMAGEM' }
+                   ].map(option => (
+                      <button
+                        key={option.id}
+                        onClick={() => setMapStyle(option.id as any)}
+                        className={cn(
+                          "w-full text-left px-2 py-1 rounded-[2px] border transition-all flex flex-col cursor-pointer",
+                          mapStyle === option.id 
+                            ? "bg-[#ff641d]/10 border-[#ff641d]/30 shadow-[0_0_8px_rgba(255,100,29,0.15)]" 
+                            : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
+                        )}
+                      >
+                         <span className={cn(
+                           "text-[8px] font-mono font-black tracking-wide",
+                           mapStyle === option.id ? "text-white font-bold" : "text-white/40"
+                         )}>
+                            {option.label}
+                         </span>
+                         <span className="text-[5.5px] font-mono text-white/30 uppercase tracking-[0.05em]">
+                            {option.desc}
+                         </span>
+                      </button>
+                   ))}
+                </div>
+             </div>
+          </div>
+
           {/* Real-Time GPS Tracking Widget */}
           <GPSTracker 
             className="absolute bottom-6 right-6 z-[3500] hidden lg:block"
@@ -4310,15 +4381,43 @@ export default function AdventureMap() {
               }} />
               {showHeatmap && <HeatmapLayer points={filteredPoints} />}
               
-              <TileLayer
-                attribution='&copy; CARTO'
-                url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-              />
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-                className="map-contrast-labels-layer"
-                zIndex={10}
-              />
+              {mapStyle === 'tactical' && (
+                <>
+                  <TileLayer
+                    attribution='&copy; CARTO'
+                    url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+                  />
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+                    className="map-contrast-labels-layer"
+                    zIndex={10}
+                  />
+                </>
+              )}
+              {mapStyle === 'google_roadmap' && (
+                <TileLayer
+                  attribution='&copy; Google Maps'
+                  url="https://mt{s}.google.com/vt/lyrs=m,traffic&x={x}/{y}{r}&z={z}"
+                  subdomains={['0', '1', '2', '3']}
+                  zIndex={1}
+                />
+              )}
+              {mapStyle === 'google_satellite' && (
+                <TileLayer
+                  attribution='&copy; Google Maps'
+                  url="https://mt{s}.google.com/vt/lyrs=s&x={x}/{y}&z={z}"
+                  subdomains={['0', '1', '2', '3']}
+                  zIndex={1}
+                />
+              )}
+              {mapStyle === 'google_hybrid' && (
+                <TileLayer
+                  attribution='&copy; Google Maps'
+                  url="https://mt{s}.google.com/vt/lyrs=y&x={x}/{y}&z={z}"
+                  subdomains={['0', '1', '2', '3']}
+                  zIndex={1}
+                />
+              )}
 
               {/* Active Route Display: Optimized to only show start/end and line */}
               {routePoints.length > 0 && (
@@ -5032,7 +5131,7 @@ export default function AdventureMap() {
               exit={{ height: 0, opacity: 0, y: -10 }}
               className="w-full max-w-7xl bg-[#0a0a0a]/60 backdrop-blur-md border border-[#ff7828]/18 overflow-hidden rounded-sm pointer-events-auto shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative z-[1900]"
             >
-                <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
                   {/* Difficulty Filter */}
                   <div className="space-y-4">
                       <div className="flex items-center gap-2">
@@ -5045,8 +5144,8 @@ export default function AdventureMap() {
                               key={dif}
                               onClick={() => setDifficultyFilter(dif)}
                               className={cn(
-                                "h-10 text-[8px] font-mono font-bold uppercase tracking-widest border rounded-xs transition-all",
-                                difficultyFilter === dif ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                                "h-10 text-[8px] font-mono font-bold uppercase tracking-widest border rounded-xs transition-all cursor-pointer",
+                                difficultyFilter === dif ? "bg-[#ff641d] border-[#ff641d] text-white font-bold" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
                               )}
                             >
                               {dif === 'all' ? 'TODOS_OS_NÍVEIS' : dif === 'LOW' ? 'INICIANTE' : dif === 'MODERATE' ? 'MÉDIO' : 'CRÍTICO'}
@@ -5067,8 +5166,8 @@ export default function AdventureMap() {
                               key={v}
                               onClick={() => setVehicleFilter(v)}
                               className={cn(
-                                "h-10 text-[8px] font-mono font-bold uppercase tracking-widest border rounded-xs transition-all",
-                                vehicleFilter === v ? "bg-cyan-500/20 border-cyan-500 text-cyan-400" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                                "h-10 text-[8px] font-mono font-bold uppercase tracking-widest border rounded-xs transition-all cursor-pointer",
+                                vehicleFilter === v ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 font-bold" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
                               )}
                             >
                               {v === 'all' ? 'PADRÃO_NAV' : v.toUpperCase()}
@@ -5087,14 +5186,43 @@ export default function AdventureMap() {
                         value={countryFilter}
                         onChange={(e) => setCountryFilter(e.target.value)}
                         className="w-full h-12 bg-white/5 border border-white/10 rounded-xs px-4 text-[10px] font-mono text-white outline-none focus:border-[#ff641d]/50 appearance-none cursor-pointer"
-                          >
-                            <option value="all">TODOS_PAÍSES</option>
-                            {countries.map(c => (
-                                <option key={c} value={c}>{c.toUpperCase()}</option>
-                            ))}
-                          </select>
+                      >
+                        <option value="all">TODOS_PAÍSES</option>
+                        {countries.map(c => (
+                            <option key={c} value={c}>{c.toUpperCase()}</option>
+                        ))}
+                      </select>
+                  </div>
+
+                  {/* Google Maps Layer Select */}
+                  <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Globe size={12} className="text-[#ff641d]" />
+                        <label className="text-[9px] font-mono text-white/40 uppercase tracking-widest font-black">SISTEMA_DADOS_RTC</label>
                       </div>
-                    </div>
+                      <div className="grid grid-cols-2 gap-2">
+                         {[
+                           { id: 'tactical', label: 'TÁTICO' },
+                           { id: 'google_roadmap', label: 'TRÂFEGO' },
+                           { id: 'google_satellite', label: 'SATÉLITE' },
+                           { id: 'google_hybrid', label: 'HÍBRIDO' }
+                         ].map(opt => (
+                            <button
+                              key={opt.id}
+                              onClick={() => setMapStyle(opt.id as any)}
+                              className={cn(
+                                "h-10 text-[8px] font-mono font-bold uppercase tracking-widest border rounded-xs transition-all cursor-pointer",
+                                mapStyle === opt.id 
+                                  ? "bg-[#ff641d]/20 border-[#ff641d] text-white font-bold shadow-[0_0_8px_rgba(255,100,29,0.25)]" 
+                                  : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                              )}
+                            >
+                              {opt.label}
+                            </button>
+                         ))}
+                      </div>
+                  </div>
+                </div>
                 </motion.div>
               )}
            </AnimatePresence>

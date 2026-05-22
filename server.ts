@@ -350,6 +350,54 @@ Responda ÚNICA E EXCLUSIVAMENTE com um objeto JSON válido, sem bloco markdown 
     }
   });
 
+  // Google Maps Geocoding Security Proxy
+  app.get("/api/google-geocode", async (req, res) => {
+    const { q } = req.query;
+    const apiKey = process.env.GOOGLE_MAPS_PLATFORM_KEY;
+
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ error: "Query de busca (q) é obrigatória" });
+    }
+
+    console.log(`[GoogleGeocodeProxy] Request for query: "${q}"`);
+
+    if (!apiKey || apiKey.trim() === "") {
+      console.log(`[GoogleGeocodeProxy] Google Maps API key not configured on the server. Falling back.`);
+      return res.status(404).json({ error: "Google Maps API Key not configured on the server", fallback: true });
+    }
+
+    try {
+      const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q)}&key=${apiKey}`;
+      const response = await fetch(googleUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Google Maps API responded with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status !== "OK") {
+        console.warn(`[GoogleGeocodeProxy] Google Geocoding returned status: ${data.status}`);
+        return res.json({ status: data.status, results: [] });
+      }
+
+      // Convert Google Geocoding response format to standard structure expected by the Map component
+      const mappedResults = data.results.map((item: any) => ({
+        lat: String(item.geometry.location.lat),
+        lon: String(item.geometry.location.lng),
+        display_name: item.formatted_address,
+        source: 'google'
+      }));
+
+      console.log(`[GoogleGeocodeProxy] Successful proxy fetch. Found ${mappedResults.length} high-precision results.`);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24h as geocodes do not change often
+      return res.json({ status: "OK", results: mappedResults });
+    } catch (err: any) {
+      console.error("[GoogleGeocodeProxy] Exception:", err.message);
+      return res.status(500).json({ error: "Google Maps integration error", details: err?.message, fallback: true });
+    }
+  });
+
   // Helper functions for Open-Meteo adaptation
   function getWmoDescription(code: number): string {
     const codes: Record<number, string> = {
