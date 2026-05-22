@@ -3956,6 +3956,275 @@ export default function AdventureMap() {
                 {/* Integrated Weather Widget */}
                 <WeatherWidget lat={mapCenter[0]} lng={mapCenter[1]} />
 
+                {/* Community Evaluation Operational Widget */}
+                {selectedPreDefinedRoute && (() => {
+                  const evalData = routeEvaluations[selectedPreDefinedRoute.id] || { percentage: 95, reviewsCount: 150, statusStr: 'OPERACIONAL', statusValue: 4 };
+                  return (
+                    <div className="p-4 bg-[#141517]/95 border border-white/10 rounded-[10px] relative overflow-hidden select-none shadow-[inset_0_0_12px_rgba(255,100,29,0.05),_0_8px_32px_rgba(0,0,0,0.5)]">
+                       {/* Background neon subtle glow */}
+                       <div className="absolute inset-0 bg-[#ff641d]/[0.01] pointer-events-none" />
+                       
+                       {/* Top section: Title & stats */}
+                       <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-1.5">
+                             <span className="text-[10px] font-mono font-black text-[#ff641d] tracking-[0.1em] uppercase drop-shadow-[0_0_4px_rgba(255,100,29,0.4)]">AVALIAÇÃO:</span>
+                          </div>
+                          <div className="text-[10px] font-mono text-white/85 lowercase tracking-tight">
+                             <span className="font-semibold text-white">{evalData.percentage}%</span>{' '}
+                             <span className="text-white/40">[{evalData.reviewsCount.toLocaleString()}] REVIEWS</span>
+                          </div>
+                       </div>
+
+                       {/* Grid & Button Row */}
+                       <div className="flex items-end justify-between gap-4">
+                          {/* Left: indicator squares */}
+                          <div className="flex flex-col gap-1 shrink-0 relative">
+                             {/* Top Row (Current Status / Predominant highlighted block) */}
+                             <div className="flex gap-1.5">
+                                <div 
+                                  className={cn(
+                                    "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                    evalData.statusValue === 1 
+                                      ? "border-red-500 bg-red-500/80 shadow-[0_0_8px_rgba(239,68,68,0.6)]" 
+                                      : "border-white/10 bg-[#1e2022]"
+                                  )} 
+                                  style={evalData.statusValue === 1 ? { borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.8)', boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)' } : {}}
+                                  title="CRÍTICO"
+                                />
+                                <div 
+                                  className={cn(
+                                    "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                    evalData.statusValue === 2 
+                                      ? "border-orange-500 bg-orange-500/80 shadow-[0_0_8px_rgba(249,115,22,0.6)]" 
+                                      : "border-white/10 bg-[#1e2022]"
+                                  )} 
+                                  style={evalData.statusValue === 2 ? { borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.8)', boxShadow: '0 0 8px rgba(249, 115, 22, 0.6)' } : {}}
+                                  title="INSTÁVEL"
+                                />
+                                <div 
+                                  className={cn(
+                                    "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                    evalData.statusValue === 3 
+                                      ? "border-[#ebd01a] bg-[#ebd01a]/80 shadow-[0_0_8px_rgba(235,208,26,0.6)]" 
+                                      : "border-white/10 bg-[#1e2022]"
+                                  )} 
+                                  style={evalData.statusValue === 3 ? { borderColor: '#ebd01a', backgroundColor: 'rgba(235,208,26,0.8)', boxShadow: '0 0 8px rgba(235,208,26,0.6)' } : {}}
+                                  title="ATENÇÃO"
+                                />
+                                <div 
+                                  className={cn(
+                                    "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                    evalData.statusValue === 4 
+                                      ? "border-[#2df432] bg-[#2df432]/80 shadow-[0_0_8px_rgba(45,244,50,0.6)]" 
+                                      : "border-white/10 bg-[#1e2022]"
+                                  )} 
+                                  style={evalData.statusValue === 4 ? { borderColor: '#2df432', backgroundColor: 'rgba(45,244,50,0.8)', boxShadow: '0 0 8px rgba(45,244,50,0.6)' } : {}}
+                                  title="OPERACIONAL"
+                                />
+                             </div>
+
+                             {/* Bottom Row (Palette Static Legend Buttons / Level Tooltip hover) */}
+                             <div className="flex gap-1.5">
+                                <div 
+                                  onMouseEnter={() => setActiveHoverStatus(1)}
+                                  onMouseLeave={() => setActiveHoverStatus(null)}
+                                  className="w-4 h-2 rounded-3xs bg-red-600 hover:scale-110 shadow-[0_1px_3px_rgba(0,0,0,0.3)] hover:shadow-[0_0_6px_rgba(239,68,68,0.8)] transition-all cursor-help"
+                                  title="Tooltip: CRÍTICO"
+                                />
+                                <div 
+                                  onMouseEnter={() => setActiveHoverStatus(2)}
+                                  onMouseLeave={() => setActiveHoverStatus(null)}
+                                  className="w-4 h-2 rounded-3xs bg-orange-500 hover:scale-110 shadow-[0_1px_3px_rgba(0,0,0,0.3)] hover:shadow-[0_0_6px_rgba(249,115,22,0.8)] transition-all cursor-help"
+                                  title="Tooltip: INSTÁVEL"
+                                />
+                                <div 
+                                  onMouseEnter={() => setActiveHoverStatus(3)}
+                                  onMouseLeave={() => setActiveHoverStatus(null)}
+                                  className="w-4 h-2 rounded-3xs bg-[#ebd01a] hover:scale-110 shadow-[0_1px_3px_rgba(0,0,0,0.3)] hover:shadow-[0_0_6px_rgba(235,208,26,0.8)] transition-all cursor-help"
+                                  title="Tooltip: ATENÇÃO"
+                                />
+                                <div 
+                                  onMouseEnter={() => setActiveHoverStatus(4)}
+                                  onMouseLeave={() => setActiveHoverStatus(null)}
+                                  className="w-4 h-2 rounded-3xs bg-[#2df432] hover:scale-110 shadow-[0_1px_3px_rgba(0,0,0,0.3)] hover:shadow-[0_0_6px_rgba(45,244,50,0.8)] transition-all cursor-help"
+                                  title="Tooltip: OPERACIONAL"
+                                />
+                             </div>
+                          </div>
+
+                          {/* Right: AVALIAR Solid block Action Button */}
+                          <div className="text-right">
+                             <button
+                               type="button"
+                               onClick={() => {
+                                  setIsEvaluating(!isEvaluating);
+                                  setEvalError(null);
+                               }}
+                               disabled={isSubmittingEval}
+                               className={cn(
+                                 "px-6 py-2 bg-[#ff641d] hover:bg-orange-600 text-white border border-transparent text-[11px] font-sans font-bold uppercase tracking-wider transition-all rounded-xs shadow-[0_0_12px_rgba(255,100,29,0.3)] active:scale-[0.97] disabled:opacity-50 cursor-pointer",
+                                 isEvaluating && "bg-white/10 text-white/50 border-white/5 shadow-none"
+                               )}
+                             >
+                                AVALIAR
+                             </button>
+                          </div>
+                       </div>
+
+                       {/* Tooltip dynamic info or active status string caption */}
+                       <div className="mt-3 h-5 flex items-center justify-start border-t border-white/5 pt-2">
+                          <AnimatePresence mode="wait">
+                             {activeHoverStatus ? (
+                               <motion.span 
+                                 key={`hover-${activeHoverStatus}`}
+                                 initial={{ opacity: 0, y: 2 }}
+                                 animate={{ opacity: 1, y: 0 }}
+                                 exit={{ opacity: 0, y: -2 }}
+                                 className="text-[8px] font-mono uppercase tracking-wider block"
+                               >
+                                  {activeHoverStatus === 1 && <span className="text-red-400 font-bold">🔴 CRÍTICO: BLOQUEIO TOTAL / DESVIO INTRAFEGÁVEL</span>}
+                                  {activeHoverStatus === 2 && <span className="text-orange-400 font-bold">🟠 INSTÁVEL: LAMA, GELO OU FORTES RISCOS CLIMÁTICOS</span>}
+                                  {activeHoverStatus === 3 && <span className="text-yellow-400 font-bold">🟡 ATENÇÃO: BURACOS, OBRAS OU NEBLINA NA PISTA</span>}
+                                  {activeHoverStatus === 4 && <span className="text-green-400 font-bold">🟢 OPERACIONAL: PISTA LIMPA E LIVRE SEM OBSTRUÇÕES</span>}
+                               </motion.span>
+                             ) : (
+                               <motion.span 
+                                 key="default-status"
+                                 initial={{ opacity: 0 }}
+                                 animate={{ opacity: 0.4 }}
+                                 className="text-[7.5px] font-mono uppercase tracking-[0.1em] text-white"
+                               >
+                                  STATUS PREDOMINANTE: <span className={cn(
+                                     "font-bold",
+                                     evalData.statusValue === 1 ? "text-red-400" :
+                                     evalData.statusValue === 2 ? "text-orange-400" :
+                                     evalData.statusValue === 3 ? "text-[#ebd01a]" : "text-[#2df432]"
+                                  )}>{evalData.statusStr}</span>
+                               </motion.span>
+                             )}
+                          </AnimatePresence>
+                       </div>
+
+                       {/* Expandable sub-panel when clicking AVALIAR */}
+                       <AnimatePresence>
+                          {isEvaluating && (
+                             <motion.div
+                               initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                               animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                               exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                               className="overflow-hidden border-t border-white/5 pt-3 space-y-2.5 relative z-10"
+                             >
+                                <div className="flex items-center justify-between">
+                                   <span className="text-[8px] font-mono text-[#ff641d]/70 uppercase tracking-widest font-black">NÍVEL OPERACIONAL DA COMUNIDADE</span>
+                                   <button 
+                                     type="button"
+                                     onClick={() => setIsEvaluating(false)} 
+                                     className="text-[7px] font-mono text-white/30 hover:text-white uppercase hover:underline"
+                                   >
+                                     Fechar
+                                   </button>
+                                </div>
+
+                                {isSubmittingEval ? (
+                                   <div className="py-4 flex flex-col items-center justify-center gap-2 bg-black/30 border border-white/5 rounded-xs">
+                                      <div className="w-4 h-4 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />
+                                      <span className="text-[7px] font-mono text-white/40 tracking-[0.15em] uppercase animate-pulse">TRANSMITINDO VOTO CRIPTOGRAFADO...</span>
+                                   </div>
+                                ) : (
+                                   <div className="grid grid-cols-2 gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 4)}
+                                        className="p-2 bg-green-500/5 hover:bg-green-500/10 border border-green-500/10 hover:border-green-500/30 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                      >
+                                         <div className="w-2 h-2 rounded-full bg-green-500 shrink-0 shadow-[0_0_4px_#22c55e]" />
+                                         <div className="flex flex-col text-left">
+                                            <span className="text-[8px] font-mono font-black text-green-400 uppercase">OPERACIONAL</span>
+                                         </div>
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 3)}
+                                        className="p-2 bg-[#ebd01a]/5 hover:bg-[#ebd01a]/10 border border-[#ebd01a]/10 hover:border-[#ebd01a]/30 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                      >
+                                         <div className="w-2 h-2 rounded-full bg-[#ebd01a] shrink-0 shadow-[0_0_4px_#ebd01a]" />
+                                         <div className="flex flex-col text-left">
+                                            <span className="text-[8px] font-mono font-black text-yellow-400 uppercase">ATENÇÃO</span>
+                                         </div>
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 2)}
+                                        className="p-2 bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/10 hover:border-orange-500/30 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                      >
+                                         <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0 shadow-[0_0_4px_#f97316]" />
+                                         <div className="flex flex-col text-left">
+                                            <span className="text-[8px] font-mono font-black text-orange-400 uppercase">INSTÁVEL</span>
+                                         </div>
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 1)}
+                                        className="p-2 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/30 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                      >
+                                         <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 shadow-[0_0_4px_#ef4444]" />
+                                         <div className="flex flex-col text-left">
+                                            <span className="text-[8px] font-mono font-black text-red-400 uppercase">CRÍTICO</span>
+                                         </div>
+                                      </button>
+                                   </div>
+                                )}
+                             </motion.div>
+                          )}
+                       </AnimatePresence>
+
+                       {/* Error / Success Toast Messages inside the HUD */}
+                       <AnimatePresence>
+                          {evalError && (
+                             <motion.div
+                               initial={{ y: 10, opacity: 0 }}
+                               animate={{ y: 0, opacity: 1 }}
+                               exit={{ y: -10, opacity: 0 }}
+                               className="absolute inset-0 bg-[#160a0a]/98 border border-red-500/30 p-4 flex flex-col items-center justify-center gap-1.5 text-center rounded-[10px] z-[100]"
+                             >
+                                <ShieldAlert size={18} className="text-red-500 animate-bounce" />
+                                <span className="text-[8px] font-mono font-black text-red-500 uppercase tracking-widest">{evalError}</span>
+                                <button 
+                                  type="button"
+                                  onClick={() => setEvalError(null)}
+                                  className="mt-1 text-[7px] font-mono text-white/50 border border-white/10 px-2 py-0.5 rounded-xs hover:bg-white/5 hover:text-white uppercase transition-all"
+                                >
+                                  ENTENDIDO
+                                </button>
+                             </motion.div>
+                          )}
+
+                          {evalSuccess && (
+                             <motion.div
+                               initial={{ y: 10, opacity: 0 }}
+                               animate={{ y: 0, opacity: 1 }}
+                               exit={{ y: -10, opacity: 0 }}
+                               className="absolute inset-0 bg-[#09160d]/98 border border-emerald-500/30 p-4 flex flex-col items-center justify-center gap-1.5 text-center rounded-[10px] z-[100]"
+                             >
+                                <ShieldCheck size={18} className="text-emerald-400 animate-pulse" />
+                                <span className="text-[8px] font-mono font-black text-emerald-400 uppercase tracking-widest">{evalSuccess}</span>
+                                <button 
+                                  type="button"
+                                  onClick={() => setEvalSuccess(null)}
+                                  className="mt-1 text-[7px] font-mono text-emerald-400 underline uppercase hover:text-emerald-300 transition-all cursor-pointer"
+                                >
+                                  OK // DISMISS
+                                </button>
+                             </motion.div>
+                          )}
+                       </AnimatePresence>
+                    </div>
+                  );
+                })()}
+
                 {/* New Risk Radar Gadget */}
                 <RiskRadar 
                   lat={mapCenter[0]} 
