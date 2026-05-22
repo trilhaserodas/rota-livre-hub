@@ -1694,6 +1694,25 @@ function HeatmapLayer({ points }: { points: LocationPoint[] }) {
   return null;
 }
 
+
+const INITIAL_ROUTE_EVALUATIONS: Record<string, {
+  percentage: number;
+  reviewsCount: number;
+  statusStr: 'OPERACIONAL' | 'ATENÇÃO' | 'INSTÁVEL' | 'CRÍTICO';
+  statusValue: number;
+}> = {
+  'br-156': { percentage: 22, reviewsCount: 1420, statusStr: 'CRÍTICO', statusValue: 1 },
+  'n2-guyane': { percentage: 98, reviewsCount: 840, statusStr: 'OPERACIONAL', statusValue: 4 },
+  'cwb-arg': { percentage: 75, reviewsCount: 1105, statusStr: 'ATENÇÃO', statusValue: 3 },
+  'carretera-austral': { percentage: 94, reviewsCount: 2840, statusStr: 'OPERACIONAL', statusValue: 4 },
+  'ushuaia-ruta3': { percentage: 98, reviewsCount: 3530, statusStr: 'OPERACIONAL', statusValue: 4 },
+  'maringa-ushuaia': { percentage: 80, reviewsCount: 650, statusStr: 'ATENÇÃO', statusValue: 3 },
+  'ruta-40': { percentage: 41, reviewsCount: 1980, statusStr: 'INSTÁVEL', statusValue: 2 },
+  'estrada-real': { percentage: 88, reviewsCount: 1250, statusStr: 'OPERACIONAL', statusValue: 4 },
+  'atacama-exp': { percentage: 50, reviewsCount: 940, statusStr: 'INSTÁVEL', statusValue: 2 },
+  'transamazonica': { percentage: 15, reviewsCount: 780, statusStr: 'CRÍTICO', statusValue: 1 },
+};
+
 // --- Main Component ---
 
 export default function AdventureMap() {
@@ -1708,6 +1727,91 @@ export default function AdventureMap() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
   const [selectedPreDefinedRoute, setSelectedPreDefinedRoute] = useState<typeof preDefinedRoutes[0] | null>(null);
+
+  // Community Operational Validation state
+  const [routeEvaluations, setRouteEvaluations] = useState<Record<string, {
+    percentage: number;
+    reviewsCount: number;
+    statusStr: 'OPERACIONAL' | 'ATENÇÃO' | 'INSTÁVEL' | 'CRÍTICO';
+    statusValue: number;
+  }>>(() => {
+    const saved = localStorage.getItem('GPS_TACTICAL_ROUTE_EVALUATIONS');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return INITIAL_ROUTE_EVALUATIONS;
+  });
+
+  const [activeHoverStatus, setActiveHoverStatus] = useState<number | null>(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [isSubmittingEval, setIsSubmittingEval] = useState(false);
+  const [evalError, setEvalError] = useState<string | null>(null);
+  const [evalSuccess, setEvalSuccess] = useState<string | null>(null);
+
+  const submitRouteEvaluation = useCallback((routeId: string, value: number) => {
+    const limitKey = `gps_tactical_rated_${routeId}`;
+    const lastRated = localStorage.getItem(limitKey);
+    if (lastRated) {
+      const elapsed = Date.now() - parseInt(lastRated, 10);
+      if (elapsed < 5 * 60 * 1000) {
+        setEvalError('SINAL ATIVO // REAVALIAÇÃO EM BLOQUEIO TEMPORÁRIO (5M)');
+        setTimeout(() => setEvalError(null), 4000);
+        return;
+      }
+    }
+
+    setIsSubmittingEval(true);
+    
+    setTimeout(() => {
+      setRouteEvaluations(prev => {
+        const current = prev[routeId] || { percentage: 95, reviewsCount: 100, statusStr: 'OPERACIONAL', statusValue: 4 };
+        
+        let itemPercentage = 100;
+        if (value === 1) itemPercentage = 15;
+        else if (value === 2) itemPercentage = 45;
+        else if (value === 3) itemPercentage = 75;
+
+        const totalSum = (current.percentage * current.reviewsCount) + itemPercentage;
+        const nextCount = current.reviewsCount + 1;
+        const nextPercentage = Math.round(totalSum / nextCount);
+
+        let nextStatusStr: 'OPERACIONAL' | 'ATENÇÃO' | 'INSTÁVEL' | 'CRÍTICO' = 'OPERACIONAL';
+        if (nextPercentage < 35) nextStatusStr = 'CRÍTICO';
+        else if (nextPercentage < 65) nextStatusStr = 'INSTÁVEL';
+        else if (nextPercentage < 85) nextStatusStr = 'ATENÇÃO';
+
+        let nextStatusVal = value;
+        if (nextStatusStr === 'CRÍTICO') nextStatusVal = 1;
+        else if (nextStatusStr === 'INSTÁVEL') nextStatusVal = 2;
+        else if (nextStatusStr === 'ATENÇÃO') nextStatusVal = 3;
+        else nextStatusVal = 4;
+
+        const updated = {
+          ...prev,
+          [routeId]: {
+            percentage: nextPercentage,
+            reviewsCount: nextCount,
+            statusStr: nextStatusStr,
+            statusValue: nextStatusVal
+          }
+        };
+        localStorage.setItem('GPS_TACTICAL_ROUTE_EVALUATIONS', JSON.stringify(updated));
+        return updated;
+      });
+
+      localStorage.setItem(limitKey, Date.now().toString());
+      setIsSubmittingEval(false);
+      setIsEvaluating(false);
+      
+      setEvalSuccess('SINAL DE TRANSMISSÃO EMITIDO COM SUCESSO');
+      setTimeout(() => setEvalSuccess(null), 4000);
+    }, 1200);
+  }, []);
+
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [selectedPointState, setSelectedPointState] = useState<LocationPoint | null>(null);
 
@@ -3451,6 +3555,277 @@ export default function AdventureMap() {
                             </motion.div>
                           )}
                         </AnimatePresence>
+
+                        {/* Community Evaluation Operational Widget */}
+                        {(() => {
+                          const evalData = routeEvaluations[selectedPreDefinedRoute.id] || { percentage: 95, reviewsCount: 150, statusStr: 'OPERACIONAL', statusValue: 4 };
+                          return (
+                            <div className="p-5 bg-black/40 border border-white/5 rounded-sm relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                               {/* Background neon subtle grid/glow */}
+                               <div className="absolute inset-0 bg-[#ff641d]/[0.01] pointer-events-none" />
+                               
+                               {/* Header */}
+                               <div className="flex items-center justify-between mb-4">
+                                  <div className="flex items-center gap-2">
+                                     <div className="w-1.5 h-1.5 bg-[#ff641d] rounded-full animate-ping" />
+                                     <span className="text-[9px] font-mono font-black text-[#ff641d] tracking-[0.25em] uppercase">AVALIAÇÃO OPERACIONAL</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-2xs border border-white/5">
+                                     <span className="text-[11px] font-mono font-black text-white">{evalData.percentage}%</span>
+                                     <span className="text-[8px] font-mono text-white/40">[{evalData.reviewsCount.toLocaleString()}] REVIEWS</span>
+                                  </div>
+                                </div>
+
+                               {/* Main UI row: Left: tactical squares graphic, Right: button */}
+                               <div className="flex items-center justify-between gap-4">
+                                  {/* Left Graphic Block: 2 rows of 4 squares */}
+                                  <div className="flex flex-col gap-1 shrink-0 relative group/legend">
+                                     {/* Row 1 (Indicators): Predominant status highlights */}
+                                     <div className="flex gap-1.5">
+                                        <div 
+                                          className={cn(
+                                            "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                            evalData.statusValue === 1 
+                                              ? "border-red-500 bg-red-500/80 shadow-[0_0_8px_rgba(239,68,68,0.6)]" 
+                                              : "border-white/10 bg-transparent"
+                                          )} 
+                                          style={evalData.statusValue === 1 ? { borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.8)', boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)' } : {}}
+                                          title="CRÍTICO"
+                                        />
+                                        <div 
+                                          className={cn(
+                                            "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                            evalData.statusValue === 2 
+                                              ? "border-orange-500 bg-orange-500/80 shadow-[0_0_8px_rgba(249,115,22,0.6)]" 
+                                              : "border-white/10 bg-transparent"
+                                          )} 
+                                          style={evalData.statusValue === 2 ? { borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.8)', boxShadow: '0 0 8px rgba(249, 115, 22, 0.6)' } : {}}
+                                          title="INSTÁVEL"
+                                        />
+                                        <div 
+                                          className={cn(
+                                            "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                            evalData.statusValue === 3 
+                                              ? "border-yellow-400 bg-yellow-400/80 shadow-[0_0_8px_rgba(250,204,21,0.6)]" 
+                                              : "border-white/10 bg-transparent"
+                                          )} 
+                                          style={evalData.statusValue === 3 ? { borderColor: '#facc15', backgroundColor: 'rgba(250, 204, 21, 0.8)', boxShadow: '0 0 8px rgba(250, 204, 21, 0.6)' } : {}}
+                                          title="ATENÇÃO"
+                                        />
+                                        <div 
+                                          className={cn(
+                                            "w-4 h-4 rounded-3xs border transition-all duration-500",
+                                            evalData.statusValue === 4 
+                                              ? "border-green-500 bg-green-500/80 shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
+                                              : "border-white/10 bg-transparent"
+                                          )} 
+                                          style={evalData.statusValue === 4 ? { borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.8)', boxShadow: '0 0 8px rgba(34, 197, 94, 0.6)' } : {}}
+                                          title="OPERACIONAL"
+                                        />
+                                     </div>
+
+                                     {/* Row 2 (Static visual palette / Legend) */}
+                                     <div className="flex gap-1.5">
+                                        <div 
+                                          onMouseEnter={() => setActiveHoverStatus(1)}
+                                          onMouseLeave={() => setActiveHoverStatus(null)}
+                                          className="w-4 h-2.5 rounded-3xs bg-red-500 hover:scale-110 hover:shadow-[0_0_6px_rgba(239,68,68,0.8)] transition-all cursor-help"
+                                        />
+                                        <div 
+                                          onMouseEnter={() => setActiveHoverStatus(2)}
+                                          onMouseLeave={() => setActiveHoverStatus(null)}
+                                          className="w-4 h-2.5 rounded-3xs bg-orange-500 hover:scale-110 hover:shadow-[0_0_6px_rgba(249,115,22,0.8)] transition-all cursor-help"
+                                        />
+                                        <div 
+                                          onMouseEnter={() => setActiveHoverStatus(3)}
+                                          onMouseLeave={() => setActiveHoverStatus(null)}
+                                          className="w-4 h-2.5 rounded-3xs bg-yellow-400 hover:scale-110 hover:shadow-[0_0_6px_rgba(250,204,21,0.8)] transition-all cursor-help"
+                                        />
+                                        <div 
+                                          onMouseEnter={() => setActiveHoverStatus(4)}
+                                          onMouseLeave={() => setActiveHoverStatus(null)}
+                                          className="w-4 h-2.5 rounded-3xs bg-green-500 hover:scale-110 hover:shadow-[0_0_6px_rgba(34,197,94,0.8)] transition-all cursor-help"
+                                        />
+                                     </div>
+                                  </div>
+
+                                  {/* Info/Condition Status description text or AVALIAR action button */}
+                                  <div className="flex-1 text-right">
+                                     <button
+                                       type="button"
+                                       onClick={() => {
+                                          setIsEvaluating(!isEvaluating);
+                                          setEvalError(null);
+                                       }}
+                                       disabled={isSubmittingEval}
+                                       className={cn(
+                                         "px-5 py-2.5 bg-[#ff641d] hover:bg-white text-white hover:text-[#ff641d] border border-transparent text-[10px] font-mono font-black uppercase tracking-[0.2em] transition-all rounded-xs shadow-[0_0_12px_rgba(255,100,29,0.25)] active:scale-[0.97] disabled:opacity-50",
+                                         isEvaluating && "bg-white/10 text-white/50 border-white/5 shadow-none"
+                                       )}
+                                     >
+                                        AVALIAR
+                                     </button>
+                                  </div>
+                               </div>
+
+                               {/* Interactive Level Hover Tooltip Text */}
+                               <div className="mt-4 h-5 flex items-center justify-start border-t border-white/5 pt-2">
+                                  <AnimatePresence mode="wait">
+                                     {activeHoverStatus ? (
+                                       <motion.span 
+                                         key={`hover-${activeHoverStatus}`}
+                                         initial={{ opacity: 0, y: 2 }}
+                                         animate={{ opacity: 1, y: 0 }}
+                                         exit={{ opacity: 0, y: -2 }}
+                                         className="text-[8px] font-mono uppercase tracking-wider block"
+                                       >
+                                          {activeHoverStatus === 1 && <span className="text-red-400 font-bold">🔴 CRÍTICO: BLOQUEIO TOTAL / DESVIO INTRAFEGÁVEL</span>}
+                                          {activeHoverStatus === 2 && <span className="text-orange-400 font-bold">🟠 INSTÁVEL: LAMA, GELO OU FORTES RISCOS CLIMÁTICOS</span>}
+                                          {activeHoverStatus === 3 && <span className="text-yellow-400 font-bold">🟡 ATENÇÃO: BURACOS, OBRAS OU NEBLINA NA PISTA</span>}
+                                          {activeHoverStatus === 4 && <span className="text-green-400 font-bold">🟢 OPERACIONAL: PISTA LIMPA E LIVRE SEM OBSTRUÇÕES</span>}
+                                       </motion.span>
+                                     ) : (
+                                       <motion.span 
+                                         key="default-status"
+                                         initial={{ opacity: 0 }}
+                                         animate={{ opacity: 0.4 }}
+                                         className="text-[7.5px] font-mono uppercase tracking-[0.1em] text-white"
+                                       >
+                                          STATUS PREDOMINANTE: <span className={cn(
+                                             "font-bold",
+                                             evalData.statusValue === 1 ? "text-red-400" :
+                                             evalData.statusValue === 2 ? "text-orange-400" :
+                                             evalData.statusValue === 3 ? "text-yellow-400" : "text-green-400"
+                                          )}>{evalData.statusStr}</span>
+                                       </motion.span>
+                                     )}
+                                  </AnimatePresence>
+                               </div>
+
+                               {/* Expandable sub-panel when clicking AVALIAR */}
+                               <AnimatePresence>
+                                  {isEvaluating && (
+                                     <motion.div
+                                       initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                       animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                                       exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                       className="overflow-hidden border-t border-white/5 pt-4 space-y-3 relative z-10"
+                                     >
+                                        <div className="flex items-center justify-between">
+                                           <span className="text-[8px] font-mono text-[#ff641d]/70 uppercase tracking-widest font-black">DEFINIR CONDIÇÃO DA CARRETERA</span>
+                                           <button 
+                                             type="button"
+                                             onClick={() => setIsEvaluating(false)} 
+                                             className="text-[7px] font-mono text-white/30 hover:text-white uppercase hover:underline"
+                                           >
+                                             Sair
+                                           </button>
+                                        </div>
+
+                                        {isSubmittingEval ? (
+                                           <div className="py-6 flex flex-col items-center justify-center gap-3 bg-black/30 border border-white/5 rounded-xs">
+                                              <div className="w-5 h-5 border-2 border-[#ff641d]/20 border-t-[#ff641d] rounded-full animate-spin" />
+                                              <span className="text-[8px] font-mono text-white/40 tracking-[0.15em] uppercase animate-pulse">TRANSMITINDO SINAL OPERACIONAL...</span>
+                                           </div>
+                                        ) : (
+                                           <div className="grid grid-cols-2 gap-2">
+                                              <button
+                                                type="button"
+                                                onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 4)}
+                                                className="p-2.5 bg-green-500/5 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                              >
+                                                 <div className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0 shadow-[0_0_4px_#22c55e]" />
+                                                 <div className="flex flex-col text-left">
+                                                    <span className="text-[8px] font-mono font-black text-green-400 uppercase">OPERACIONAL</span>
+                                                    <span className="text-[6px] font-mono text-green-500/50 uppercase leading-none mt-0.5">Pista Excelente</span>
+                                                 </div>
+                                              </button>
+
+                                              <button
+                                                type="button"
+                                                onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 3)}
+                                                className="p-2.5 bg-yellow-500/5 hover:bg-yellow-500/20 border border-yellow-500/20 hover:border-yellow-500/40 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                              >
+                                                 <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 shrink-0 shadow-[0_0_4px_#eab308]" />
+                                                 <div className="flex flex-col text-left">
+                                                    <span className="text-[8px] font-mono font-black text-yellow-400 uppercase">ATENÇÃO</span>
+                                                    <span className="text-[6px] font-mono text-yellow-500/50 uppercase leading-none mt-0.5">Buracos / Neblina</span>
+                                                 </div>
+                                              </button>
+
+                                              <button
+                                                type="button"
+                                                onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 2)}
+                                                className="p-2.5 bg-orange-500/5 hover:bg-orange-500/20 border border-orange-500/20 hover:border-orange-500/40 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                              >
+                                                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0 shadow-[0_0_4px_#f97316]" />
+                                                 <div className="flex flex-col text-left">
+                                                    <span className="text-[8px] font-mono font-black text-orange-400 uppercase">INSTÁVEL</span>
+                                                    <span className="text-[6px] font-mono text-orange-500/50 uppercase leading-none mt-0.5">Lama / Desvios</span>
+                                                 </div>
+                                              </button>
+
+                                              <button
+                                                type="button"
+                                                onClick={() => submitRouteEvaluation(selectedPreDefinedRoute.id, 1)}
+                                                className="p-2.5 bg-red-500/5 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 rounded-xs flex items-center gap-2 group/btn cursor-pointer transition-all active:scale-[0.98]"
+                                              >
+                                                 <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 shadow-[0_0_4px_#ef4444]" />
+                                                 <div className="flex flex-col text-left">
+                                                    <span className="text-[8px] font-mono font-black text-red-400 uppercase">CRÍTICO</span>
+                                                    <span className="text-[6px] font-mono text-red-500/50 uppercase leading-none mt-0.5">Bloqueio Total</span>
+                                                 </div>
+                                              </button>
+                                           </div>
+                                        )}
+                                     </motion.div>
+                                  )}
+                               </AnimatePresence>
+
+                               {/* Error / Success Toast Messages inside the HUD */}
+                               <AnimatePresence>
+                                  {evalError && (
+                                     <motion.div
+                                       initial={{ y: 10, opacity: 0 }}
+                                       animate={{ y: 0, opacity: 1 }}
+                                       exit={{ y: -10, opacity: 0 }}
+                                       className="absolute inset-0 bg-red-950/95 border border-red-500/40 p-4 flex flex-col items-center justify-center gap-2 text-center rounded-sm z-[100]"
+                                     >
+                                        <ShieldAlert size={20} className="text-red-500 animate-bounce" />
+                                        <span className="text-[9px] font-mono font-black text-red-400 uppercase tracking-wider">{evalError}</span>
+                                        <button 
+                                          type="button"
+                                          onClick={() => setEvalError(null)}
+                                          className="mt-2 text-[7px] font-mono text-white/50 border border-white/10 px-2 py-0.5 rounded-xs hover:bg-white/5 hover:text-white uppercase hover:border-white/30 transition-all"
+                                        >
+                                          RECONHECER ERRO
+                                        </button>
+                                     </motion.div>
+                                  )}
+
+                                  {evalSuccess && (
+                                     <motion.div
+                                       initial={{ y: 10, opacity: 0 }}
+                                       animate={{ y: 0, opacity: 1 }}
+                                       exit={{ y: -10, opacity: 0 }}
+                                       className="absolute inset-0 bg-emerald-950/95 border border-emerald-500/40 p-4 flex flex-col items-center justify-center gap-2 text-center rounded-sm z-[100]"
+                                     >
+                                        <ShieldCheck size={20} className="text-emerald-400 animate-pulse" />
+                                        <span className="text-[9px] font-mono font-black text-emerald-400 uppercase tracking-widest">{evalSuccess}</span>
+                                        <span className="text-[7px] font-mono text-white/40 uppercase mt-0.5">NÓ DE DADOS DA COMUNIDADE ATUALIZADO</span>
+                                        <button 
+                                          type="button"
+                                          onClick={() => setEvalSuccess(null)}
+                                          className="mt-2 text-[7px] font-mono text-emerald-400/65 underline hover:text-emerald-400 uppercase cursor-pointer"
+                                        >
+                                          OK // DISMISS
+                                        </button>
+                                     </motion.div>
+                                  )}
+                               </AnimatePresence>
+                            </div>
+                          );
+                        })()}
 
                         {/* Discovery Log */}
                         <div className="space-y-4 pb-10">
