@@ -4746,7 +4746,7 @@ export default function AdventureMap() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -15 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute left-full top-0 ml-3 z-[5000] pointer-events-auto select-none"
+                    className="absolute left-full bottom-[10px] ml-3 z-[6000] pointer-events-auto select-none"
                   >
                      <div className="bg-[#0b0c0d]/98 backdrop-blur-md border border-white/10 p-2.5 rounded-sm shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_15px_rgba(255,100,29,0.05)] w-[180px] border-l-2 border-l-[#ff641d]">
                         <div className="flex items-center justify-between border-b border-white/5 pb-1 mb-2">
