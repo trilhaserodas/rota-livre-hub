@@ -1653,6 +1653,18 @@ function MapEventsHandler({ onMapClick, active }: { onMapClick: (latlng: L.LatLn
   return null;
 }
 
+function MapInteractionsHandler({ onMapClick }: { onMapClick: () => void }) {
+  useMapEvents({
+    click: () => {
+      onMapClick();
+    },
+    dragstart: () => {
+      onMapClick();
+    }
+  });
+  return null;
+}
+
 function HeatmapLayer({ points }: { points: LocationPoint[] }) {
   const map = useMap();
 
@@ -1865,6 +1877,27 @@ export default function AdventureMap() {
   const [autoDiscoveredPoints, setAutoDiscoveredPoints] = useState<LocationPoint[]>([]);
   const [isDiscoveringPOIs, setIsDiscoveringPOIs] = useState(false);
   const [showRoutesMenu, setShowRoutesMenu] = useState(false);
+
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const routesMenuContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+      if (routesMenuContainerRef.current && !routesMenuContainerRef.current.contains(event.target as Node)) {
+        setShowRoutesMenu(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
 
   // GPS Sharing State
   const [isSharing, setIsSharing] = useState(false);
@@ -3627,6 +3660,10 @@ export default function AdventureMap() {
               <MapEventsHandler active={isTracing} onMapClick={(latlng) => {
                 setRoutePoints(prev => [...prev, [latlng.lat, latlng.lng]]);
               }} />
+              <MapInteractionsHandler onMapClick={() => {
+                setShowSuggestions(false);
+                setShowRoutesMenu(false);
+              }} />
               {showHeatmap && <HeatmapLayer points={filteredPoints} />}
               
               <TileLayer
@@ -4027,7 +4064,7 @@ export default function AdventureMap() {
 
           {/* Section 2: Search Area (Center on Desktop - ~65%) */}
           <div className="flex-[4] lg:flex-[6] min-w-0 order-1 lg:order-2 flex gap-2">
-             <div className="relative flex-1 group">
+             <div className="relative flex-1 group" ref={searchContainerRef}>
                 <AnimatePresence>
                   {(isDiscoveringPOIs || isCalculatingRoute) && (
                     <motion.div 
@@ -4195,7 +4232,7 @@ export default function AdventureMap() {
              </button>
 
              {/* Rotas Inteligentes / Saved Routes Button */}
-             <div className="relative hidden sm:block shrink-0">
+             <div className="relative hidden sm:block shrink-0" ref={routesMenuContainerRef}>
                 <button 
                   onClick={() => setShowRoutesMenu(!showRoutesMenu)}
                   className={cn(
