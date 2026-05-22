@@ -1720,6 +1720,7 @@ export default function AdventureMap() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [mapStyle, setMapStyle] = useState<'tactical' | 'google_roadmap' | 'google_satellite' | 'google_hybrid'>('tactical');
+  const [showRtcMenu, setShowRtcMenu] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-34.603, -58.381]);
   const [mapZoom, setMapZoom] = useState(4);
@@ -4292,51 +4293,6 @@ export default function AdventureMap() {
       {/* --- MAP MAIN VIEWPORT --- */}
       <div className="w-full h-[85vh] lg:h-full relative flex flex-col lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last overflow-hidden lg:overflow-visible">
           
-          {/* Provedor de Mapas RTC (Google & Tactical HUD) */}
-          <div className="absolute bottom-6 left-6 z-[3500] hidden lg:block select-none pointer-events-auto">
-             <div className="bg-[#0b0c0d]/95 backdrop-blur-md border border-white/10 p-2.5 rounded-sm shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_15px_rgba(255,100,29,0.05)] w-[180px] border-l-2 border-l-[#ff641d]">
-                <div className="flex items-center justify-between border-b border-white/5 pb-1 mb-2">
-                   <div className="flex items-center gap-1.5">
-                      <Globe size={11} className="text-[#ff641d] animate-pulse" />
-                      <span className="text-[8px] font-mono font-black text-white/50 tracking-wider font-bold">SUPORTE_DADOS_RTC</span>
-                   </div>
-                   <div className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-[#ff641d] rounded-full animate-ping"></span>
-                      <span className="text-[7px] font-mono text-[#ff641d] font-bold">GOOGLE</span>
-                   </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                   {[
-                     { id: 'tactical', label: 'HUD TÁTICO', desc: 'CARTO_DARK_DB' },
-                     { id: 'google_roadmap', label: 'GOOGLE TRÂFEGO', desc: 'DADOS_TEMPO_REAL' },
-                     { id: 'google_satellite', label: 'GOOGLE SATÉLITE', desc: 'ALTA_RESOLUÇÃO' },
-                     { id: 'google_hybrid', label: 'GOOGLE HÍBRIDO', desc: 'VETOR_MAIS_IMAGEM' }
-                   ].map(option => (
-                      <button
-                        key={option.id}
-                        onClick={() => setMapStyle(option.id as any)}
-                        className={cn(
-                          "w-full text-left px-2 py-1 rounded-[2px] border transition-all flex flex-col cursor-pointer",
-                          mapStyle === option.id 
-                            ? "bg-[#ff641d]/10 border-[#ff641d]/30 shadow-[0_0_8px_rgba(255,100,29,0.15)]" 
-                            : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
-                        )}
-                      >
-                         <span className={cn(
-                           "text-[8px] font-mono font-black tracking-wide",
-                           mapStyle === option.id ? "text-white font-bold" : "text-white/40"
-                         )}>
-                            {option.label}
-                         </span>
-                         <span className="text-[5.5px] font-mono text-white/30 uppercase tracking-[0.05em]">
-                            {option.desc}
-                         </span>
-                      </button>
-                   ))}
-                </div>
-             </div>
-          </div>
-
           {/* Real-Time GPS Tracking Widget */}
           <GPSTracker 
             className="absolute bottom-6 right-6 z-[3500] hidden lg:block"
@@ -4384,10 +4340,12 @@ export default function AdventureMap() {
               {mapStyle === 'tactical' && (
                 <>
                   <TileLayer
+                    key="tile-layer-tactical-base"
                     attribution='&copy; CARTO'
                     url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
                   />
                   <TileLayer
+                    key="tile-layer-tactical-labels"
                     url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
                     className="map-contrast-labels-layer"
                     zIndex={10}
@@ -4396,24 +4354,27 @@ export default function AdventureMap() {
               )}
               {mapStyle === 'google_roadmap' && (
                 <TileLayer
+                  key="tile-layer-google-roadmap"
                   attribution='&copy; Google Maps'
-                  url="https://mt{s}.google.com/vt/lyrs=m,traffic&x={x}/{y}{r}&z={z}"
+                  url="https://mt{s}.google.com/vt/lyrs=m,traffic&x={x}&y={y}&z={z}"
                   subdomains={['0', '1', '2', '3']}
                   zIndex={1}
                 />
               )}
               {mapStyle === 'google_satellite' && (
                 <TileLayer
+                  key="tile-layer-google-satellite"
                   attribution='&copy; Google Maps'
-                  url="https://mt{s}.google.com/vt/lyrs=s&x={x}/{y}&z={z}"
+                  url="https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
                   subdomains={['0', '1', '2', '3']}
                   zIndex={1}
                 />
               )}
               {mapStyle === 'google_hybrid' && (
                 <TileLayer
+                  key="tile-layer-google-hybrid"
                   attribution='&copy; Google Maps'
-                  url="https://mt{s}.google.com/vt/lyrs=y&x={x}/{y}&z={z}"
+                  url="https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                   subdomains={['0', '1', '2', '3']}
                   zIndex={1}
                 />
@@ -4753,6 +4714,84 @@ export default function AdventureMap() {
                 )}
               </button>
             ))}
+         </div>
+
+         {/* Separador e Botão do SUPORTE DE DADOS RTC */}
+         <div className="h-[1px] bg-white/10 my-1 shrink-0" />
+         
+         <div 
+           className="relative group/rtc shrink-0"
+           onMouseEnter={() => setShowRtcMenu(true)}
+           onMouseLeave={() => setShowRtcMenu(false)}
+         >
+            <button
+              className={cn(
+                "w-10 h-10 lg:w-12 lg:h-12 rounded-xs border backdrop-blur-md transition-all flex items-center justify-center relative",
+                showRtcMenu 
+                  ? "bg-[#ff641d]/25 border-[#ff641d] text-[#ff641d] shadow-[0_0_20px_rgba(255,100,29,0.3)] z-10" 
+                  : "bg-black/80 border-[#ff641d]/30 text-[#ff641d] hover:bg-[#ff641d]/10 hover:border-[#ff641d]"
+              )}
+            >
+               <Globe size={16} className={showRtcMenu ? "animate-spin" : "animate-pulse"} />
+               <div className="absolute left-full ml-3 px-2 py-1 bg-black/90 border border-white/10 text-white text-[8px] font-mono whitespace-nowrap opacity-0 group-hover/rtc:opacity-100 pointer-events-none transition-all translate-x-[-10px] group-hover/rtc:translate-x-0 z-50">
+                   SUPORTE DE DADOS RTC
+               </div>
+            </button>
+
+            {/* Hover Submenu: "SUPORTE DE DADOS RTC" Overlay Panel */}
+            <AnimatePresence>
+               {showRtcMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -15 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-full top-0 ml-3 z-[5000] pointer-events-auto select-none"
+                  >
+                     <div className="bg-[#0b0c0d]/98 backdrop-blur-md border border-white/10 p-2.5 rounded-sm shadow-[0_20px_40px_rgba(0,0,0,0.8),_0_0_15px_rgba(255,100,29,0.05)] w-[180px] border-l-2 border-l-[#ff641d]">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-1 mb-2">
+                           <div className="flex items-center gap-1.5">
+                              <Globe size={11} className="text-[#ff641d] animate-pulse" />
+                              <span className="text-[8px] font-mono font-black text-white/50 tracking-wider font-bold">SUPORTE_DADOS_RTC</span>
+                           </div>
+                           <div className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-[#ff641d] rounded-full animate-ping"></span>
+                              <span className="text-[7px] font-mono text-[#ff641d] font-bold">GOOGLE</span>
+                           </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                           {[
+                             { id: 'tactical', label: 'HUD TÁTICO', desc: 'CARTO_DARK_DB' },
+                             { id: 'google_roadmap', label: 'GOOGLE TRÂFEGO', desc: 'DADOS_TEMPO_REAL' },
+                             { id: 'google_satellite', label: 'GOOGLE SATÉLITE', desc: 'ALTA_RESOLUÇÃO' },
+                             { id: 'google_hybrid', label: 'GOOGLE HÍBRIDO', desc: 'VETOR_MAIS_IMAGEM' }
+                           ].map(option => (
+                              <button
+                                key={option.id}
+                                onClick={() => setMapStyle(option.id as any)}
+                                className={cn(
+                                  "w-full text-left px-2 py-1 rounded-[2px] border transition-all flex flex-col cursor-pointer",
+                                  mapStyle === option.id 
+                                    ? "bg-[#ff641d]/10 border-[#ff641d]/30 shadow-[0_0_8px_rgba(255,100,29,0.15)]" 
+                                    : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
+                                )}
+                              >
+                                 <span className={cn(
+                                   "text-[8px] font-mono font-black tracking-wide",
+                                   mapStyle === option.id ? "text-white font-bold" : "text-white/40"
+                                 )}>
+                                    {option.label}
+                                 </span>
+                                 <span className="text-[5.5px] font-mono text-white/30 uppercase tracking-[0.05em]">
+                                    {option.desc}
+                                 </span>
+                              </button>
+                           ))}
+                        </div>
+                     </div>
+                  </motion.div>
+               )}
+            </AnimatePresence>
          </div>
       </div>
 
