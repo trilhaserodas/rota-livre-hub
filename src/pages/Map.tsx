@@ -14,7 +14,7 @@ import {
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer, Send,
   Cloud, Sun, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck,
-  Map as MapIcon, ChevronLeft, ChevronRight, X, Menu, MoreVertical
+  Map as MapIcon, ChevronLeft, ChevronRight, X, Menu, MoreVertical, Printer, Download
 } from 'lucide-react';
 import PointPanelV2 from '@/src/components/PointPanelV2';
 import WeatherWidget from '@/src/components/WeatherWidget';
@@ -1960,6 +1960,7 @@ export default function AdventureMap() {
   };
 
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const sidebarRef = useRef<HTMLElement>(null);
@@ -2089,6 +2090,119 @@ export default function AdventureMap() {
     const m = Math.round((hours - h) * 60);
     return `${h}h ${m}m`;
   }, [totalDistance, transportMode]);
+
+  const calculatePointsDistance = (pts: [number, number][]): number => {
+    if (pts.length < 2) return 0;
+    let dist = 0;
+    const toRad = (n: number) => (n * Math.PI) / 180;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i+1];
+      if (!p1 || !p2) continue;
+      const lat1 = p1[0];
+      const lon1 = p1[1];
+      const lat2 = p2[0];
+      const lon2 = p2[1];
+      
+      const R = 6371; // km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      dist += R * c;
+    }
+    return dist;
+  };
+
+  const handlePrintMap = () => {
+    window.print();
+  };
+
+  const handleExportGPX = () => {
+    if (selectedPreDefinedRoute) {
+      exportToGPX({
+        id: selectedPreDefinedRoute.id,
+        name: selectedPreDefinedRoute.name,
+        country: selectedPreDefinedRoute.country,
+        points: selectedPreDefinedRoute.points,
+        difficulty: selectedPreDefinedRoute.difficulty,
+        vehicleTypes: selectedPreDefinedRoute.vehicleTypes,
+        status: selectedPreDefinedRoute.status,
+        downloadedAt: Date.now()
+      });
+    } else if (routePoints.length > 0) {
+      exportToGPX({
+        id: 'custom_route',
+        name: `Rota Customizada - ${new Date().toLocaleDateString()}`,
+        country: 'América Latina',
+        points: routePoints,
+        difficulty: 'VARIÁVEL',
+        vehicleTypes: ['bike', 'moto', 'car', 'motorhome'],
+        status: 'ACTIVE',
+        downloadedAt: Date.now()
+      });
+    } else {
+      const name = `Waypoint_Centro_${mapCenter[0].toFixed(4)}_${mapCenter[1].toFixed(4)}`;
+      exportToGPX({
+        id: 'waypoint',
+        name: name,
+        country: 'América Latina',
+        points: [mapCenter],
+        difficulty: 'INFO',
+        vehicleTypes: [],
+        status: 'ACTIVE',
+        downloadedAt: Date.now()
+      });
+    }
+  };
+
+  const handleExportTXTCoordinates = () => {
+    let textContent = `==================================================\n`;
+    textContent += `   ROTA LIVRE HUB - FICHA DE BACKUP FÍSICO DE COORDENADAS\n`;
+    textContent += `==================================================\n`;
+    textContent += `Gerado em: ${new Date().toLocaleString()}\n`;
+    
+    if (selectedPreDefinedRoute) {
+      textContent += `Rota Ativa: ${selectedPreDefinedRoute.name}\n`;
+      textContent += `País: ${selectedPreDefinedRoute.country} | Dificuldade: ${selectedPreDefinedRoute.difficulty}\n`;
+      textContent += `Distância Total Estimada: ${calculatePointsDistance(selectedPreDefinedRoute.points).toFixed(2)} KM\n`;
+      textContent += `Waypoints Totais: ${selectedPreDefinedRoute.points.length}\n\n`;
+      textContent += `COOPERATIVA DE SEGURANÇA - LISTA DE COORDENADAS (LAT, LNG):\n`;
+      selectedPreDefinedRoute.points.forEach((pt, i) => {
+        textContent += `[WP_${(i+1).toString().padStart(3, '0')}]  Lat: ${pt[0].toFixed(6)}  |  Lng: ${pt[1].toFixed(6)}\n`;
+      });
+    } else if (routePoints.length > 0) {
+      textContent += `Rota Ativa: Trajeto Customizado do Viajante\n`;
+      textContent += `Distância Total Estimada: ${totalDistance.toFixed(2)} KM\n`;
+      textContent += `Tempo Estimado de Viagem: ${estimatedTime}\n`;
+      textContent += `Waypoints Totais: ${routePoints.length}\n\n`;
+      textContent += `LISTA DE COORDENADAS (LAT, LNG):\n`;
+      routePoints.forEach((pt, i) => {
+        textContent += `[WP_${(i+1).toString().padStart(3, '0')}]  Lat: ${pt[0].toFixed(6)}  |  Lng: ${pt[1].toFixed(6)}\n`;
+      });
+    } else {
+      textContent += `Localização do Mapa: Vista de Centro Ativa\n`;
+      textContent += `Lat: ${mapCenter[0].toFixed(6)}  |  Lng: ${mapCenter[1].toFixed(6)}\n`;
+      textContent += `Zoom: ${mapZoom}\n\n`;
+      textContent += `Use estas coordenadas para inserir no seu dispositivo de backup físico (GPS Garmin, bússola ou mapa cartográfico).\n`;
+    }
+    
+    textContent += `\n==================================================\n`;
+    textContent += `Dica de Sobrevivência: Em regiões polares ou montanhosas sem sinal, consulte esta lista impressa.\n`;
+    textContent += `==================================================\n`;
+
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_coordenadas_${selectedPreDefinedRoute ? selectedPreDefinedRoute.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'rota_livre'}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     if (routePoints.length === 0) {
@@ -4318,7 +4432,7 @@ export default function AdventureMap() {
           />
 
           {/* --- MAP CORE (Layer 0) --- */}
-          <div className="relative flex-1 min-h-0 lg:absolute lg:inset-0 z-0 w-full">
+          <div id="map-container" className="relative flex-1 min-h-0 lg:absolute lg:inset-0 z-0 w-full">
             <MapContainer 
               center={mapCenter} 
               zoom={mapZoom} 
@@ -5525,6 +5639,105 @@ export default function AdventureMap() {
             </AnimatePresence>
           </div>
 
+          {/* DOCUMENT EXPORT & PRINT (PDF BACKUP) */}
+          <div className="relative group/export">
+            <button 
+              onClick={() => {
+                setShowExportMenu(!showExportMenu);
+                setShowShareMenu(false);
+                setTimeout(() => setShowExportMenu(false), 15000);
+              }} 
+              title="EXPORTAR OU IMPRIMIR BACKUP"
+              className={cn(
+                "w-9 h-9 lg:w-12 lg:h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center relative", 
+                showExportMenu 
+                  ? "bg-[#ff641d] border-[#ff641d] text-white" 
+                  : "bg-black/80 border-white/10 text-[#ff641d] hover:bg-[#ff641d] hover:text-white"
+              )}
+            >
+               <Printer size={14} className="animate-pulse" />
+               <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover/export:opacity-100 border border-white/10 pointer-events-none uppercase">Exportar_Backup</div>
+            </button>
+
+            {/* Export Dropdown Menu */}
+            <AnimatePresence>
+              {showExportMenu && (
+                <motion.div 
+                  initial={{ opacity: 0, x: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 10, scale: 0.95 }}
+                  className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-64 bg-[#0b0c0d]/95 backdrop-blur-xl border border-[#ff641d]/30 rounded-sm overflow-hidden z-[5000] shadow-[0_10px_30px_rgba(0,0,0,0.9)] p-3 space-y-2 pointer-events-auto text-left"
+                >
+                  <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                    <span className="text-[8px] font-mono text-[#ff641d] font-black tracking-widest uppercase">
+                      EXPORTAR UTILS COOPERATIVA
+                    </span>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowExportMenu(false);
+                      }}
+                      className="text-white/40 hover:text-white transition-colors"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+
+                  <p className="text-[7.5px] font-mono text-white/50 leading-tight uppercase">
+                    Kit de Segurança para Viagens Isoladas: Imprima seu mapa de contingência ou transfira trilhas estruturadas.
+                  </p>
+
+                  <div className="space-y-1 pt-1">
+                    {/* Print / Save PDF Button */}
+                    <button 
+                      onClick={() => {
+                        setShowExportMenu(false);
+                        handlePrintMap();
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-xs border border-white/10 bg-white/[0.02] hover:bg-[#ff641d]/10 hover:border-[#ff641d] transition-all font-mono text-left"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-white uppercase tracking-wider">IMPRIMIR VIA (PDF BACKUP)</span>
+                        <span className="text-[6.5px] text-white/40 uppercase">Gera mapa físico para contingência</span>
+                      </div>
+                      <Printer size={12} className="text-[#ff641d] shrink-0 ml-2" />
+                    </button>
+
+                    {/* Export GPX Track */}
+                    <button 
+                      onClick={() => {
+                        setShowExportMenu(false);
+                        handleExportGPX();
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-xs border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-yellow-500/50 transition-all font-mono text-left"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-white uppercase tracking-wider">EXPORTAR GPX (DISPOSITIVOS)</span>
+                        <span className="text-[6.5px] text-white/40 uppercase">Compatível com Garmin e Apps Offline</span>
+                      </div>
+                      <Download size={12} className="text-yellow-500 shrink-0 ml-2" />
+                    </button>
+
+                    {/* Export Coordinates TXT file */}
+                    <button 
+                      onClick={() => {
+                        setShowExportMenu(false);
+                        handleExportTXTCoordinates();
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-xs border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-cyan-500/50 transition-all font-mono text-left"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-white uppercase tracking-wider">FICHA COORDENADAS (TEXTO)</span>
+                        <span className="text-[6.5px] text-white/40 uppercase">Salva coordenadas puras em TXT</span>
+                      </div>
+                      <Download size={12} className="text-cyan-400 shrink-0 ml-2" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <div className="h-[1px] bg-white/5 my-1" />
 
          <div className="flex flex-col bg-black/40 border border-white/10 rounded-sm overflow-hidden text-[8px] font-mono text-white/20">
@@ -5622,6 +5835,41 @@ export default function AdventureMap() {
         .leaflet-tooltip-top:before { border-top-color: rgba(255,255,255,0.1) !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media print {
+          body {
+            background: #ffffff !important;
+            color: #000000 !important;
+          }
+          header, nav, footer, aside, .print-hidden, [role="navigation"],
+          .leaflet-control-zoom, .leaflet-control-attribution, .leaflet-control,
+          button, .absolute, .fixed, .z-\[4000\], .z-\[3000\], .z-\[10000\], 
+          div[class*="sidebar"], div[class*="Right"], div[class*="Left"], div[class*="HUD"],
+          div[class*="floating-controls"], .hud-panel {
+            display: none !important;
+          }
+          #map-container, .leaflet-container {
+            position: absolute !important;
+            left: 0 !important;
+            top: 140px !important;
+            width: 100% !important;
+            height: 550px !important;
+            border: 2px solid #000000 !important;
+            visibility: visible !important;
+            display: block !important;
+            background: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .leaflet-layer, .leaflet-tile {
+            filter: none !important;
+          }
+          .only-print {
+            display: block !important;
+            visibility: visible !important;
+            position: relative !important;
+          }
+        }
       `}} />
       
       {/* --- AI TACTICAL INTELLIGENCE PANEL (OVERLAY) --- */}
@@ -5759,6 +6007,74 @@ export default function AdventureMap() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Printable Sheet for Physical PDF / Paper Backup (ONLY printed, hidden on UI) */}
+      <div className="hidden print:block only-print font-mono text-black bg-white p-8 max-w-4xl mx-auto space-y-6">
+        <div className="border-4 double border-black p-4 text-center">
+          <h1 className="text-xl font-bold uppercase tracking-wider">ROTA LIVRE HUB - CARTA TÁTICA DE EXPEDIÇÃO</h1>
+          <p className="text-xs uppercase mt-1">Sincronização de Segurança e Viagem por Satélite e Modo Offline</p>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 text-xs border-b border-black pb-4">
+          <div>
+            <p className="uppercase"><strong>Gerado em:</strong> {new Date().toLocaleString()}</p>
+            <p className="uppercase"><strong>Estado de Tráfego:</strong> MODO SEGURANÇA INTEGRADO</p>
+            <p className="uppercase"><strong>Dúvidas / Alertas:</strong> COOPERATIVA OUTDOOR</p>
+          </div>
+          <div>
+            {selectedPreDefinedRoute ? (
+              <>
+                <p className="uppercase"><strong>Rota Ativa:</strong> {selectedPreDefinedRoute.name}</p>
+                <p className="uppercase"><strong>Distância Total:</strong> {calculatePointsDistance(selectedPreDefinedRoute.points).toFixed(2)} KM</p>
+                <p className="uppercase"><strong>Waypoints Integrados:</strong> {selectedPreDefinedRoute.points.length}</p>
+              </>
+            ) : routePoints.length > 0 ? (
+              <>
+                <p className="uppercase"><strong>Rota Ativa:</strong> TRAJETO CUSTOMIZADO DO VIAJANTE</p>
+                <p className="uppercase"><strong>Distância Total:</strong> {totalDistance.toFixed(2)} KM</p>
+                <p className="uppercase"><strong>Waypoints Criados:</strong> {routePoints.length}</p>
+              </>
+            ) : (
+              <>
+                <p className="uppercase"><strong>Vista de Coordenadas:</strong> MAPA CENTRADO</p>
+                <p className="uppercase"><strong>Latitude:</strong> {mapCenter[0].toFixed(5)}°</p>
+                <p className="uppercase"><strong>Longitude:</strong> {mapCenter[1].toFixed(5)}°</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        <p className="text-[10px] italic text-center text-gray-700">
+          * A folha impressa abaixo é uma representação física de segurança da vista de mapa atual. Guarde esta carta no seu alforje ou mochila para contingências sem bateria.
+        </p>
+
+        {/* Separador para a impressão do mapa Leaflet */}
+        <div className="border border-black h-[10px] my-2 text-center text-[10px] leading-tight flex items-center justify-center font-bold">
+          [ VISTA DO MAPA IMPRESSO EXPORTADO CORRESPONDE AO QUADRANTE NA TELA ]
+        </div>
+
+        {/* If route has waypoints, print up to 40 nodes */}
+        {(selectedPreDefinedRoute || routePoints.length > 0) && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold border-b border-black pb-1 uppercase">Tabela de Coordenadas Táticas para Entrada de Receptor GPS:</h3>
+            <div className="grid grid-cols-2 gap-x-6 text-[9px] font-mono leading-tight">
+              {(selectedPreDefinedRoute ? selectedPreDefinedRoute.points : routePoints).slice(0, 40).map((pt, idx) => (
+                <div key={idx} className="flex justify-between border-b border-gray-200 py-1">
+                  <span>WP_{(idx+1).toString().padStart(3, '0')}</span>
+                  <span>LAT: {pt[0].toFixed(5)}°</span>
+                  <span>LNG: {pt[1].toFixed(5)}°</span>
+                  <span className="text-gray-400">_________</span>
+                </div>
+              ))}
+            </div>
+            {(selectedPreDefinedRoute ? selectedPreDefinedRoute.points.length : routePoints.length) > 40 && (
+              <p className="text-[8px] text-gray-500 italic mt-1 text-right">
+                * Amostragem limitada aos primeiros 40 pontos para economia de papel.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

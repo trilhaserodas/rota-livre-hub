@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '@/src/lib/firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShieldCheck, 
@@ -38,19 +38,33 @@ export default function Admin() {
   const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
 
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error("Erro no login do admin:", err);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === ADMIN_EMAIL) {
-        setCurrentUser(user);
+      if (user) {
+        if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          setCurrentUser(user);
+        } else {
+          // Logado mas com outra conta: redireciona para home
+          navigate('/');
+        }
       } else {
-        // Redireciona se não for admin
-        if (!authLoading) navigate('/');
+        // Deslogado: não redireciona automaticamente para que possa logar nesta página
+        setCurrentUser(null);
       }
       setAuthLoading(false);
     });
 
     return () => unsubscribe();
-  }, [navigate, authLoading]);
+  }, [navigate]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -105,13 +119,21 @@ export default function Admin() {
         <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-8 border border-red-500/20">
           <Lock size={32} />
         </div>
-        <h1 className="text-3xl font-display font-black text-white uppercase tracking-tighter mb-4">ACESO NEGADO</h1>
-        <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest max-w-xs mb-8">
-          Você não possui credenciais táticas para acessar o centro de moderação.
+        <h1 className="text-3xl font-display font-black text-white uppercase tracking-tighter mb-4">ACESSO NEGADO</h1>
+        <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest max-w-md mb-8">
+          Você precisa estar conectado com a conta de administrador ({ADMIN_EMAIL}) para gerenciar este painel.
         </p>
-        <Link to="/" className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white text-[10px] font-mono font-bold uppercase tracking-widest border border-white/10 rounded-xl transition-all">
-          Voltar à Base
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+          <button 
+            onClick={handleLogin}
+            className="px-8 py-3 bg-[#ff641d] hover:bg-[#ff641d]/85 text-white text-[10px] font-mono font-bold uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_20px_rgba(255,100,29,0.3)] active:translate-y-0.5"
+          >
+            Entrar como Administrador
+          </button>
+          <Link to="/" className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white text-[10px] font-mono font-bold uppercase tracking-widest border border-white/10 rounded-xl transition-all">
+            Voltar à Base
+          </Link>
+        </div>
       </div>
     );
   }
