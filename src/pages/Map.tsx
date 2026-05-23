@@ -5537,68 +5537,74 @@ export default function AdventureMap() {
       {/* Bottom Route / Elevation HUD */}
       <AnimatePresence>
         {(routePoints.length > 0) && (
-          <motion.div 
-            initial={{ y: 200 }} 
-            animate={{ y: isBottomPanelMinimized ? 150 : 0 }} 
-            exit={{ y: 200 }}
-            className="relative lg:absolute bottom-auto lg:bottom-6 left-auto lg:left-1/2 right-auto lg:-translate-x-1/2 w-full lg:max-w-2xl z-[2100] pointer-events-auto px-0 lg:px-4"
-          >
-             <div className="w-full bg-black/90 backdrop-blur-2xl border-t lg:border border-white/10 lg:rounded-md shadow-[0_-20px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_15px_50px_rgba(0,0,0,0.9)] overflow-hidden">
-                {/* Minimal Header for Minimized state */}
-                {isBottomPanelMinimized && (
-                   <div className="h-10 px-6 flex items-center justify-between border-b border-white/5 bg-[#ff641d]/5 cursor-pointer" onClick={() => setIsBottomPanelMinimized(false)}>
-                      <div className="flex items-center gap-10">
-                         <div className="flex items-center gap-2">
-                            <Activity size={10} className="text-[#ff641d]" />
-                            <span className="text-[8px] font-mono font-black text-white uppercase tracking-widest">{totalDistance.toFixed(2)} KM</span>
-                         </div>
-                         <div className="flex items-center gap-2">
-                            <Clock size={10} className="text-[#ff641d]" />
-                            <span className="text-[8px] font-mono text-white/60 uppercase">{estimatedTime}</span>
-                         </div>
-                      </div>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setIsBottomPanelMinimized(false); }}
-                        className="text-white/20 hover:text-white transition-colors"
-                      >
-                         <Maximize2 size={12} />
-                      </button>
-                   </div>
-                )}
-
-                <div className={cn(
-                  "p-6 flex items-center justify-between border-b border-white/5",
-                  isBottomPanelMinimized && "opacity-0 h-0 p-0 pointer-events-none"
-                )}>
-                   <div className="flex gap-10">
-                      <div className="flex flex-col gap-1">
-                         <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">TOTAL_KM</div>
-                         <div className="text-xl font-display font-black text-white">{totalDistance.toFixed(2)} KM</div>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                         <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">ESTIMATED_TIME</div>
-                         <div className="text-xl font-display font-black text-[#ff641d]">{estimatedTime}</div>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                         <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">WAYPOINTS</div>
-                         <div className="text-xl font-display font-black text-white/40">{routePoints.length}</div>
-                      </div>
-                   </div>
-                   <div className="flex gap-2">
-                      <button 
-                        onClick={() => setIsBottomPanelMinimized(true)}
-                        className="p-3 text-white/20 hover:text-white transition-colors border border-white/5 hover:border-white/20"
-                        title="MINIMIZAR"
-                      >
-                         <Minimize2 size={14} />
-                      </button>
-                      <button onClick={handleClearRoute} className="h-10 px-4 border border-white/10 text-white/40 hover:text-red-500 hover:border-red-500/30 text-[8px] font-mono uppercase font-black tracking-widest transition-all">LIMPAR</button>
-                      <button className="h-10 px-6 bg-[#ff641d] text-white text-[8px] font-mono uppercase font-black tracking-widest hover:bg-white hover:text-[#ff641d] transition-all">INICIAR_EXP</button>
-                   </div>
-                </div>
-                {!isBottomPanelMinimized && <ElevationChart data={elevationData} isLoading={isLoadingElevation} />}
-             </div>
-          </motion.div>
+          !isBottomPanelMinimized ? (
+            <motion.div 
+              key="full-route-panel"
+              initial={{ opacity: 0, y: 50, scale: 0.95 }} 
+              animate={{ opacity: 1, y: 0, scale: 0.98 }} 
+              exit={{ opacity: 0, y: 50, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={cn(
+                "relative lg:absolute bottom-auto lg:bottom-5 right-auto w-full lg:max-w-[638px] z-[2100] pointer-events-auto px-0 lg:px-4 transition-all duration-300",
+                isSidebarMinimized ? "lg:left-[72px]" : "lg:left-[440px]"
+              )}
+            >
+               <div className="w-full bg-black/80 backdrop-blur-md border border-white/10 lg:rounded-xs shadow-[0_15px_50px_rgba(0,0,0,0.9)] overflow-hidden">
+                  <div className="p-5 flex items-center justify-between border-b border-white/5">
+                     <div className="flex gap-8">
+                        <div className="flex flex-col gap-1">
+                           <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">TOTAL_KM</div>
+                           <div className="text-lg font-display font-black text-white">{totalDistance.toFixed(2)} KM</div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                           <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">ESTIMATED_TIME</div>
+                           <div className="text-lg font-display font-black text-[#ff641d]">{estimatedTime}</div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                           <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">WAYPOINTS</div>
+                           <div className="text-lg font-display font-black text-white/40">{routePoints.length}</div>
+                        </div>
+                     </div>
+                     <div className="flex gap-2">
+                        <button 
+                          onClick={() => setIsBottomPanelMinimized(true)}
+                          className="p-2.5 text-white/20 hover:text-white transition-colors border border-white/5 hover:border-white/20"
+                          title="MINIMIZAR"
+                        >
+                           <Minimize2 size={12} />
+                        </button>
+                        <button onClick={handleClearRoute} className="h-9 px-3 border border-white/10 text-white/40 hover:text-red-500 hover:border-red-500/30 text-[8px] font-mono uppercase font-black tracking-widest transition-all">LIMPAR</button>
+                        <button className="h-9 px-4 bg-[#ff641d] text-white text-[8px] font-mono uppercase font-black tracking-widest hover:bg-white hover:text-[#ff641d] transition-all">INICIAR_EXP</button>
+                     </div>
+                  </div>
+                  <ElevationChart data={elevationData} isLoading={isLoadingElevation} />
+               </div>
+            </motion.div>
+          ) : (
+            <motion.button
+              key="minimized-route-btn"
+              initial={{ opacity: 0, scale: 0.8, x: -20 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.8, x: -20 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setIsBottomPanelMinimized(false)}
+              className={cn(
+                "fixed bottom-6 z-[2100] flex items-center gap-3 px-4 py-3 bg-[#0b0c0d]/90 backdrop-blur-md border border-[#ff641d]/40 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.5),_0_0_15px_rgba(255,100,29,0.1)] hover:border-[#ff641d] group transition-all duration-300 pointer-events-auto",
+                isSidebarMinimized ? "left-[72px]" : "left-[440px]"
+              )}
+              title="REABRIR PAINEL DE ROTAS"
+            >
+              <div className="relative flex items-center justify-center">
+                <Activity size={12} className="text-[#ff641d] animate-pulse" />
+                <div className="absolute -inset-0.5 bg-[#ff641d]/20 blur rounded-full animate-ping opacity-70" />
+              </div>
+              <div className="flex flex-col items-start leading-none gap-1">
+                <span className="text-[7px] font-mono uppercase text-[#ff641d] tracking-widest font-black">PAINEL_ROTA</span>
+                <span className="text-[9px] font-sans font-bold text-white/90">{totalDistance.toFixed(1)} km</span>
+              </div>
+              <Maximize2 size={10} className="text-white/40 group-hover:text-white group-hover:scale-110 transition-all ml-1" />
+            </motion.button>
+          )
         )}
       </AnimatePresence>
 
