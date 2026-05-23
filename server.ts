@@ -259,8 +259,10 @@ Responda ÚNICA E EXCLUSIVAMENTE com um objeto JSON válido, sem bloco markdown 
             const data = await response.json();
             console.log(`[WeatherAPI] OWM Success`);
             res.setHeader('Cache-Control', 'public, max-age=600');
+            const rainVal = data.rain ? (data.rain['1h'] ?? data.rain['3h'] ?? 0) : (data.snow ? (data.snow['1h'] ?? data.snow['3h'] ?? 0) : 0);
             return res.json({
               ...data,
+              precipitation: rainVal,
               debug: {
                 source: 'openweathermap',
                 hasKey: true,
@@ -317,7 +319,8 @@ Responda ÚNICA E EXCLUSIVAMENTE com um objeto JSON válido, sem bloco markdown 
         ],
         wind: {
           speed: (current.wind_speed_10m || 0) / 3.6 
-        }
+        },
+        precipitation: current.precipitation ?? 0
       };
 
       console.log(`[WeatherAPI] Open-Meteo Success (Adapted)`);

@@ -12,7 +12,7 @@ import {
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer, Send,
-  Cloud, Sun, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
+  Cloud, Sun, Moon, Settings, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck,
   Map as MapIcon, ChevronLeft, ChevronRight, X, Menu, MoreVertical, Printer, Download
 } from 'lucide-react';
@@ -38,6 +38,7 @@ interface WeatherData {
   description: string;
   humidity: number;
   windSpeed: number;
+  precipitation?: number;
   icon: string;
   debug?: {
     source: string;
@@ -2586,6 +2587,7 @@ export default function AdventureMap() {
           wind: {
             speed: (current.wind_speed_10m || 0) / 3.6
           },
+          precipitation: current.precipitation ?? 0,
           debug: {
             source: 'open-meteo-client',
             hasKey: false,
@@ -2604,6 +2606,7 @@ export default function AdventureMap() {
         description: (data.weather[0].description || "CONDIÇÃO_N/A").toUpperCase(),
         humidity: data.main.humidity ?? 0,
         windSpeed: data.wind ? Math.round((data.wind.speed ?? 0) * 3.6) : 0, 
+        precipitation: data.precipitation ?? 0,
         icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`,
         debug: {
           source: data.debug?.source || 'unknown',
@@ -2847,7 +2850,87 @@ export default function AdventureMap() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<'explore' | 'saved' | 'expedition' | 'routing'>('explore');
+  const [activeTab, setActiveTab] = useState<'explore' | 'saved' | 'expedition' | 'routing' | 'config'>('explore');
+
+  // Configuration settings for Light/Dark mode and eye fatigue mitigation
+  const [themeMode, setThemeMode] = useState<'dark' | 'light' | 'auto'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('gps_theme_mode') as 'dark' | 'light' | 'auto') || 'dark';
+    }
+    return 'dark';
+  });
+
+  const [eyeDimmerEnabled, setEyeDimmerEnabled] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('gps_eye_dimmer') === 'true';
+    }
+    return false;
+  });
+
+  const [isLightModeActive, setIsLightModeActive] = useState<boolean>(false);
+
+  // Auto calculate theme mode and check local time
+  useEffect(() => {
+    const checkTheme = () => {
+      if (themeMode === 'light') {
+        setIsLightModeActive(true);
+      } else if (themeMode === 'dark') {
+        setIsLightModeActive(false);
+      } else { // 'auto'
+        const hour = new Date().getHours();
+        // Light during day hours: 6:00 to 18:00
+        const isDayTime = hour >= 6 && hour < 18;
+        setIsLightModeActive(isDayTime ? true : false);
+      }
+    };
+
+    checkTheme();
+    localStorage.setItem('gps_theme_mode', themeMode);
+
+    // If auto, check every 15 seconds to be extremely responsive
+    const interval = setInterval(checkTheme, 15000);
+    return () => clearInterval(interval);
+  }, [themeMode]);
+
+  // Persist Eye Dimmer state
+  useEffect(() => {
+    localStorage.setItem('gps_eye_dimmer', String(eyeDimmerEnabled));
+  }, [eyeDimmerEnabled]);
+
+  const [criticalWeatherAlert, setCriticalWeatherAlert] = useState<{
+    show: boolean;
+    poiName: string;
+    windSpeed: number;
+    precipitation: number;
+    temp: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (selectedPoint && weatherData) {
+      const wind = weatherData.windSpeed;
+      const rain = weatherData.precipitation ?? 0;
+      
+      if (wind > 40 || rain > 5) {
+        setCriticalWeatherAlert({
+          show: true,
+          poiName: selectedPoint.name,
+          windSpeed: wind,
+          precipitation: rain,
+          temp: weatherData.temp
+        });
+      }
+    }
+  }, [weatherData, selectedPoint]);
+
+  // Auto-dismiss the critical weather alert banner after 12 seconds
+  useEffect(() => {
+    if (criticalWeatherAlert && criticalWeatherAlert.show) {
+      const timer = setTimeout(() => {
+        setCriticalWeatherAlert(prev => prev ? { ...prev, show: false } : null);
+      }, 12000);
+      return () => clearTimeout(timer);
+    }
+  }, [criticalWeatherAlert]);
 
   useEffect(() => {
     if (selectedPreDefinedRoute) {
@@ -3034,14 +3117,164 @@ export default function AdventureMap() {
   }, [selectedCategory, searchQuery, autoDiscoveredPoints]);
 
   return (
-    <div className="h-auto lg:h-[calc(100vh-96px)] bg-[#0b0c0d] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden isolate relative no-scrollbar scroll-smooth">
+    <div className={cn(
+      "h-auto lg:h-[calc(100vh-96px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden isolate relative no-scrollbar scroll-smooth transition-colors duration-300",
+      isLightModeActive ? "bg-[#f8fafc] light-app" : "bg-[#0b0c0d]"
+    )}>
+      {isLightModeActive && (
+        <style>{`
+          .light-app {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+          }
+          .light-app .text-white {
+            color: #0f172a !important;
+          }
+          .light-app .text-white\\/90 {
+            color: #0f172a !important;
+          }
+          .light-app .text-white\\/80 {
+            color: #1e293b !important;
+          }
+          .light-app .text-white\\/70 {
+            color: #334155 !important;
+          }
+          .light-app .text-white\\/60 {
+            color: #475569 !important;
+          }
+          .light-app .text-white\\/50 {
+            color: #475569 !important;
+          }
+          .light-app .text-white\\/40 {
+            color: #64748b !important;
+          }
+          .light-app .text-white\\/30 {
+            color: #64748b !important;
+          }
+          .light-app .text-white\\/20 {
+            color: #94a3b8 !important;
+          }
+          .light-app .text-white\\/10 {
+            color: #cbd5e1 !important;
+          }
+          .light-app .bg-white\\/\\[0\\.02\\] {
+            background-color: #ffffff !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+          }
+          .light-app .bg-[#0a0a0b]/45 {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            border-color: rgba(255, 100, 29, 0.2) !important;
+          }
+          .light-app .bg-white\\/\\[0\\.03\\] {
+            background-color: #f1f5f9 !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+          }
+          .light-app .bg-white\\/\\[0\\.05\\] {
+            background-color: #f1f5f9 !important;
+          }
+          .light-app .bg-white\\/5 {
+            background-color: #f1f5f9 !important;
+          }
+          .light-app .bg-white\\/10 {
+            background-color: #e2e8f0 !important;
+          }
+          .light-app .bg-black\\/40 {
+            background-color: #f8fafc !important;
+          }
+          .light-app .bg-black\\/60 {
+            background-color: #f1f5f9 !important;
+          }
+          .light-app .bg-[#0b0c0d]/45 {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            border-color: rgba(255, 100, 29, 0.2) !important;
+          }
+          .light-app .bg-[#0b0c0d]/95 {
+             background-color: rgba(255, 255, 255, 0.95) !important;
+          }
+          .light-app .bg-[#0b0c0d]/98 {
+             background-color: rgba(255, 255, 255, 0.98) !important;
+          }
+          .light-app .bg-black\\/80 {
+            background-color: #ffffff !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+          }
+          .light-app .bg-black\\/90 {
+            background-color: #ffffff !important;
+          }
+          .light-app .bg-black\\/95 {
+            background-color: #ffffff !important;
+          }
+          .light-app .bg-black {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+          }
+          .light-app .bg-\\[\\#0b0c0d\\] {
+            background-color: #f8fafc !important;
+          }
+          .light-app .bg-\\[\\#0b0c0d\\]\\/98 {
+            background-color: #ffffff !important;
+          }
+          .light-app .bg-\\[\\#0b0c0d\\]\\/95 {
+            background-color: #ffffff !important;
+          }
+          .light-app .bg-\\[\\#0a0a0b\\]\\/80 {
+            background-color: #ffffff !important;
+          }
+          .light-app .border-white\\/5 {
+            border-color: rgba(15, 23, 42, 0.08) !important;
+          }
+          .light-app .border-white\\/10 {
+            border-color: rgba(15, 23, 42, 0.12) !important;
+          }
+          .light-app .border-white\\/20 {
+            border-color: rgba(15, 23, 42, 0.16) !important;
+          }
+          .light-app input {
+            color: #0f172a !important;
+            background-color: #ffffff !important;
+            border-color: rgba(15, 23, 42, 0.12) !important;
+          }
+          .light-app input::placeholder {
+            color: #94a3b8 !important;
+          }
+          .light-app .placeholder\\:text-white\\/5::placeholder {
+            color: #94a3b8 !important;
+          }
+          .light-app .bg-\\[\\#ff641d\\]\\/5 {
+            background-color: rgba(255, 100, 29, 0.08) !important;
+          }
+          .light-app .map-contrast-labels-layer {
+            filter: brightness(0.9) contrast(1.1) !important;
+            mix-blend-mode: normal !important;
+          }
+          .light-app .text-white\\/5 {
+            color: rgba(15, 23, 42, 0.1) !important;
+          }
+          .light-app .dashboard-card {
+            background-color: #ffffff !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+          }
+          .light-app .bg-blue-500 {
+            background-color: #3b82f6 !important;
+          }
+          .light-app .bg-red-500 {
+            background-color: #ef4444 !important;
+          }
+          .light-app .bg-[#0b0c0d]/90 {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+          }
+        `}</style>
+      )}
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
       <motion.aside 
         ref={sidebarRef as any}
         className={cn(
-          "w-full flex-shrink-0 flex flex-col bg-[#0b0c0d]/98 backdrop-blur-3xl lg:backdrop-blur-none border-t lg:border-t-0 lg:border-r border-white/10 overflow-hidden lg:overflow-visible shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)]",
+          "w-full flex-shrink-0 flex flex-col transition-colors duration-300",
+          isLightModeActive 
+            ? "bg-white border-t lg:border-t-0 lg:border-r border-slate-200 shadow-md"
+            : "bg-[#0b0c0d]/98 backdrop-blur-3xl lg:backdrop-blur-none border-t lg:border-t-0 lg:border-r border-white/10 shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)]",
           "relative lg:relative lg:order-first order-last h-[85vh] lg:h-full z-[1000] lg:z-[5000]",
           isSidebarMinimized ? "lg:w-[52px]" : "lg:w-[420px]"
         )}
@@ -3119,10 +3352,18 @@ export default function AdventureMap() {
          </div>
 
          {/* Brand Section */}
-         <div className="p-6 border-b border-white/5 flex flex-col gap-1 bg-gradient-to-br from-black to-[#ff641d]/10 shrink-0 select-none">
+         <div className={cn(
+            "p-6 border-b shrink-0 select-none flex flex-col gap-1",
+            isLightModeActive 
+              ? "border-slate-200 bg-gradient-to-br from-slate-50 to-[#ff641d]/5" 
+              : "border-white/5 bg-gradient-to-br from-black to-[#ff641d]/10"
+         )}>
             <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.6.9</div>
-            <h1 className="text-xl font-display font-black text-white uppercase tracking-tighter leading-none flex items-center gap-3">
-               <Navigation2 size={24} className={isExpeditionMode ? "animate-pulse text-[#ff641d]" : "text-white/40"} />
+            <h1 className={cn(
+               "text-xl font-display font-black uppercase tracking-tighter leading-none flex items-center gap-3",
+               isLightModeActive ? "text-slate-900" : "text-white"
+            )}>
+               <Navigation2 size={24} className={isExpeditionMode ? "animate-pulse text-[#ff641d]" : isLightModeActive ? "text-slate-400" : "text-white/40"} />
                GPS_TACTICAL<span className="text-[#ff641d]">.</span>SYSTEM
             </h1>
             <div className="flex gap-2 mt-2">
@@ -3132,7 +3373,9 @@ export default function AdventureMap() {
                    "w-full h-10 border rounded-xs transition-all flex items-center justify-center gap-2 font-mono font-black text-[9px] uppercase tracking-[0.2em]",
                    isExpeditionMode 
                      ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.4)]" 
-                     : "bg-black/40 border-white/10 text-white/20 hover:border-[#ff641d]/40"
+                     : isLightModeActive 
+                       ? "bg-slate-100 border-slate-200 text-slate-700 hover:border-[#ff641d]/40 hover:bg-slate-200"
+                       : "bg-black/40 border-white/10 text-white/20 hover:border-[#ff641d]/40"
                  )}
                >
                  <Zap size={12} className={isExpeditionMode ? "animate-pulse" : ""} /> 
@@ -3142,12 +3385,13 @@ export default function AdventureMap() {
          </div>
 
          {/* Sidebar Tabs */}
-         <div className="flex border-b border-white/5 bg-black/40">
+         <div className={cn("flex border-b", isLightModeActive ? "border-slate-200 bg-slate-50" : "border-white/5 bg-black/40")}>
             {[
               { id: 'explore', label: 'EXPLORADOR', icon: Search },
               { id: 'saved', label: 'CÉLULA_SAVED', icon: Heart },
               { id: 'expedition', label: 'OPERACIONAL', icon: Zap },
-              { id: 'routing', label: 'TRAJETO', icon: Navigation }
+              { id: 'routing', label: 'TRAJETO', icon: Navigation },
+              { id: 'config', label: 'AJUSTES', icon: Settings }
             ].map(tab => (
               <button 
                 key={tab.id}
@@ -3157,7 +3401,9 @@ export default function AdventureMap() {
                   "flex-1 h-16 flex flex-col items-center justify-center gap-1.5 transition-all relative border-b-2",
                   activeTab === tab.id 
                     ? "bg-[#ff641d]/10 border-[#ff641d] text-[#ff641d]" 
-                    : "bg-transparent border-transparent text-white/20 hover:bg-white/5 hover:text-white/40 disabled:opacity-20 disabled:cursor-not-allowed"
+                    : isLightModeActive
+                      ? "bg-transparent border-transparent text-slate-400 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-20 disabled:cursor-not-allowed"
+                      : "bg-transparent border-transparent text-white/20 hover:bg-white/5 hover:text-white/40 disabled:opacity-20 disabled:cursor-not-allowed"
                 )}
               >
                 <tab.icon size={16} />
@@ -4391,6 +4637,173 @@ export default function AdventureMap() {
                 </div>
               </div>
             )}
+
+               {activeTab === 'config' && (
+                  <motion.div
+                    key="config"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto no-scrollbar"
+                  >
+                     <div className={cn("flex items-center gap-3 border-b pb-4 mb-2", isLightModeActive ? "border-slate-200" : "border-white/5")}>
+                        <Settings className="text-[#ff641d]" size={18} />
+                        <h2 className={cn("text-xl font-display font-black uppercase tracking-tighter", isLightModeActive ? "text-slate-900" : "text-white")}>CONFIGURAÇÕES</h2>
+                     </div>
+
+                     {/* MODO DE COR (LUMINOSIDADE) */}
+                     <div className="space-y-3">
+                        <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em] block", isLightModeActive ? "text-slate-400" : "text-white/20")}>TEMA & LUMINOSIDADE</label>
+                        
+                        <div className={cn("p-1 rounded-sm flex gap-1", isLightModeActive ? "bg-slate-100" : "bg-white/[0.03]")}>
+                           {[
+                             { id: 'dark', label: 'Escuro', icon: Moon, desc: 'Foco táctico' },
+                             { id: 'light', label: 'Claro', icon: Sun, desc: 'Visão diurna' },
+                             { id: 'auto', label: 'Auto', icon: Clock, desc: 'Horário local' },
+                           ].map(opt => (
+                              <button
+                                key={opt.id}
+                                onClick={() => setThemeMode(opt.id as any)}
+                                className={cn(
+                                  "flex-1 py-3 px-1 rounded-sm flex flex-col items-center gap-1 transition-all border",
+                                  themeMode === opt.id
+                                    ? "bg-[#ff641d] border-[#ff641d] text-white shadow-md font-bold"
+                                    : isLightModeActive
+                                      ? "bg-transparent border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
+                                      : "bg-transparent border-transparent text-white/30 hover:text-white hover:bg-white/5"
+                                )}
+                              >
+                                 <opt.icon size={14} className={themeMode === opt.id ? "animate-pulse" : ""} />
+                                 <span className="text-[9px] font-mono uppercase tracking-wider">{opt.label}</span>
+                                 <span className={cn("text-[5px] font-mono uppercase tracking-widest", themeMode === opt.id ? "text-white/70" : "text-white/20")}>{opt.desc}</span>
+                              </button>
+                           ))}
+                        </div>
+
+                        {/* AUTO MODE DESCRIPTION */}
+                        {themeMode === 'auto' && (
+                           <motion.div 
+                             initial={{ opacity: 0, y: -5 }}
+                             animate={{ opacity: 1, y: 0 }}
+                             className={cn(
+                               "p-3 rounded-sm border flex items-start gap-2 text-left",
+                               isLightModeActive 
+                                 ? "bg-amber-500/5 border-amber-500/20 text-slate-600" 
+                                 : "bg-amber-500/10 border-amber-500/20 text-amber-300"
+                             )}
+                           >
+                              <Clock size={12} className="shrink-0 mt-0.5" />
+                              <div className="space-y-0.5">
+                                 <div className="text-[8px] font-sans font-black uppercase tracking-widest">Controle de Horário Ativo</div>
+                                 <p className="text-[7.5px] font-mono uppercase leading-relaxed text-amber-600 dark:text-amber-300">
+                                    Ajuste automático baseado na hora local do dispositivo ({new Date().getHours()}:00). Modo Escuro ativo das 18h às 6h para ciclistas evitarem a fadiga ocular em trilhas ou rotas noturnas.
+                                 </p>
+                              </div>
+                           </motion.div>
+                        )}
+                     </div>
+
+                     {/* FILTRO DE FADIGA OCULAR / DIMMER */}
+                     <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                           <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em]", isLightModeActive ? "text-slate-400" : "text-white/20")}>DIMMER TÁTICO NOTURNO</label>
+                           <span className={cn(
+                             "text-[6px] font-mono px-1 py-0.5 rounded-xs border uppercase",
+                             eyeDimmerEnabled ? "border-amber-500/40 text-amber-400 bg-amber-500/5" : "border-white/10 text-white/20"
+                           )}>{eyeDimmerEnabled ? "FILTRO ATIVO" : "FADE_OFF"}</span>
+                        </div>
+
+                        <button
+                          onClick={() => setEyeDimmerEnabled(!eyeDimmerEnabled)}
+                          className={cn(
+                            "w-full p-4 border rounded-sm flex items-center justify-between transition-all group/toggle text-left",
+                            eyeDimmerEnabled
+                              ? "bg-amber-500/10 border-amber-500/40 hover:bg-amber-500/15"
+                              : isLightModeActive
+                                ? "bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100"
+                                : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
+                          )}
+                        >
+                           <div className="flex items-start gap-3">
+                              <div className={cn(
+                                "p-2 rounded-xs border shrink-0 transition-all",
+                                eyeDimmerEnabled
+                                  ? "bg-amber-500/20 border-amber-500/30 text-amber-400 animate-pulse"
+                                  : isLightModeActive
+                                    ? "bg-slate-200/50 border-slate-300 text-slate-400"
+                                    : "bg-white/5 border-white/10 text-white/20"
+                              )}>
+                                 <Eye size={14} />
+                              </div>
+                              <div className="space-y-0.5">
+                                 <span className={cn(
+                                   "text-[10px] font-mono font-black uppercase tracking-wider group-hover/toggle:text-amber-400 transition-colors",
+                                   eyeDimmerEnabled ? "text-amber-400" : isLightModeActive ? "text-slate-800" : "text-white"
+                                 )}>Filtro de Luz Âmbar</span>
+                                 <p className={cn("text-[7.5px] font-mono uppercase leading-relaxed max-w-[240px]", isLightModeActive ? "text-slate-500" : "text-white/40")}>
+                                    Aplica uma película tática suave de matiz quente para uso em rodovias sem iluminação e pedaladas à noite.
+                                 </p>
+                              </div>
+                           </div>
+                           <div className={cn(
+                             "w-8 h-4 rounded-full p-0.5 transition-colors duration-200 relative shrink-0",
+                             eyeDimmerEnabled ? "bg-amber-500" : "bg-white/10"
+                           )}>
+                              <div className={cn(
+                                "w-3 h-3 bg-white rounded-full shadow-md transition-all duration-200",
+                                eyeDimmerEnabled ? "translate-x-4" : "translate-x-0"
+                              )} />
+                           </div>
+                        </button>
+                     </div>
+
+                     {/* AJUSTES ADICIONAIS DE MAPA */}
+                     <div className="space-y-3">
+                        <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em] block", isLightModeActive ? "text-slate-400" : "text-white/20")}>COBERTURA DE TRÁFEGO</label>
+                        <div className={cn("p-4 rounded-sm border space-y-3", isLightModeActive ? "bg-slate-50 border-slate-200" : "bg-white/[0.01] border-white/5")}>
+                           <div className="flex items-center justify-between">
+                              <span className={cn("text-[9px] font-mono uppercase tracking-wider", isLightModeActive ? "text-slate-700" : "text-white/60")}>Estilo do Mapa Base</span>
+                              <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase">{mapStyle}</span>
+                           </div>
+                           <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-400" : "text-white/30")}>
+                              O sistema adapta o mapa tático e de calor conforme a seleção de iluminação atual para maximizar a visibilidade da tripulação.
+                           </p>
+                        </div>
+                     </div>
+
+                     {/* SIMULADOR CLIMÁTICO CRÍTICO */}
+                     <div className="space-y-3">
+                        <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em] block", isLightModeActive ? "text-slate-400" : "text-white/20")}>TESTE DE ALERTAS DE CLIMA</label>
+                        <div className={cn("p-4 rounded-sm border space-y-2.5", isLightModeActive ? "bg-slate-50 border-slate-200" : "bg-white/[0.01] border-white/5")}>
+                           <span className={cn("text-[9px] font-mono font-black uppercase tracking-wider block", isLightModeActive ? "text-slate-800" : "text-white")}>Simulador de Condição Crítica</span>
+                           <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-500" : "text-white/40")}>
+                              Dispara uma simulação de clima extremo em um ponto de interesse (vento de 45km/h e chuva forte com 8mm) para testar a notificação visual do banner de segurança.
+                           </p>
+                           <button
+                             onClick={() => {
+                               setCriticalWeatherAlert({
+                                 show: true,
+                                 poiName: "Mirante da BR-101 (Simulado)",
+                                 windSpeed: 45,
+                                 precipitation: 8,
+                                 temp: 14
+                               });
+                             }}
+                             className="w-full h-8 bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 hover:border-red-500/50 text-red-500 hover:text-red-400 font-mono text-[8.5px] uppercase tracking-wider rounded-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                           >
+                              <AlertTriangle size={12} className="animate-pulse text-red-500" />
+                              Testar Alerta Crítico
+                           </button>
+                        </div>
+                     </div>
+
+                     {/* SISTEMA OPERACIONAL ESTÁTICA */}
+                     <div className={cn("pt-4 border-t text-center space-y-1.5", isLightModeActive ? "border-slate-200" : "border-white/5")}>
+                        <div className={cn("text-[7px] font-mono uppercase tracking-[0.2em]", isLightModeActive ? "text-slate-400" : "text-white/30")}>CENTRAL DE AJUSTES TAC-REDE</div>
+                        <div className={cn("text-[8px] font-mono font-bold uppercase", isLightModeActive ? "text-slate-500" : "text-white/40")}>FUSO: BRT // LOCAL_GPS_READY</div>
+                     </div>
+                  </motion.div>
+               )}
          </div>
 
          {/* Sidebar Navigation Footer (PC ONLY) */}
@@ -4454,13 +4867,19 @@ export default function AdventureMap() {
               {mapStyle === 'tactical' && (
                 <>
                   <TileLayer
-                    key="tile-layer-tactical-base"
+                    key={isLightModeActive ? "tile-layer-tactical-base-light" : "tile-layer-tactical-base-dark"}
                     attribution='&copy; CARTO'
-                    url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+                    url={isLightModeActive 
+                      ? "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+                      : "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+                    }
                   />
                   <TileLayer
-                    key="tile-layer-tactical-labels"
-                    url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+                    key={isLightModeActive ? "tile-layer-tactical-labels-light" : "tile-layer-tactical-labels-dark"}
+                    url={isLightModeActive 
+                      ? "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
+                      : "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+                    }
                     className="map-contrast-labels-layer"
                     zIndex={10}
                   />
@@ -4911,6 +5330,60 @@ export default function AdventureMap() {
 
       {/* TACTICAL SUPERIOR NAVIGATION BAR (Unified & Responsive) */}
       <div className="absolute top-0 left-0 right-0 z-[2000] p-4 md:p-6 pointer-events-none flex flex-col items-center gap-4">
+        {/* CRITICAL WEATHER CONDITIONS ALERT BANNER */}
+        <AnimatePresence>
+          {criticalWeatherAlert && criticalWeatherAlert.show && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-2xl pointer-events-auto border-2 rounded-sm p-4 shadow-xl flex items-start gap-4 relative isolate backdrop-blur-md"
+              style={{
+                background: isLightModeActive 
+                  ? 'rgba(254, 242, 242, 0.95)' 
+                  : 'rgba(24, 9, 9, 0.95)',
+                borderColor: '#ef4444',
+                color: isLightModeActive ? '#991b1b' : '#fecaca'
+              }}
+            >
+              <div className="p-2 bg-red-500 text-white rounded-xs shrink-0 animate-pulse">
+                <AlertTriangle size={18} />
+              </div>
+              <div className="flex-1 space-y-1 text-left">
+                <div className="text-[9px] font-mono uppercase tracking-[0.25em] font-black" style={{ color: '#ef4444' }}>
+                  ALERTA METEOROLÓGICO CRÍTICO // SISTEMA_TAC
+                </div>
+                <h3 className="text-xs font-display font-black uppercase tracking-tight" style={{ color: isLightModeActive ? '#7f1d1d' : '#fbcfe8' }}>
+                  {criticalWeatherAlert.poiName}
+                </h3>
+                <p className="text-[10px] font-mono uppercase leading-relaxed opacity-90">
+                  Condições de risco detectadas:{' '}
+                  {criticalWeatherAlert.windSpeed > 40 && (
+                    <span className="font-black underline text-red-500">
+                      VENTO DE {criticalWeatherAlert.windSpeed} KM/H (NÍVEL CRÍTICO &gt; 40KM/H)
+                    </span>
+                  )}
+                  {criticalWeatherAlert.windSpeed > 40 && criticalWeatherAlert.precipitation > 5 && ' e '}
+                  {criticalWeatherAlert.precipitation > 5 && (
+                    <span className="font-black underline text-red-500">
+                      PRECIPITAÇÃO DE {criticalWeatherAlert.precipitation} MM (NÍVEL CRÍTICO &gt; 5MM)
+                    </span>
+                  )}
+                  . Recomenda-se adiar travessia, buscar um abrigo ou ponto seguro imediatamente!
+                </p>
+              </div>
+              <button
+                onClick={() => setCriticalWeatherAlert(prev => prev ? { ...prev, show: false } : null)}
+                className="p-1.5 hover:bg-red-500/10 rounded-xs transition-colors text-red-500 flex items-center justify-center focus:outline-none cursor-pointer border-0 bg-transparent self-start"
+                title="Fechar Alerta"
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="w-full max-w-7xl bg-[#0a0a0a]/45 backdrop-blur-md border border-[#ff7828]/18 rounded-sm p-1.5 flex flex-col lg:flex-row items-stretch lg:items-center gap-2 pointer-events-auto shadow-[0_20px_50px_rgba(0,0,0,0.4),0_0_20px_rgba(255,100,29,0.05)] transition-all ring-1 ring-white/5 ring-inset">
           
           {/* Section 1: Filters & Vehicles (Left on Desktop) */}
@@ -6075,6 +6548,10 @@ export default function AdventureMap() {
           </div>
         )}
       </div>
+
+      {eyeDimmerEnabled && (
+        <div className="fixed inset-0 pointer-events-none mix-blend-multiply bg-[#ff8000]/8 z-[99999] transition-all duration-300" style={{ pointerEvents: 'none' }} />
+      )}
     </div>
   );
 }

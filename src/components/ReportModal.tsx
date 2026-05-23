@@ -57,13 +57,52 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isOfflineSubmitted, setIsOfflineSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userName || !content) return;
 
     setLoading(true);
+    setIsOfflineSubmitted(false);
+
     try {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        // Save to offline_reports list
+        const savedOfflineStr = localStorage.getItem('offline_reports') || '[]';
+        let savedOffline = [];
+        try {
+          savedOffline = JSON.parse(savedOfflineStr);
+        } catch (e) {
+          savedOffline = [];
+        }
+
+        const newOfflineReport = {
+          id: 'offline_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          userName,
+          content,
+          category,
+          location,
+          status: 'PENDING',
+          createdAt: new Date().toISOString()
+        };
+
+        savedOffline.push(newOfflineReport);
+        localStorage.setItem('offline_reports', JSON.stringify(savedOffline));
+
+        setIsOfflineSubmitted(true);
+        setSuccess(true);
+        setTimeout(() => {
+          onClose();
+          setSuccess(false);
+          setIsOfflineSubmitted(false);
+          setUserName('');
+          setContent('');
+          setLocation('');
+        }, 3000);
+        return;
+      }
+
       await addDoc(collection(db, 'reports'), {
         userName,
         content,
@@ -119,10 +158,16 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
               {success ? (
                 <div className="py-12 text-center space-y-4">
                   <div className="w-16 h-16 bg-[#ff641d]/20 rounded-full flex items-center justify-center mx-auto text-[#ff641d]">
-                    <Send size={32} />
+                    <Send size={32} className={isOfflineSubmitted ? "animate-pulse" : ""} />
                   </div>
-                  <h4 className="text-white font-display font-black uppercase tracking-tight">REPORTE ENVIADO!</h4>
-                  <p className="text-xs text-white/40 font-mono uppercase tracking-widest">Sua inteligência foi integrada ao hub.</p>
+                  <h4 className="text-white font-display font-black uppercase tracking-tight">
+                    {isOfflineSubmitted ? "SALVO NO DISPOSITIVO!" : "REPORTE ENVIADO!"}
+                  </h4>
+                  <p className="text-xs text-white/40 font-mono uppercase tracking-widest px-4 leading-relaxed">
+                    {isOfflineSubmitted 
+                      ? "Você está offline. O reporte foi salvo localmente e será sincronizado ao recuperar sinal." 
+                      : "Sua inteligência foi integrada ao hub de contingência."}
+                  </p>
                 </div>
               ) : (
                 <>

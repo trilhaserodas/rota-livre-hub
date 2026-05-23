@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle } from 'lucide-react';
+import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle, Wifi, WifiOff, RotateCw, UploadCloud, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { auth, db } from '@/src/lib/firebase';
@@ -30,6 +30,68 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sendLoading, setSendLoading] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
   const location = useLocation();
+
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [offlineReports, setOfflineReports] = useState<any[]>([]);
+  const [showSyncBanner, setShowSyncBanner] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+
+  const checkOfflineReports = () => {
+    const reportsStr = localStorage.getItem('offline_reports');
+    if (reportsStr) {
+      try {
+        const parsed = JSON.parse(reportsStr);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setOfflineReports(parsed);
+          if (typeof navigator !== 'undefined' && navigator.onLine) {
+            setShowSyncBanner(true);
+          }
+          return;
+        }
+      } catch (e) {
+        console.error("Erro ao analisar offline_reports:", e);
+      }
+    }
+    setOfflineReports([]);
+    setShowSyncBanner(false);
+  };
+
+  const handleSyncReports = async () => {
+    if (offlineReports.length === 0) return;
+    setSyncing(true);
+    try {
+      for (const report of offlineReports) {
+        await addDoc(collection(db, 'reports'), {
+          userName: report.userName || 'Anônimo',
+          content: report.content,
+          category: report.category,
+          location: report.location || '',
+          status: 'PENDING',
+          createdAt: serverTimestamp(),
+        });
+      }
+      localStorage.removeItem('offline_reports');
+      setOfflineReports([]);
+      setSyncSuccess(true);
+      setTimeout(() => {
+        setSyncSuccess(false);
+        setShowSyncBanner(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Erro na sincronização de reportes:", error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleDiscardReports = () => {
+    if (window.confirm(`Deseja mesmo descartar os ${offlineReports.length} reportes salvos offline?`)) {
+      localStorage.removeItem('offline_reports');
+      setOfflineReports([]);
+      setShowSyncBanner(false);
+    }
+  };
 
   const handleSendPartnership = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +134,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   // Close menu on route change
   useEffect(() => setIsMenuOpen(false), [location.pathname]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      checkOfflineReports();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Initial check
+    checkOfflineReports();
+
+    // Regular check to instantly capture newly saved offline reports
+    const interval = setInterval(checkOfflineReports, 5000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleLogin = async () => {
     try {
@@ -422,6 +509,75 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+
+      {/* Toast de Sincronização de Reportes Offline */}
+      <AnimatePresence>
+        {showSyncBanner && offlineReports.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            className="fixed bottom-6 right-6 z-[9999] w-[90%] sm:w-full sm:max-w-sm bg-[#0A0A0A]/95 backdrop-blur-md border border-[#ff641d]/30 rounded-xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] font-mono text-left"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-[#ff641d]/10 text-[#ff641d] rounded-lg shrink-0">
+                <Wifi size={18} className="animate-pulse" />
+              </div>
+              <div className="flex-grow space-y-1.5 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black text-[#ff641d] tracking-widest uppercase">CONEXÃO RECUPERADA</span>
+                  <button 
+                    onClick={() => setShowSyncBanner(false)} 
+                    className="text-white/40 hover:text-white transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <h5 className="text-xs font-display font-black text-white uppercase tracking-tight">Reportes Offline Pendentes</h5>
+                <p className="text-[9px] text-white/50 leading-relaxed uppercase">
+                  Detectamos {offlineReports.length} {offlineReports.length === 1 ? 'reporte salvo' : 'reportes salvos'} localmente durante o período offline. Deseja sincronizar agora?
+                </p>
+                
+                <div className="pt-2 flex gap-2">
+                  {syncSuccess ? (
+                    <div className="w-full flex items-center justify-center gap-1.5 py-2 bg-green-500/10 border border-green-500/20 rounded-md text-green-500 text-[9px] font-bold uppercase tracking-widest">
+                      <CheckCircle size={12} /> Sincronizado com Sucesso!
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleSyncReports}
+                        disabled={syncing}
+                        className="flex-grow flex items-center justify-center gap-1.5 py-2 px-3 bg-[#ff641d] hover:bg-[#ff844d] disabled:opacity-50 text-white text-[9px] font-bold uppercase tracking-wider rounded-md transition-all font-mono"
+                      >
+                        {syncing ? (
+                          <>
+                            <Loader2 size={10} className="animate-spin" />
+                            Sincronizando...
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud size={10} />
+                            Sincronizar
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleDiscardReports}
+                        disabled={syncing}
+                        className="py-2 px-3 border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-white/40 hover:text-red-400 text-[9px] font-bold uppercase tracking-wider rounded-md transition-all font-mono flex items-center justify-center gap-1 shrink-0"
+                      >
+                        <Trash2 size={10} />
+                        Descartar
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
