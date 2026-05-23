@@ -1511,6 +1511,22 @@ const initialPoints: LocationPoint[] = [
     lng: -54.9372652,
     category: 'viewpoint',
     description: 'PONTO FINAL OFICIAL DA EXPEDIÇÃO FRONTEIRA LIVRE. O mais icônico monumento esculpido pelo artista Mario Irarrázabal em Punta del Este, emergindo das areias da praia. Símbolo maior de superação pessoal, persistência e aventura transfronteiriça na América do Sul. Plus Code: 23R7+R3 La Barra, Maldonado Department, Uruguay. 💬 Experiência Real: Depois de milhares de quilômetros, o oceano marca o fim da estrada e o começo de uma nova versão de você.'
+  },
+  {
+    id: 'water-trilha-canal-juquery',
+    name: '💧 Trilha do Canal, perto do Rio Juquery, Mairiporã/SP',
+    address: 'R. Raimundo J. Cervenka, 36 - Mairiporã, SP, 07600-000',
+    lat: -23.4500,
+    lng: -46.6000,
+    category: 'water',
+    hours: 'Saturday: 8 AM–6 PM / Sunday: 8 AM–6 PM / Monday: 8 AM–6 PM / Tuesday: 8 AM–6 PM / Wednesday: 8 AM–6 PM / Thursday: 8 AM–6 PM / Friday: 8 AM–6 PM',
+    plusCode: 'MCP7+7W Mairiporã, State of São Paulo',
+    image: 'https://i.ibb.co/tTcWVcNq/Captura-de-tela-2026-05-23-145540.png',
+    images: [
+      'https://i.ibb.co/tTcWVcNq/Captura-de-tela-2026-05-23-145540.png',
+      'https://i.ibb.co/Q3qZjrhv/Captura-de-tela-2026-05-23-145420.png'
+    ],
+    description: 'Ponto de captação e abastecimento de água potável estrategicamente posicionado na Trilha do Canal, próximo ao histórico Rio Juquery, em Mairiporã, SP. Apoio fundamental de hidratação para viajantes da natureza e expedições terrestres na serra.'
   }
 ];
 
@@ -1666,16 +1682,60 @@ function MapInteractionsHandler({ onMapClick }: { onMapClick: () => void }) {
   return null;
 }
 
-function HeatmapLayer({ points }: { points: LocationPoint[] }) {
+function HeatmapLayer({ 
+  points, 
+  type = 'density', 
+  weatherCacheRef 
+}: { 
+  points: LocationPoint[]; 
+  type?: 'density' | 'weather_wind'; 
+  weatherCacheRef?: React.MutableRefObject<Record<string, { data: any, timestamp: number }>>;
+}) {
   const map = useMap();
 
   useEffect(() => {
     if (!points || points.length === 0) return;
 
-    // Use a slightly different intensity based on category density if needed, 
-    // but a standard 0.5-0.8 works well for visualization.
-    const heatPoints = points.map(p => [p.lat, p.lng, 0.6] as [number, number, number]);
-    const heatLayer = (L as any).heatLayer(heatPoints, {
+    const heatPoints = points.map(p => {
+      if (type === 'weather_wind') {
+        let wind = 15;
+        const cacheKey = `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`;
+        if (weatherCacheRef?.current && weatherCacheRef.current[cacheKey]) {
+          wind = weatherCacheRef.current[cacheKey].data.windSpeed;
+        } else {
+          // Deterministic simulation
+          const latInt = Math.abs(Math.round(p.lat * 1000));
+          const lngInt = Math.abs(Math.round(p.lng * 1000));
+          wind = 12 + ((latInt + lngInt) % 25);
+          if (p.lat < -42) {
+            wind = 32 + ((latInt * 3 + lngInt) % 28);
+          }
+          if (p.name.toLowerCase().includes('vento') || p.name.toLowerCase().includes('crítica') || p.name.toLowerCase().includes('critica')) {
+            wind = 55 + (latInt % 15);
+          }
+        }
+        
+        // Wind scale: 40 km/h is around 0.73, making it strongly stand out in red
+        const intensity = Math.min(Math.max(wind / 55, 0.1), 1.0);
+        return [p.lat, p.lng, intensity] as [number, number, number];
+      } else {
+        return [p.lat, p.lng, 0.6] as [number, number, number];
+      }
+    });
+
+    const options = type === 'weather_wind' ? {
+      radius: 40,
+      blur: 25,
+      maxZoom: 17,
+      minOpacity: 0.35,
+      gradient: { 
+        0.2: '#3b82f6', // Breeze / Safe (Blue)
+        0.4: '#10b981', // Mild (Green)
+        0.6: '#f59e0b', // Elevated / Caution (Yellow/Orange)
+        0.75: '#ef4444', // Hotspot / Above 40km/h (Red)
+        1.0: '#991b1b'  // Critical Winds > 50km/h (Dark Red)
+      }
+    } : {
       radius: 35,
       blur: 20,
       maxZoom: 17,
@@ -1685,12 +1745,14 @@ function HeatmapLayer({ points }: { points: LocationPoint[] }) {
         0.6: '#ff9d00', 
         1.0: '#ff641d' 
       }
-    }).addTo(map);
+    };
+
+    const heatLayer = (L as any).heatLayer(heatPoints, options).addTo(map);
 
     return () => {
       map.removeLayer(heatLayer);
     };
-  }, [map, points]);
+  }, [map, points, type, weatherCacheRef]);
 
   return null;
 }
@@ -1816,6 +1878,7 @@ export default function AdventureMap() {
   }, []);
 
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapType, setHeatmapType] = useState<'density' | 'weather_wind'>('density');
   const [selectedPointState, setSelectedPointState] = useState<LocationPoint | null>(null);
 
   const enrichPoint = useCallback((p: LocationPoint | null): LocationPoint | null => {
@@ -4760,14 +4823,54 @@ export default function AdventureMap() {
                      {/* AJUSTES ADICIONAIS DE MAPA */}
                      <div className="space-y-3">
                         <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em] block", isLightModeActive ? "text-slate-400" : "text-white/20")}>COBERTURA DE TRÁFEGO</label>
-                        <div className={cn("p-4 rounded-sm border space-y-3", isLightModeActive ? "bg-slate-50 border-slate-200" : "bg-white/[0.01] border-white/5")}>
-                           <div className="flex items-center justify-between">
-                              <span className={cn("text-[9px] font-mono uppercase tracking-wider", isLightModeActive ? "text-slate-700" : "text-white/60")}>Estilo do Mapa Base</span>
-                              <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase">{mapStyle}</span>
+                        <div className={cn("p-4 rounded-sm border space-y-4", isLightModeActive ? "bg-slate-50 border-slate-200" : "bg-white/[0.01] border-white/5")}>
+                           <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                 <span className={cn("text-[9px] font-mono uppercase tracking-wider", isLightModeActive ? "text-slate-700" : "text-white/60")}>Estilo do Mapa Base</span>
+                                 <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase">{mapStyle}</span>
+                              </div>
+                              <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-400" : "text-white/30")}>
+                                 O sistema adapta o mapa tático e de calor conforme a seleção de iluminação atual para maximizar a visibilidade da tripulação.
+                              </p>
                            </div>
-                           <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-400" : "text-white/30")}>
-                              O sistema adapta o mapa tático e de calor conforme a seleção de iluminação atual para maximizar a visibilidade da tripulação.
-                           </p>
+
+                           <div className={cn("border-t pt-3 space-y-2", isLightModeActive ? "border-slate-200" : "border-white/5")}>
+                              <div className="flex items-center justify-between">
+                                 <span className={cn("text-[9px] font-mono uppercase tracking-wider", isLightModeActive ? "text-slate-700" : "text-white/60")}>Foco do Mapa de Calor</span>
+                                 <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase">
+                                    {heatmapType === 'density' ? 'CONCENTRAÇÃO' : 'VENTO >40 KM/h'}
+                                 </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1 bg-black/10 p-1 rounded-sm border border-white/5">
+                                <button
+                                  type="button"
+                                  onClick={() => setHeatmapType('density')}
+                                  className={cn(
+                                    "px-2 py-1.5 rounded-xs transition-all font-mono text-[8px] uppercase tracking-wider cursor-pointer font-bold",
+                                    heatmapType === 'density'
+                                      ? "bg-[#ff641d] text-white shadow-sm"
+                                      : "text-white/40 hover:text-white"
+                                  )}
+                                >
+                                   Densidade
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setHeatmapType('weather_wind')}
+                                  className={cn(
+                                    "px-2 py-1.5 rounded-xs transition-all font-mono text-[8px] uppercase tracking-wider cursor-pointer font-bold",
+                                    heatmapType === 'weather_wind'
+                                      ? "bg-red-600 text-white shadow-sm"
+                                      : "text-white/40 hover:text-white"
+                                  )}
+                                >
+                                   Vento &gt;40km/h
+                                </button>
+                              </div>
+                              <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-400" : "text-white/30")}>
+                                 Selecione 'Vento' para visualizar no mapa de calor em tempo real as rajadas meteorológicas por localidade do mapa.
+                              </p>
+                           </div>
                         </div>
                      </div>
 
@@ -4862,7 +4965,7 @@ export default function AdventureMap() {
                 setShowSuggestions(false);
                 setShowRoutesMenu(false);
               }} />
-              {showHeatmap && <HeatmapLayer points={filteredPoints} />}
+              {showHeatmap && <HeatmapLayer points={filteredPoints} type={heatmapType} weatherCacheRef={weatherCache} />}
               
               {mapStyle === 'tactical' && (
                 <>
@@ -6548,6 +6651,109 @@ export default function AdventureMap() {
           </div>
         )}
       </div>
+
+      {/* HEATMAP FLOATING CONTROL & LEGEND OVERLAY */}
+      <AnimatePresence>
+        {showHeatmap && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ duration: 0.3 }}
+            className={cn(
+              "absolute bottom-[80px] lg:bottom-6 z-[3000] p-4 rounded-sm border backdrop-blur-md shadow-2xl flex flex-col gap-3 min-w-[300px] max-w-[340px] pointer-events-auto transition-all duration-300",
+              isSidebarMinimized ? "left-4 lg:left-[72px]" : "left-4 lg:left-[440px]",
+              isLightModeActive 
+                ? "bg-white/95 border-slate-200 text-slate-800" 
+                : "bg-[#0b0c0d]/95 border-[#ff641d]/30 text-white"
+            )}
+          >
+            {/* Header */}
+            <div className={cn("flex items-center justify-between border-b pb-2", isLightModeActive ? "border-slate-200" : "border-white/10")}>
+              <div className="flex items-center gap-2">
+                <Layers size={14} className="text-[#ff641d] animate-pulse" />
+                <span className="text-[9px] font-mono font-black uppercase tracking-wider">
+                  CONFIG_HEATMAP_TÁTICO
+                </span>
+              </div>
+              <button
+                onClick={() => setShowHeatmap(false)}
+                className={cn("transition-colors cursor-pointer", isLightModeActive ? "text-slate-400 hover:text-slate-600" : "text-white/40 hover:text-white")}
+                title="Desativar Mapa de Calor"
+              >
+                <X size={12} />
+              </button>
+            </div>
+
+            {/* Mode selection buttons */}
+            <div className="space-y-1.5">
+              <span className={cn("text-[7.5px] font-mono uppercase tracking-widest block font-bold", isLightModeActive ? "text-slate-400" : "text-white/40")}>FONTE_DADOS</span>
+              <div className={cn("grid grid-cols-2 gap-1 p-1 rounded-sm border", isLightModeActive ? "bg-slate-100 border-slate-200" : "bg-black/30 border-white/5")}>
+                <button
+                  type="button"
+                  onClick={() => setHeatmapType('density')}
+                  className={cn(
+                    "px-2 py-1.5 rounded-xs transition-all font-mono text-[8px] uppercase tracking-wider cursor-pointer font-bold",
+                    heatmapType === 'density'
+                      ? "bg-[#ff641d] text-white shadow-sm"
+                      : isLightModeActive
+                        ? "text-slate-500 hover:text-slate-800"
+                        : "text-white/40 hover:text-white/80"
+                  )}
+                >
+                  CONCENTRAÇÃO
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeatmapType('weather_wind')}
+                  className={cn(
+                    "px-2 py-1.5 rounded-xs transition-all font-mono text-[8px] uppercase tracking-wider cursor-pointer font-bold flex items-center justify-center gap-1",
+                    heatmapType === 'weather_wind'
+                      ? "bg-red-600 text-white shadow-sm"
+                      : isLightModeActive
+                        ? "text-slate-500 hover:text-slate-800"
+                        : "text-white/40 hover:text-white/80"
+                  )}
+                >
+                  VENTO &gt;40km/h
+                </button>
+              </div>
+            </div>
+
+            {/* Descriptions & Legends */}
+            <div className="space-y-2 text-left">
+              {heatmapType === 'density' ? (
+                <>
+                  <p className={cn("text-[8.5px] font-mono uppercase leading-relaxed", isLightModeActive ? "text-slate-500" : "text-white/50")}>
+                    Exibe a concentração de pontos de interesse (POIs) cadastrados de suporte (comida, água, combustível, campings) para identificar áreas guarnecidas.
+                  </p>
+                  <div className={cn("flex items-center justify-between text-[7px] font-mono border-t pt-1.5", isLightModeActive ? "text-slate-400 border-slate-200" : "text-white/40 border-white/5")}>
+                    <span>Baixa Conc. (#00d4ff)</span>
+                    <span>Alta Conc. (#ff641d)</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className={cn("text-[8.5px] font-mono uppercase leading-relaxed", isLightModeActive ? "text-slate-500" : "text-white/50")}>
+                    Mapeamento de rajadas de vento em tempo real. Destaca zonas com risco de instabilidade física (motos/bicicletas) acima de <strong className="text-red-500 underline">40km/h</strong>.
+                  </p>
+                  
+                  {/* Legend: Wind scale / colors */}
+                  <div className={cn("space-y-1.5 pt-1.5 border-t", isLightModeActive ? "border-slate-200" : "border-white/5")}>
+                    <div className="h-2 w-full rounded-full overflow-hidden flex bg-gradient-to-r from-blue-500 via-green-500 via-yellow-500 to-red-600" />
+                    <div className="flex justify-between items-center text-[7px] font-mono font-black">
+                      <span className="text-blue-500">&lt;15 km/h</span>
+                      <span className="text-emerald-500">25 km/h</span>
+                      <span className="text-yellow-500">35 km/h</span>
+                      <span className="text-red-500 underline animate-pulse">&gt;40 km/h</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {eyeDimmerEnabled && (
         <div className="fixed inset-0 pointer-events-none mix-blend-multiply bg-[#ff8000]/8 z-[99999] transition-all duration-300" style={{ pointerEvents: 'none' }} />

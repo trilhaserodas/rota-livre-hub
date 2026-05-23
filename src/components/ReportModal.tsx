@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, User, MessageSquare, MapPin, Tag, Loader2 } from 'lucide-react';
+import { X, Send, User, MessageSquare, MapPin, Tag, Loader2, CheckCircle2 } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/src/lib/firebase';
 
@@ -59,6 +59,17 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
   const [success, setSuccess] = useState(false);
   const [isOfflineSubmitted, setIsOfflineSubmitted] = useState(false);
 
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      setSuccess(false);
+      setIsOfflineSubmitted(false);
+      setUserName('');
+      setContent('');
+      setLocation('');
+    }, 300);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userName || !content) return;
@@ -93,13 +104,8 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
         setIsOfflineSubmitted(true);
         setSuccess(true);
         setTimeout(() => {
-          onClose();
-          setSuccess(false);
-          setIsOfflineSubmitted(false);
-          setUserName('');
-          setContent('');
-          setLocation('');
-        }, 3000);
+          handleClose();
+        }, 6000);
         return;
       }
 
@@ -113,12 +119,8 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
       });
       setSuccess(true);
       setTimeout(() => {
-        onClose();
-        setSuccess(false);
-        setUserName('');
-        setContent('');
-        setLocation('');
-      }, 2000);
+        handleClose();
+      }, 6000);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'reports');
     } finally {
@@ -134,7 +136,7 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
           />
           
@@ -149,25 +151,40 @@ export default function ReportModal({ isOpen, onClose }: ReportModalProps) {
                 <h3 className="text-xl font-display font-black text-white uppercase tracking-tight">ENVIAR REPORTE TÁTICO</h3>
                 <p className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.2em] mt-1">// Sensor de Comunidade</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-white/40 transition-colors">
+              <button type="button" onClick={handleClose} className="p-2 hover:bg-white/5 rounded-full text-white/40 transition-colors">
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               {success ? (
-                <div className="py-12 text-center space-y-4">
-                  <div className="w-16 h-16 bg-[#ff641d]/20 rounded-full flex items-center justify-center mx-auto text-[#ff641d]">
-                    <Send size={32} className={isOfflineSubmitted ? "animate-pulse" : ""} />
+                <div className="py-8 text-center space-y-6">
+                  <div className="w-16 h-16 bg-[#ff641d]/10 border border-[#ff641d]/20 rounded-full flex items-center justify-center mx-auto text-[#ff641d]">
+                    <CheckCircle2 size={32} className="animate-pulse" />
                   </div>
-                  <h4 className="text-white font-display font-black uppercase tracking-tight">
-                    {isOfflineSubmitted ? "SALVO NO DISPOSITIVO!" : "REPORTE ENVIADO!"}
-                  </h4>
-                  <p className="text-xs text-white/40 font-mono uppercase tracking-widest px-4 leading-relaxed">
-                    {isOfflineSubmitted 
-                      ? "Você está offline. O reporte foi salvo localmente e será sincronizado ao recuperar sinal." 
-                      : "Sua inteligência foi integrada ao hub de contingência."}
-                  </p>
+                  
+                  <div className="space-y-4">
+                    <h4 className="text-white font-display font-black text-lg uppercase tracking-tight">
+                      {isOfflineSubmitted ? "SALVO NO DISPOSITIVO / OFFLINE!" : "REPORTE REGISTRADO CONCLUÍDO!"}
+                    </h4>
+
+                    {/* Elegant text box for the requested message */}
+                    <div className="p-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.04] max-w-sm mx-auto shadow-[0_4px_30px_rgba(16,185,129,0.05)]">
+                      <p className="text-xs text-emerald-400 font-mono font-bold leading-relaxed text-center">
+                        Obrigado! seu Comentário será avaliado o mais Breve Possível, a Comunidade agradece
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="px-6 py-2.5 bg-white/5 hover:bg-white/10 active:scale-95 text-white/80 hover:text-[#ff641d] font-mono text-[9px] uppercase tracking-[0.2em] rounded-lg border border-white/5 transition-all cursor-pointer font-bold"
+                    >
+                      Ok, Entendido
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
