@@ -1670,13 +1670,18 @@ function MapEventsHandler({ onMapClick, active }: { onMapClick: (latlng: L.LatLn
   return null;
 }
 
-function MapInteractionsHandler({ onMapClick }: { onMapClick: () => void }) {
-  useMapEvents({
+function MapInteractionsHandler({ onMapClick, onZoomChange }: { onMapClick: () => void, onZoomChange?: (zoom: number) => void }) {
+  const map = useMapEvents({
     click: () => {
       onMapClick();
     },
     dragstart: () => {
       onMapClick();
+    },
+    zoomend: () => {
+      if (onZoomChange) {
+        onZoomChange(map.getZoom());
+      }
     }
   });
   return null;
@@ -3182,7 +3187,8 @@ export default function AdventureMap() {
   return (
     <div className={cn(
       "h-auto lg:h-[calc(100vh-96px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden isolate relative no-scrollbar scroll-smooth transition-colors duration-300",
-      isTacticalDayActive ? "bg-[#ECE6DA] tactical-day-mode" : "bg-[#0b0c0d]"
+      isTacticalDayActive ? "bg-[#ECE6DA] tactical-day-mode" : "bg-[#0b0c0d]",
+      `map-zoom-${mapZoom}`
     )}>
       {/* Dynamic SVG Filters for Map Tiles in Tactical Modes */}
       <svg width="0" height="0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} className="pointer-events-none">
@@ -3203,6 +3209,62 @@ export default function AdventureMap() {
         </defs>
       </svg>
       <style>{`
+          /* --- DARK MODE SPECIAL ZOOM HIGHLIGHTS FOR ROADS (BR, RUTAS & DEMARCATIONS) --- */
+          /* Low-zoom: keep original dark theme clean and calm */
+          .map-tactical-dark-base-layer .leaflet-tile {
+            transition: filter 0.25s ease-out;
+            filter: none !important;
+          }
+          
+          /* As user zooms in, dynamically isolate and highlight roads, BRs, RUTAs, and local routes */
+          .map-zoom-6 .map-tactical-dark-base-layer .leaflet-tile {
+            filter: contrast(1.1) brightness(1.05) !important;
+          }
+          .map-zoom-7 .map-tactical-dark-base-layer .leaflet-tile {
+            filter: contrast(1.18) brightness(1.1) !important;
+          }
+          .map-zoom-8 .map-tactical-dark-base-layer .leaflet-tile {
+            filter: contrast(1.25) brightness(1.15) !important;
+          }
+          .map-zoom-9 .map-tactical-dark-base-layer .leaflet-tile {
+            filter: contrast(1.35) brightness(1.2) !important;
+          }
+          .map-zoom-10 .map-tactical-dark-base-layer .leaflet-tile,
+          .map-zoom-11 .map-tactical-dark-base-layer .leaflet-tile {
+            filter: contrast(1.45) brightness(1.25) !important;
+          }
+          .map-zoom-12 .map-tactical-dark-base-layer .leaflet-tile,
+          .map-zoom-13 .map-tactical-dark-base-layer .leaflet-tile {
+            filter: contrast(1.58) brightness(1.3) !important;
+          }
+          .map-zoom-14 .map-tactical-dark-base-layer .leaflet-tile,
+          .map-zoom-15 .map-tactical-dark-base-layer .leaflet-tile,
+          .map-zoom-16 .map-tactical-dark-base-layer .leaflet-tile,
+          .map-zoom-17 .map-tactical-dark-base-layer .leaflet-tile,
+          .map-zoom-18 .map-tactical-dark-base-layer .leaflet-tile {
+            filter: contrast(1.7) brightness(1.35) !important;
+          }
+
+          /* Ensure labels are perfectly matching the crispness of the road network at high zoom */
+          .map-tactical-dark-labels-layer .leaflet-tile {
+            transition: filter 0.25s ease-out;
+          }
+          .map-zoom-10 .map-tactical-dark-labels-layer .leaflet-tile,
+          .map-zoom-11 .map-tactical-dark-labels-layer .leaflet-tile {
+            filter: brightness(1.1) contrast(1.1) !important;
+          }
+          .map-zoom-12 .map-tactical-dark-labels-layer .leaflet-tile,
+          .map-zoom-13 .map-tactical-dark-labels-layer .leaflet-tile {
+            filter: brightness(1.15) contrast(1.15) !important;
+          }
+          .map-zoom-14 .map-tactical-dark-labels-layer .leaflet-tile,
+          .map-zoom-15 .map-tactical-dark-labels-layer .leaflet-tile,
+          .map-zoom-16 .map-tactical-dark-labels-layer .leaflet-tile,
+          .map-zoom-17 .map-tactical-dark-labels-layer .leaflet-tile,
+          .map-zoom-18 .map-tactical-dark-labels-layer .leaflet-tile {
+            filter: brightness(1.2) contrast(1.2) !important;
+          }
+
           .tactical-day-mode {
             background-color: #ECE6DA !important;
             color: #1a150e !important;
@@ -5135,10 +5197,15 @@ export default function AdventureMap() {
               <MapEventsHandler active={isTracing} onMapClick={(latlng) => {
                 setRoutePoints(prev => [...prev, [latlng.lat, latlng.lng]]);
               }} />
-              <MapInteractionsHandler onMapClick={() => {
-                setShowSuggestions(false);
-                setShowRoutesMenu(false);
-              }} />
+              <MapInteractionsHandler 
+                onMapClick={() => {
+                  setShowSuggestions(false);
+                  setShowRoutesMenu(false);
+                }} 
+                onZoomChange={(zoom) => {
+                  setMapZoom(zoom);
+                }}
+              />
               {showHeatmap && <HeatmapLayer points={filteredPoints} type={heatmapType} weatherCacheRef={weatherCache} />}
               
               {mapStyle === 'tactical' && (
@@ -5165,11 +5232,13 @@ export default function AdventureMap() {
                         key="tile-layer-tactical-base-dark"
                         attribution='&copy; CARTO'
                         url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+                        className="map-tactical-dark-base-layer"
                       />
                       <TileLayer
                         key="tile-layer-tactical-labels-dark"
                         attribution='&copy; CARTO'
                         url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+                        className="map-tactical-dark-labels-layer"
                         zIndex={10}
                       />
                     </>
