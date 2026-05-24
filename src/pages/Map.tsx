@@ -1630,15 +1630,32 @@ function otherUserIcon(color: string = '#00d4ff', name: string = 'Explorador') {
 
 function MapController({ center, zoom, bounds, isSidebarMinimized }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression, isSidebarMinimized?: boolean }) {
   const map = useMap();
+  const prevCenterRef = useRef<[number, number] | undefined>(center);
+  const prevBoundsRef = useRef<L.LatLngBoundsExpression | undefined>(bounds);
+
   useEffect(() => {
     // Force map to recalculate its container size - critical for mobile/responsive fixes
     map.invalidateSize();
     
     try {
-      if (bounds) {
+      const boundsChanged = JSON.stringify(bounds) !== JSON.stringify(prevBoundsRef.current);
+      const centerChanged = 
+        center && 
+        (!prevCenterRef.current || 
+         prevCenterRef.current[0] !== center[0] || 
+         prevCenterRef.current[1] !== center[1]);
+
+      if (bounds && boundsChanged) {
+        prevBoundsRef.current = bounds;
+        prevCenterRef.current = center;
         map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
-      } else if (center && !isNaN(center[0]) && !isNaN(center[1])) {
+      } else if (center && centerChanged && !isNaN(center[0]) && !isNaN(center[1])) {
+        prevCenterRef.current = center;
         map.flyTo(center, zoom || map.getZoom(), { duration: 1.5 });
+      } else if (zoom !== undefined && zoom !== map.getZoom()) {
+        // If center didn't change, but zoom changed (e.g. from screen zoom buttons + / -),
+        // zoom to the map's current visible viewport center instead of dragging the map back to stale coordinates!
+        map.flyTo(map.getCenter(), zoom, { duration: 0.5 });
       }
     } catch (err) {
       console.error("Map perspective shift failed", err);
