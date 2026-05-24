@@ -62,6 +62,46 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
     operationalStatus: 'STABLE' as 'STABLE' | 'WARNING' | 'CRITICAL' | 'CLOSED'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showHoursDropdown, setShowHoursDropdown] = useState(false);
+  const hoursRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (hoursRef.current && !hoursRef.current.contains(event.target as Node)) {
+        setShowHoursDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const hoursData = React.useMemo(() => {
+    if (!point?.hours) {
+      return { isComplex: false, summary: "24 HORAS", items: ["Aberto 24 horas"] };
+    }
+    const parts = point.hours.split('/').map(s => s.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const todayEnglish = daysMap[new Date().getDay()];
+      const todayPart = parts.find(p => p.toLowerCase().includes(todayEnglish.toLowerCase()));
+      
+      let summary = "VER HORÁRIO ▾";
+      if (todayPart) {
+        // e.g. "Monday: 8 AM-6 PM" -> "SEG: 8 AM-6 PM"
+        const cleanToday = todayPart
+          .replace(/sunday/i, 'DOM')
+          .replace(/monday/i, 'SEG')
+          .replace(/tuesday/i, 'TER')
+          .replace(/wednesday/i, 'QUA')
+          .replace(/thursday/i, 'QUI')
+          .replace(/friday/i, 'SEX')
+          .replace(/saturday/i, 'SÁB');
+        summary = `${cleanToday} ▾`;
+      }
+      return { isComplex: true, summary, items: parts };
+    }
+    return { isComplex: false, summary: point.hours, items: [point.hours] };
+  }, [point?.hours]);
 
   useEffect(() => {
     setCurrentImageIndex(0);
@@ -474,14 +514,82 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                       </div>
                     </div>
 
-                    <div className="p-4 bg-white/[0.02] border border-white/5 rounded-sm flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-[#ff641d]/10 flex items-center justify-center">
+                     <div 
+                      ref={hoursRef}
+                      className={cn(
+                        "p-4 bg-white/[0.02] border border-white/5 rounded-sm flex items-center gap-4 relative transition-all duration-200 select-none cursor-pointer hover:bg-white/[0.05]",
+                        showHoursDropdown && "border-[#ff641d]/50 bg-black/40 shadow-[0_0_15px_rgba(255,100,29,0.1)]"
+                      )}
+                      onClick={() => setShowHoursDropdown(!showHoursDropdown)}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-[#ff641d]/10 flex items-center justify-center shrink-0">
                         <Clock size={18} className="text-[#ff641d]" />
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-[14px] font-mono text-white font-black">{point.hours || "24H"}</span>
+                      <div className="flex flex-col flex-1 overflow-hidden">
+                        <span className="text-[11px] font-mono text-white font-bold tracking-tight truncate flex items-center gap-1">
+                          {hoursData.summary}
+                        </span>
                         <span className="text-[7px] font-mono text-white/30 uppercase tracking-widest">HORÁRIO</span>
                       </div>
+
+                      {/* Submenu de Horários Scrolável */}
+                      <AnimatePresence>
+                        {showHoursDropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute left-0 right-0 top-full mt-1.5 bg-[#0e0f11]/98 border border-white/10 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-[200] p-3 max-h-[160px] overflow-y-auto"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-between border-b border-white/5 pb-1.5 mb-2">
+                              <span className="text-[8px] font-mono text-[#ff641d] font-bold uppercase tracking-widest">
+                                ESCALA_HORAS
+                              </span>
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#ff641d] animate-pulse" />
+                            </div>
+                            <div className="space-y-1">
+                              {hoursData.items.map((item, idx) => {
+                                const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                                const todayEnglish = daysMap[new Date().getDay()];
+                                const isToday = item.toLowerCase().includes(todayEnglish.toLowerCase());
+
+                                return (
+                                  <div 
+                                    key={idx} 
+                                    className={cn(
+                                      "py-1 px-1.5 rounded-sm font-mono text-[9px] uppercase leading-relaxed transition-all flex items-center justify-between",
+                                      isToday 
+                                        ? "bg-[#ff641d]/10 border border-[#ff641d]/20 text-[#ff641d] font-black scale-[1.01]" 
+                                        : "text-white/75 hover:text-white"
+                                    )}
+                                  >
+                                    <span className="truncate">
+                                      {item
+                                        .replace(/sunday/i, 'DOMINGO')
+                                        .replace(/monday/i, 'SEGUNDA')
+                                        .replace(/tuesday/i, 'TERÇA')
+                                        .replace(/wednesday/i, 'QUARTA')
+                                        .replace(/thursday/i, 'QUINTA')
+                                        .replace(/friday/i, 'SEXTA')
+                                        .replace(/saturday/i, 'SÁBADO')
+                                        .replace(/Am/g, ' AM')
+                                        .replace(/Pm/g, ' PM')
+                                      }
+                                    </span>
+                                    {isToday && (
+                                      <span className="text-[6px] font-mono bg-[#ff641d]/20 px-1 py-0.5 rounded-xs text-[#ff641d] uppercase font-black tracking-widest leading-none shrink-0 ml-1">
+                                        HOJE
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     <div className="p-4 bg-white/[0.02] border border-white/5 rounded-sm flex items-center gap-4 group cursor-pointer hover:bg-[#ff641d]/5 transition-all">

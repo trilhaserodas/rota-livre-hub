@@ -2,6 +2,7 @@
 const CACHE_NAME = 'rota-livre-static-v2';
 const MAP_CACHE_NAME = 'rota-livre-map-tiles-v2';
 const DATA_CACHE_NAME = 'rota-livre-data-v2';
+const BLOG_CACHE_NAME = 'rota-livre-blog-assets-v2';
 
 // Essential assets to cache on install
 const PRECACHE_ASSETS = [
@@ -29,7 +30,7 @@ self.addEventListener('activate', (event) => {
       return caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (![CACHE_NAME, MAP_CACHE_NAME, DATA_CACHE_NAME].includes(cacheName)) {
+            if (![CACHE_NAME, MAP_CACHE_NAME, DATA_CACHE_NAME, BLOG_CACHE_NAME].includes(cacheName)) {
               console.log('Clearing old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -121,6 +122,38 @@ self.addEventListener('fetch', (event) => {
               headers: { 'Content-Type': 'application/json' }
             });
           });
+        });
+      })
+    );
+    return;
+  }
+
+  // Define Category 2.5: High-Priority Blog Content and Expedition Field Images
+  const isBlogOrFieldAsset = 
+    url.hostname.includes('i.ibb.co') || 
+    url.hostname.includes('images.unsplash.com') ||
+    url.pathname.includes('/blog') ||
+    url.pathname.includes('blog') ||
+    // Common image file extensions that could represent blog content or field research thumbnails
+    (url.pathname.match(/\.(png|jpg|jpeg|webp|svg|gif)$/i) && !isMapTile);
+
+  if (isBlogOrFieldAsset) {
+    event.respondWith(
+      caches.open(BLOG_CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          // High-Performance & Aggressive Stale-While-Revalidate:
+          // Immediately serve cached version if we have it, but initiate a background update
+          const fetchPromise = fetch(request).then((networkResponse) => {
+            // Include status === 0 to capture opaque responses from cross-origin image CDNs
+            if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+              cache.put(request, networkResponse.clone());
+            }
+            return networkResponse;
+          }).catch((err) => {
+            console.warn('Aggressive SW Fetch failed for blog/expedition asset. Serving cached copy:', err);
+          });
+
+          return cachedResponse || fetchPromise;
         });
       })
     );

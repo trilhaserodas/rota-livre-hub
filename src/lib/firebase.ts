@@ -1,18 +1,43 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDocFromServer } from 'firebase/firestore';
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager, 
+  doc, 
+  getDocFromServer,
+  enableNetwork,
+  disableNetwork
+} from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with robust multi-tab persistent local cache to store reports and map markers
+// Initialize Firestore with robust multi-tab persistent local cache to store reports and map markers,
+// configuring experimentalAutoDetectLongPolling to handle proxy/satellite connectivity gracefully
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
-  })
+  }),
+  experimentalAutoDetectLongPolling: true
 }, firebaseConfig.firestoreDatabaseId);
 
 export const auth = getAuth(app);
+
+// Dynamic Network Listener for Real-Time Synchronization of offline data and reports
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    enableNetwork(db)
+      .then(() => console.log('Firestore: Real-time network sync active.'))
+      .catch((err) => console.error('Firestore: Error enabling real-time network sync:', err));
+  });
+
+  window.addEventListener('offline', () => {
+    disableNetwork(db)
+      .then(() => console.log('Firestore: Switched to offline cache mode.'))
+      .catch((err) => console.error('Firestore: Error disabling network connection:', err));
+  });
+}
 
 // Validating Connection to Firestore on startup
 async function testConnection() {

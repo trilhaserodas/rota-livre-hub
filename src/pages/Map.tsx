@@ -2930,20 +2930,20 @@ export default function AdventureMap() {
     return false;
   });
 
-  const [isLightModeActive, setIsLightModeActive] = useState<boolean>(false);
+  const [isTacticalDayActive, setIsTacticalDayActive] = useState<boolean>(false);
 
   // Auto calculate theme mode and check local time
   useEffect(() => {
     const checkTheme = () => {
       if (themeMode === 'light') {
-        setIsLightModeActive(true);
+        setIsTacticalDayActive(true);
       } else if (themeMode === 'dark') {
-        setIsLightModeActive(false);
+        setIsTacticalDayActive(false);
       } else { // 'auto'
         const hour = new Date().getHours();
         // Light during day hours: 6:00 to 18:00
         const isDayTime = hour >= 6 && hour < 18;
-        setIsLightModeActive(isDayTime ? true : false);
+        setIsTacticalDayActive(isDayTime ? true : false);
       }
     };
 
@@ -3182,149 +3182,338 @@ export default function AdventureMap() {
   return (
     <div className={cn(
       "h-auto lg:h-[calc(100vh-96px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden isolate relative no-scrollbar scroll-smooth transition-colors duration-300",
-      isLightModeActive ? "bg-[#f8fafc] light-app" : "bg-[#0b0c0d]"
+      isTacticalDayActive ? "bg-[#ECE6DA] tactical-day-mode" : "bg-[#0b0c0d]"
     )}>
-      {isLightModeActive && (
+      {/* Dynamic SVG Filter for Map Tiles in Tactical Day Mode */}
+      <svg width="0" height="0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} className="pointer-events-none">
+        <defs>
+          <filter id="tactical-day-map-filter">
+            {/* Real-time color-grading table lookup (11 points): 
+                - Index 0-1 (Water bodies/rivers in Carto): Mapped to tactical blue #1e6cc9
+                - Index 2 (Continent land backgrounds): Cinematic deep charcoal/black (#12100e) -> Zero haze or white fog!
+                - Index 3-4 (Estradas, divisões, contornos geográficos): Cinza escuro operacional `#0f0d0c`
+                - Index 5-10 (Text labels & high contrast borders): Crystal clear high-contrast white/gold
+            */}
+            <feComponentTransfer>
+              <feFuncR type="table" tableValues="0.117 0.117 0.070 0.058 0.058 0.700 0.800 0.900 0.950 1.000 1.000" />
+              <feFuncG type="table" tableValues="0.423 0.423 0.060 0.051 0.051 0.700 0.800 0.900 0.950 1.000 1.000" />
+              <feFuncB type="table" tableValues="0.788 0.788 0.050 0.047 0.047 0.700 0.800 0.900 0.950 1.000 1.000" />
+            </feComponentTransfer>
+          </filter>
+        </defs>
+      </svg>
+      {isTacticalDayActive && (
         <style>{`
-          .light-app {
-            background-color: #f8fafc !important;
-            color: #0f172a !important;
+          .tactical-day-mode {
+            background-color: #ECE6DA !important;
+            color: #1a150e !important;
           }
-          .light-app .text-white {
-            color: #0f172a !important;
+          /* --- CUSTOM MAP FILTERS (Tactical Day Mode isolated) --- */
+          /* Base map elements (land, borders, road networks, and rivers) are styled for high-contrast tactical overlander view */
+          .tactical-day-mode .map-tactical-day-base .leaflet-tile {
+            filter: brightness(0.98) contrast(1.25) saturate(1.8) sepia(0.12) hue-rotate(-12deg) !important;
           }
-          .light-app .text-white\\/90 {
-            color: #0f172a !important;
+          /* Labels layer remains crystal clear, super-functional with no haze or wash */
+          .tactical-day-mode .map-tactical-day-labels .leaflet-tile {
+            filter: brightness(0.95) contrast(1.2) saturate(1.1) !important;
           }
-          .light-app .text-white\\/80 {
-            color: #1e293b !important;
+          /* Custom class for high-contrast, extremely legible map labels in light mode */
+          .tactical-day-mode .map-contrast-labels-layer-light {
+            pointer-events: none;
           }
-          .light-app .text-white\\/70 {
-            color: #334155 !important;
+          .tactical-day-mode .leaflet-container {
+            background-color: #ECE6DA !important;
           }
-          .light-app .text-white\\/60 {
-            color: #475569 !important;
+
+          /* --- MENUS LATERAIS (#261610 with 60% opacity) --- */
+          .tactical-day-mode aside,
+          .tactical-day-mode [class*="sidebarRef"],
+          .tactical-day-mode .lg\\:w-\\[420px\\],
+          .tactical-day-mode .lg\\:w-\\[52px\\] {
+            background-color: rgba(38, 22, 16, 0.6) !important;
+            border-color: rgba(255, 100, 29, 0.25) !important;
+            box-shadow: 20px 0 60px rgba(0,0,0,0.85) !important;
           }
-          .light-app .text-white\\/50 {
-            color: #475569 !important;
+
+          /* --- MAP SIDE BUTTONS / HUD OVERLAYS (Tactical Left & Right Overlay Menus) --- */
+          /* Inactive buttons background and border: color #0e0a07 with 60% opacity -> rgba(14, 10, 7, 0.6) */
+          .tactical-day-mode .map-left-hud-sidebar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]):not([class*="bg-[#ff641d]/25"]),
+          .tactical-day-mode .map-left-hud-sidebar [class*="bg-black/"],
+          .tactical-day-mode .map-right-action-stack button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]) {
+            background-color: rgba(14, 10, 7, 0.6) !important;
+            border-color: rgba(255, 50, 25, 0.25) !important;
           }
-          .light-app .text-white\\/40 {
-            color: #64748b !important;
+
+          /* Inactive icons color inside side menus: Preto */
+          .tactical-day-mode .map-left-hud-sidebar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]):not([class*="bg-[#ff641d]/25"]) svg,
+          .tactical-day-mode .map-left-hud-sidebar [class*="bg-black/"] svg,
+          .tactical-day-mode .map-right-action-stack button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]) svg {
+            color: #000000 !important;
           }
-          .light-app .text-white\\/30 {
-            color: #64748b !important;
+
+          /* Hover State: Background stays, Icon Fica na cor Laranja #ff3219 */
+          .tactical-day-mode .map-left-hud-sidebar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]):not([class*="bg-[#ff641d]/25"]):hover svg,
+          .tactical-day-mode .map-left-hud-sidebar [class*="bg-black/"]:hover svg,
+          .tactical-day-mode .map-right-action-stack button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]):hover svg {
+            color: #ff3219 !important;
           }
-          .light-app .text-white\\/20 {
-            color: #94a3b8 !important;
+
+          /* Active/Clicked menu button: background becomes SOLID Laranja #ff3219 */
+          .tactical-day-mode .map-left-hud-sidebar button[class*="bg-[#ff641d]"],
+          .tactical-day-mode .map-left-hud-sidebar button[class*="bg-[#ff641d]/25"],
+          .tactical-day-mode .map-left-hud-sidebar button.bg-\\[\\#ff641d\\],
+          .tactical-day-mode .map-right-action-stack button[class*="bg-[#ff641d]"],
+          .tactical-day-mode .map-right-action-stack button.bg-\\[\\#ff641d\\],
+          .tactical-day-mode .map-right-action-stack button[class*="bg-blue-500"],
+          .tactical-day-mode .map-right-action-stack button.bg-blue-500 {
+            background-color: #ff3219 !important;
+            border-color: #ff3219 !important;
+            opacity: 1 !important;
+            box-shadow: 0 0 20px rgba(255, 50, 25, 0.5) !important;
           }
-          .light-app .text-white\\/10 {
-            color: #cbd5e1 !important;
+
+          /* Active/Clicked icon: acende na cor #fdf1da por cima do Laranja solido */
+          .tactical-day-mode .map-left-hud-sidebar button[class*="bg-[#ff641d]"] svg,
+          .tactical-day-mode .map-left-hud-sidebar button[class*="bg-[#ff641d]/25"] svg,
+          .tactical-day-mode .map-left-hud-sidebar button.bg-\\[\\#ff641d\\] svg,
+          .tactical-day-mode .map-right-action-stack button[class*="bg-[#ff641d]"] svg,
+          .tactical-day-mode .map-right-action-stack button.bg-\\[\\#ff641d\\] svg,
+          .tactical-day-mode .map-right-action-stack button[class*="bg-blue-500"] svg,
+          .tactical-day-mode .map-right-action-stack button.bg-blue-500 svg {
+            color: #fdf1da !important;
           }
-          .light-app .bg-white\\/\\[0\\.02\\] {
-            background-color: #ffffff !important;
-            border-color: rgba(15, 23, 42, 0.08) !important;
+
+          /* Dropdown menus / absolute submenus anchored to side menus */
+          .tactical-day-mode .map-left-hud-sidebar [class*="bg-[#0b0c0d]"],
+          .tactical-day-mode .map-right-action-stack [class*="bg-[#0b0c0d]"] {
+            background-color: rgba(14, 10, 7, 0.95) !important;
+            border-color: rgba(255, 50, 25, 0.35) !important;
           }
-          .light-app .bg-[#0a0a0b]/45 {
-            background-color: rgba(255, 255, 255, 0.9) !important;
-            border-color: rgba(255, 100, 29, 0.2) !important;
+          .tactical-day-mode .map-left-hud-sidebar [class*="bg-[#0b0c0d]"] span,
+          .tactical-day-mode .map-right-action-stack [class*="bg-[#0b0c0d]"] span,
+          .tactical-day-mode .map-right-action-stack [class*="bg-[#0b0c0d]"] div {
+            color: #fdf1da !important;
           }
-          .light-app .bg-white\\/\\[0\\.03\\] {
-            background-color: #f1f5f9 !important;
-            border-color: rgba(15, 23, 42, 0.08) !important;
+
+          /* Ensure text and icons inside the clear-background panels of the Sidebar remain extremely crisp and legible in Operational Day Mode */
+          .tactical-day-mode aside .text-white,
+          .tactical-day-mode aside h1:not(.text-\\[\\#ff641d\\]),
+          .tactical-day-mode aside h2:not(.text-\\[\\#ff641d\\]),
+          .tactical-day-mode aside h3:not(.text-\\[\\#ff641d\\]),
+          .tactical-day-mode aside h4:not(.text-\\[\\#ff641d\\]),
+          .tactical-day-mode aside p:not(.text-\\[\\#ff641d\\]):not(.text-green-500),
+          .tactical-day-mode aside span:not(.text-\\[\\#ff641d\\]):not(.text-green-500):not(.text-\\[\\#ff2a10\\]),
+          .tactical-day-mode aside label:not(.text-\\[\\#ff641d\\]),
+          .tactical-day-mode aside input {
+            color: #140e0c !important;
           }
-          .light-app .bg-white\\/\\[0\\.05\\] {
-            background-color: #f1f5f9 !important;
+          
+          /* Keep the dark-background Brand Section header (GPS_TACTICAL . SYSTEM) beautiful and golden-creamy white */
+          .tactical-day-mode aside .bg-gradient-to-br h1,
+          .tactical-day-mode aside .bg-gradient-to-br h1 span:not(.text-\\[\\#ff641d\\]) {
+            color: #F8FAFC !important;
           }
-          .light-app .bg-white\\/5 {
-            background-color: #f1f5f9 !important;
+          .tactical-day-mode aside .bg-gradient-to-br svg {
+            color: rgba(248, 250, 252, 0.5) !important;
           }
-          .light-app .bg-white\\/10 {
-            background-color: #e2e8f0 !important;
+
+          .tactical-day-mode aside .text-white\\/40,
+          .tactical-day-mode aside .text-white\\/60 {
+            color: rgba(20, 14, 12, 0.55) !important;
           }
-          .light-app .bg-black\\/40 {
-            background-color: #f8fafc !important;
+
+          /* --- MENU ICONS & CONTROLS SPECIFICATION --- */
+          /* Icon Color: #080503 */
+          .tactical-day-mode aside svg:not(.text-\\[\\#ff641d\\]):not(.text-green-500),
+          .tactical-day-mode [class*="sidebarRef"] svg:not(.text-\\[\\#ff641d\\]):not(.text-green-500),
+          .tactical-day-mode .leaflet-control svg:not(.text-\\[\\#ff641d\\]) {
+            color: #080503 !important;
+            transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
           }
-          .light-app .bg-black\\/60 {
-            background-color: #f1f5f9 !important;
+
+          /* Stay vibrant for active elements and active tabs */
+          .tactical-day-mode aside button.text-\\[\\#ff641d\\] svg,
+          .tactical-day-mode aside button.text-\\[\\#ff641d\\] span {
+            color: #ff641d !important;
           }
-          .light-app .bg-[#0b0c0d]/45 {
-            background-color: rgba(255, 255, 255, 0.8) !important;
-            border-color: rgba(255, 100, 29, 0.2) !important;
+
+          /* Mouse Hover interaction on Icons & Text: premium/tactical orange #ff2a10 */
+          .tactical-day-mode aside svg:not(.text-\\[\\#ff641d\\]):hover,
+          .tactical-day-mode aside button:hover svg:not(.text-\\[\\#ff641d\\]),
+          .tactical-day-mode aside a:hover svg,
+          .tactical-day-mode [class*="sidebarRef"] svg:hover,
+          .tactical-day-mode [class*="sidebarRef"] button:hover svg,
+          .tactical-day-mode .leaflet-control button:hover svg {
+            color: #ff2a10 !important;
           }
-          .light-app .bg-[#0b0c0d]/95 {
-             background-color: rgba(255, 255, 255, 0.95) !important;
+
+          .tactical-day-mode aside button:hover span:not(.text-\\[\\#ff641d\\]) {
+            color: #ff2a10 !important;
           }
-          .light-app .bg-[#0b0c0d]/98 {
-             background-color: rgba(255, 255, 255, 0.98) !important;
+
+          /* --- PIN DETAIL PANEL / FEED-TATICAL-V2 (#442914 with 80% opacity) --- */
+          .tactical-day-mode .fixed.z-\\[99999\\],
+          .tactical-day-mode [class*="PointPanelV2"] {
+            background-color: rgba(68, 41, 20, 0.8) !important;
+            border-color: rgba(255, 100, 29, 0.35) !important;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.95), 0 0 30px rgba(255, 100, 29, 0.25) !important;
           }
-          .light-app .bg-black\\/80 {
-            background-color: #ffffff !important;
-            border-color: rgba(15, 23, 42, 0.08) !important;
+          /* Ensure text inside the Pin panel is light & readable */
+          .tactical-day-mode .fixed.z-\\[99999\\] .text-white,
+          .tactical-day-mode .fixed.z-\\[99999\\] h1,
+          .tactical-day-mode .fixed.z-\\[99999\\] h2,
+          .tactical-day-mode .fixed.z-\\[99999\\] h3,
+          .tactical-day-mode .fixed.z-\\[99999\\] h4,
+          .tactical-day-mode .fixed.z-\\[99999\\] p,
+          .tactical-day-mode .fixed.z-\\[99999\\] span,
+          .tactical-day-mode .fixed.z-\\[99999\\] div {
+            color: #F8FAFC !important;
           }
-          .light-app .bg-black\\/90 {
-            background-color: #ffffff !important;
+          .tactical-day-mode .fixed.z-\\[99999\\] .text-white\\/40 {
+            color: rgba(248, 250, 252, 0.5) !important;
           }
-          .light-app .bg-black\\/95 {
-            background-color: #ffffff !important;
+          .tactical-day-mode .fixed.z-\\[99999\\] .text-white\\/60 {
+            color: rgba(248, 250, 252, 0.75) !important;
           }
-          .light-app .bg-black {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
+
+          /* --- WIDGETS & CARDS (WARM SAND MODE) --- */
+          .tactical-day-mode .dashboard-card {
+            background-color: #F3EEE4 !important;
+            border-color: rgba(90, 80, 64, 0.25) !important;
+            box-shadow: 0 6px 24px rgba(90, 80, 64, 0.12) !important;
           }
-          .light-app .bg-\\[\\#0b0c0d\\] {
-            background-color: #f8fafc !important;
+          /* Ensure text color of clear-sand widgets changes to charcoal for deep readability */
+          .tactical-day-mode .dashboard-card .text-white {
+            color: #1a150e !important;
           }
-          .light-app .bg-\\[\\#0b0c0d\\]\\/98 {
-            background-color: #ffffff !important;
+          .tactical-day-mode .dashboard-card .text-white\\/90 {
+            color: #1a150e !important;
           }
-          .light-app .bg-\\[\\#0b0c0d\\]\\/95 {
-            background-color: #ffffff !important;
+          .tactical-day-mode .dashboard-card .text-white\\/80 {
+            color: #2F2618 !important;
           }
-          .light-app .bg-\\[\\#0a0a0b\\]\\/80 {
-            background-color: #ffffff !important;
+          .tactical-day-mode .dashboard-card .text-white\\/70 {
+            color: #443722 !important;
           }
-          .light-app .border-white\\/5 {
-            border-color: rgba(15, 23, 42, 0.08) !important;
+          .tactical-day-mode .dashboard-card .text-white\\/60 {
+            color: #5A4A30 !important;
           }
-          .light-app .border-white\\/10 {
-            border-color: rgba(15, 23, 42, 0.12) !important;
+          .tactical-day-mode .dashboard-card .text-white\\/50 {
+            color: #5A4A30 !important;
           }
-          .light-app .border-white\\/20 {
-            border-color: rgba(15, 23, 42, 0.16) !important;
+          .tactical-day-mode .dashboard-card .text-white\\/40 {
+            color: #715E40 !important;
           }
-          .light-app input {
-            color: #0f172a !important;
-            background-color: #ffffff !important;
-            border-color: rgba(15, 23, 42, 0.12) !important;
+          .tactical-day-mode .dashboard-card .text-white\\/30 {
+            color: #8D7756 !important;
           }
-          .light-app input::placeholder {
-            color: #94a3b8 !important;
+          .tactical-day-mode .dashboard-card .text-white\\/20 {
+            color: #A99372 !important;
           }
-          .light-app .placeholder\\:text-white\\/5::placeholder {
-            color: #94a3b8 !important;
+          .tactical-day-mode .dashboard-card .text-white\\/10 {
+            color: #C6AF8D !important;
           }
-          .light-app .bg-\\[\\#ff641d\\]\\/5 {
+
+          .tactical-day-mode .bg-white\\/\\[0\\.02\\] {
+            background-color: #F3EEE4 !important;
+            border-color: rgba(90, 80, 64, 0.22) !important;
+          }
+          .tactical-day-mode .bg-[#0a0a0b]/45 {
+            background-color: rgba(243, 238, 228, 0.9) !important;
+            border-color: rgba(255, 100, 29, 0.3) !important;
+          }
+          .tactical-day-mode .bg-white\\/\\[0\\.03\\] {
+            background-color: #DDD6CA !important;
+            border-color: rgba(90, 80, 64, 0.22) !important;
+          }
+          .tactical-day-mode .bg-white\\/\\[0\\.05\\] {
+            background-color: #DDD6CA !important;
+          }
+          .tactical-day-mode .bg-white\\/5 {
+            background-color: #DDD6CA !important;
+          }
+          .tactical-day-mode .bg-white\\/10 {
+            background-color: #D8D2C8 !important;
+          }
+          .tactical-day-mode .bg-black\\/40 {
+            background-color: #ECE6DA !important;
+          }
+          .tactical-day-mode .bg-black\\/60 {
+            background-color: #DDD6CA !important;
+          }
+          .tactical-day-mode .bg-[#0b0c0d]/45 {
+            background-color: rgba(243, 238, 228, 0.8) !important;
+            border-color: rgba(255, 100, 29, 0.3) !important;
+          }
+          .tactical-day-mode .bg-[#0b0c0d]/95 {
+             background-color: rgba(243, 238, 228, 0.95) !important;
+          }
+          .tactical-day-mode .bg-[#0b0c0d]/98 {
+             background-color: rgba(243, 238, 228, 0.98) !important;
+          }
+          .tactical-day-mode .bg-black\\/80 {
+            background-color: #F3EEE4 !important;
+            border-color: rgba(90, 80, 64, 0.22) !important;
+          }
+          .tactical-day-mode .bg-black\\/90 {
+            background-color: #F3EEE4 !important;
+          }
+          .tactical-day-mode .bg-black\\/95 {
+            background-color: #F3EEE4 !important;
+          }
+          .tactical-day-mode .bg-black {
+            background-color: #F3EEE4 !important;
+            color: #1a150e !important;
+          }
+          .tactical-day-mode .bg-\\[\\#0b0c0d\\] {
+            background-color: #ECE6DA !important;
+          }
+          .tactical-day-mode .bg-\\[\\#0b0c0d\\]\\/98 {
+            background-color: #F3EEE4 !important;
+          }
+          .tactical-day-mode .bg-\\[\\#0b0c0d\\]\\/95 {
+            background-color: #F3EEE4 !important;
+          }
+          .tactical-day-mode .bg-\\[\\#0a0a0b\\]\\/80 {
+            background-color: #F3EEE4 !important;
+          }
+          .tactical-day-mode .border-white\\/5 {
+            border-color: rgba(90, 80, 64, 0.15) !important;
+          }
+          .tactical-day-mode .border-white\\/10 {
+            border-color: rgba(90, 80, 64, 0.22) !important;
+          }
+          .tactical-day-mode .border-white\\/20 {
+            border-color: rgba(90, 80, 64, 0.3) !important;
+          }
+          .tactical-day-mode input {
+            color: #1a150e !important;
+            background-color: #F3EEE4 !important;
+            border-color: rgba(90, 80, 64, 0.25) !important;
+          }
+          .tactical-day-mode input::placeholder {
+            color: #8D7756 !important;
+          }
+          .tactical-day-mode .placeholder\\:text-white\\/5::placeholder {
+            color: #8D7756 !important;
+          }
+          .tactical-day-mode .bg-\\[\\#ff641d\\]\\/5 {
             background-color: rgba(255, 100, 29, 0.08) !important;
           }
-          .light-app .map-contrast-labels-layer {
-            filter: brightness(0.9) contrast(1.1) !important;
-            mix-blend-mode: normal !important;
+           .tactical-day-mode .map-tactical-day-labels {
+             filter: brightness(1.2) contrast(1.3) saturate(0.9) !important;
+           }
+          .tactical-day-mode .text-white\\/5 {
+            color: rgba(90, 80, 64, 0.15) !important;
           }
-          .light-app .text-white\\/5 {
-            color: rgba(15, 23, 42, 0.1) !important;
+          .tactical-day-mode .bg-blue-500 {
+            background-color: #1d4ed8 !important;
           }
-          .light-app .dashboard-card {
-            background-color: #ffffff !important;
-            border-color: rgba(15, 23, 42, 0.08) !important;
+          .tactical-day-mode .bg-red-500 {
+            background-color: #b91c1c !important;
           }
-          .light-app .bg-blue-500 {
-            background-color: #3b82f6 !important;
-          }
-          .light-app .bg-red-500 {
-            background-color: #ef4444 !important;
-          }
-          .light-app .bg-[#0b0c0d]/90 {
-            background-color: rgba(255, 255, 255, 0.9) !important;
+          .tactical-day-mode .bg-[#0b0c0d]/90 {
+            background-color: rgba(243, 238, 228, 0.9) !important;
           }
         `}</style>
       )}
@@ -3335,9 +3524,7 @@ export default function AdventureMap() {
         ref={sidebarRef as any}
         className={cn(
           "w-full flex-shrink-0 flex flex-col transition-colors duration-300",
-          isLightModeActive 
-            ? "bg-white border-t lg:border-t-0 lg:border-r border-slate-200 shadow-md"
-            : "bg-[#0b0c0d]/98 backdrop-blur-3xl lg:backdrop-blur-none border-t lg:border-t-0 lg:border-r border-white/10 shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)]",
+          "bg-[#0b0c0d]/60 backdrop-blur-3xl border-t lg:border-t-0 lg:border-r border-white/10 shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)] text-white",
           "relative lg:relative lg:order-first order-last h-[85vh] lg:h-full z-[1000] lg:z-[5000]",
           isSidebarMinimized ? "lg:w-[52px]" : "lg:w-[420px]"
         )}
@@ -3414,69 +3601,64 @@ export default function AdventureMap() {
            <span className="text-[6px] font-mono text-[#ff641d]/50 tracking-[0.3em] uppercase mt-2">SISTEMA_TÁTICO_GPS</span>
          </div>
 
-         {/* Brand Section */}
-         <div className={cn(
-            "p-6 border-b shrink-0 select-none flex flex-col gap-1",
-            isLightModeActive 
-              ? "border-slate-200 bg-gradient-to-br from-slate-50 to-[#ff641d]/5" 
-              : "border-white/5 bg-gradient-to-br from-black to-[#ff641d]/10"
-         )}>
-            <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.6.9</div>
-            <h1 className={cn(
-               "text-xl font-display font-black uppercase tracking-tighter leading-none flex items-center gap-3",
-               isLightModeActive ? "text-slate-900" : "text-white"
-            )}>
-               <Navigation2 size={24} className={isExpeditionMode ? "animate-pulse text-[#ff641d]" : isLightModeActive ? "text-slate-400" : "text-white/40"} />
-               GPS_TACTICAL<span className="text-[#ff641d]">.</span>SYSTEM
-            </h1>
-            <div className="flex gap-2 mt-2">
+          {/* Brand Section */}
+          <div className="p-6 border-b shrink-0 select-none flex flex-col gap-1 border-white/5 bg-gradient-to-br from-black to-[#ff641d]/10">
+             <div className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">SYSTEM_OS // v2.6.9</div>
+             <h1 className="text-xl font-display font-black uppercase tracking-tighter leading-none flex items-center gap-3 text-white">
+                <Navigation2 size={24} className={isExpeditionMode ? "animate-pulse text-[#ff641d]" : "text-white/40"} />
+                GPS_TACTICAL<span className="text-[#ff641d]">.</span>SYSTEM
+             </h1>
+             <div className="flex gap-2 mt-2">
+                <button 
+                  onClick={() => setIsExpeditionMode(!isExpeditionMode)}
+                  className={cn(
+                    "w-full h-10 border rounded-xs transition-all flex items-center justify-center gap-2 font-mono font-black text-[9px] uppercase tracking-[0.2em] cursor-pointer",
+                    isExpeditionMode 
+                      ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.4)]" 
+                      : "bg-black/40 border-white/10 text-white/20 hover:border-[#ff641d]/40"
+                  )}
+                >
+                  <Zap size={12} className={isExpeditionMode ? "animate-pulse" : ""} /> 
+                  <span>{isExpeditionMode ? "MODO_EXP_ATIVO" : "INICIAR_EXP_MODO"}</span>
+                </button>
+             </div>
+          </div>
+
+          {/* Sidebar Tabs */}
+          <div className="flex border-b border-white/5 bg-black/40">
+             {[
+               { id: 'explore', label: 'EXPLORADOR', icon: Search },
+               { id: 'saved', label: 'CÉLULA_SAVED', icon: Heart },
+               { id: 'expedition', label: 'OPERACIONAL', icon: Zap },
+               { id: 'routing', label: 'TRAJETO', icon: Navigation },
+               { id: 'config', label: 'AJUSTES', icon: Settings }
+             ].map(tab => (
                <button 
-                 onClick={() => setIsExpeditionMode(!isExpeditionMode)}
+                 key={tab.id}
+                 disabled={tab.id === 'expedition' && !selectedPreDefinedRoute}
+                 onClick={() => setActiveTab(tab.id as any)}
                  className={cn(
-                   "w-full h-10 border rounded-xs transition-all flex items-center justify-center gap-2 font-mono font-black text-[9px] uppercase tracking-[0.2em]",
-                   isExpeditionMode 
-                     ? "bg-[#ff641d] border-[#ff641d] text-white shadow-[0_0_15px_rgba(255,100,29,0.4)]" 
-                     : isLightModeActive 
-                       ? "bg-slate-100 border-slate-200 text-slate-700 hover:border-[#ff641d]/40 hover:bg-slate-200"
-                       : "bg-black/40 border-white/10 text-white/20 hover:border-[#ff641d]/40"
+                   "flex-1 h-16 flex flex-col items-center justify-center gap-1.5 transition-all relative border-b-2 group cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed",
+                   activeTab === tab.id 
+                     ? "bg-[#ff641d]/10 border-[#ff641d] text-[#ff641d]" 
+                     : "bg-transparent border-transparent text-white/80 hover:bg-white/[0.02]"
                  )}
                >
-                 <Zap size={12} className={isExpeditionMode ? "animate-pulse" : ""} /> 
-                 <span>{isExpeditionMode ? "MODO_EXP_ATIVO" : "INICIAR_EXP_MODO"}</span>
+                 <tab.icon size={15} className="group-hover:text-[#d35400] transition-colors" />
+                 <span className={cn(
+                   "text-[8px] tracking-[0.18em] uppercase transition-colors select-none font-medium",
+                   activeTab === tab.id 
+                     ? "text-[#ff641d]" 
+                     : "text-white/80 group-hover:text-[#d35400]"
+                 )}>
+                   {tab.label}
+                 </span>
+                 {activeTab === tab.id && (
+                   <motion.div layoutId="active-tab-glow" className="absolute inset-0 bg-[#ff641d]/5 blur-xl" />
+                 )}
                </button>
-            </div>
-         </div>
-
-         {/* Sidebar Tabs */}
-         <div className={cn("flex border-b", isLightModeActive ? "border-slate-200 bg-slate-50" : "border-white/5 bg-black/40")}>
-            {[
-              { id: 'explore', label: 'EXPLORADOR', icon: Search },
-              { id: 'saved', label: 'CÉLULA_SAVED', icon: Heart },
-              { id: 'expedition', label: 'OPERACIONAL', icon: Zap },
-              { id: 'routing', label: 'TRAJETO', icon: Navigation },
-              { id: 'config', label: 'AJUSTES', icon: Settings }
-            ].map(tab => (
-              <button 
-                key={tab.id}
-                disabled={tab.id === 'expedition' && !selectedPreDefinedRoute}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={cn(
-                  "flex-1 h-16 flex flex-col items-center justify-center gap-1.5 transition-all relative border-b-2",
-                  activeTab === tab.id 
-                    ? "bg-[#ff641d]/10 border-[#ff641d] text-[#ff641d]" 
-                    : isLightModeActive
-                      ? "bg-transparent border-transparent text-slate-400 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-20 disabled:cursor-not-allowed"
-                      : "bg-transparent border-transparent text-white/20 hover:bg-white/5 hover:text-white/40 disabled:opacity-20 disabled:cursor-not-allowed"
-                )}
-              >
-                <tab.icon size={16} />
-                <span className="text-[7px] font-mono font-black uppercase tracking-widest">{tab.label}</span>
-                {activeTab === tab.id && (
-                  <motion.div layoutId="active-tab-glow" className="absolute inset-0 bg-[#ff641d]/5 blur-xl" />
-                )}
-              </button>
-            ))}
-         </div>
+             ))}
+          </div>
 
          <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
             <AnimatePresence mode="wait">
@@ -3491,7 +3673,7 @@ export default function AdventureMap() {
                     <div className="p-5 lg:p-8 space-y-8 overflow-y-auto no-scrollbar">
                        {/* Integrated Search */}
                        <div className="space-y-4">
-                          <label className="text-[8px] font-mono text-white/20 uppercase tracking-[0.4em]">LOCALIZAR_VETOR_DE_COORDENADAS</label>
+                          <label className="text-[8px] font-mono text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium uppercase tracking-[0.4em]">LOCALIZAR_VETOR_DE_COORDENADAS</label>
                           <form onSubmit={handleSearch} className="relative group">
                              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-[#ff641d] transition-colors" size={20} />
                              <input 
@@ -3528,7 +3710,7 @@ export default function AdventureMap() {
                              {/* Difficulty */}
                              <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                   <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">NÍVEL_DIFICULDADE</label>
+                                   <label className="text-[7.5px] font-mono text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium uppercase tracking-widest text-left block">NÍVEL_DIFICULDADE</label>
                                    <span className="text-[7px] font-mono text-[#ff641d]/60 uppercase">{difficultyFilter === 'all' ? 'EXPEDIÇÃO_TOTAL' : difficultyFilter}</span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1">
@@ -3564,7 +3746,7 @@ export default function AdventureMap() {
                              {/* Vehicle */}
                              <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                   <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">EQUIPAMENTO_FROTA</label>
+                                   <label className="text-[7.5px] font-mono text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium uppercase tracking-widest text-left block">EQUIPAMENTO_FROTA</label>
                                    <span className="text-[7px] font-mono text-[#ff641d]/60 uppercase">{vehicleFilter === 'all' ? 'POLIVALENTE' : vehicleFilter}</span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1">
@@ -3599,7 +3781,7 @@ export default function AdventureMap() {
 
                              {/* Country */}
                              <div className="space-y-2">
-                                <label className="text-[7px] font-mono text-white/40 uppercase tracking-widest text-left block">LATITUDE_NACIONAL</label>
+                                <label className="text-[7.5px] font-mono text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium uppercase tracking-widest text-left block">LATITUDE_NACIONAL</label>
                                  <div className="relative group">
                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 p-1 border-r border-white/10 pr-2">
                                       <Globe size={10} className={countryFilter !== 'all' ? "text-[#ff641d]" : "text-white/20"} />
@@ -4342,7 +4524,7 @@ export default function AdventureMap() {
                      
                      <form onSubmit={handleRoutingSearch} className="space-y-4">
                         <div className="space-y-2">
-                           <label className="text-[8px] font-mono text-white/20 uppercase tracking-[0.4em] block">ORIGEM_ALFA</label>
+                           <label className="text-[8px] font-mono text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium uppercase tracking-[0.4em] block">ORIGEM_ALFA</label>
                            <div className="relative">
                               <div className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-[#ff641d] shadow-[0_0_10px_#ff641d]" />
                               <input 
@@ -4360,7 +4542,7 @@ export default function AdventureMap() {
                         </div>
 
                         <div className="space-y-2">
-                           <label className="text-[8px] font-mono text-white/20 uppercase tracking-[0.4em] block">DESTINO_OMEGA</label>
+                           <label className="text-[8px] font-mono text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium uppercase tracking-[0.4em] block">DESTINO_OMEGA</label>
                            <div className="relative">
                               <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff641d]" size={18} />
                               <input 
@@ -4709,16 +4891,16 @@ export default function AdventureMap() {
                     exit={{ opacity: 0, x: 20 }}
                     className="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto no-scrollbar"
                   >
-                     <div className={cn("flex items-center gap-3 border-b pb-4 mb-2", isLightModeActive ? "border-slate-200" : "border-white/5")}>
+                     <div className="flex items-center gap-3 border-b pb-4 mb-2 border-white/5">
                         <Settings className="text-[#ff641d]" size={18} />
-                        <h2 className={cn("text-xl font-display font-black uppercase tracking-tighter", isLightModeActive ? "text-slate-900" : "text-white")}>CONFIGURAÇÕES</h2>
+                        <h2 className="text-xl font-display font-black uppercase tracking-tighter text-white">CONFIGURAÇÕES</h2>
                      </div>
 
                      {/* MODO DE COR (LUMINOSIDADE) */}
                      <div className="space-y-3">
-                        <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em] block", isLightModeActive ? "text-slate-400" : "text-white/20")}>TEMA & LUMINOSIDADE</label>
+                        <label className="text-[8px] font-mono uppercase tracking-[0.4em] block text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium">TEMA & LUMINOSIDADE</label>
                         
-                        <div className={cn("p-1 rounded-sm flex gap-1", isLightModeActive ? "bg-slate-100" : "bg-white/[0.03]")}>
+                        <div className="p-1 rounded-sm flex gap-1 bg-white/[0.03]">
                            {[
                              { id: 'dark', label: 'Escuro', icon: Moon, desc: 'Foco táctico' },
                              { id: 'light', label: 'Claro', icon: Sun, desc: 'Visão diurna' },
@@ -4728,12 +4910,10 @@ export default function AdventureMap() {
                                 key={opt.id}
                                 onClick={() => setThemeMode(opt.id as any)}
                                 className={cn(
-                                  "flex-1 py-3 px-1 rounded-sm flex flex-col items-center gap-1 transition-all border",
+                                  "flex-1 py-3 px-1 rounded-sm flex flex-col items-center gap-1 transition-all border cursor-pointer",
                                   themeMode === opt.id
                                     ? "bg-[#ff641d] border-[#ff641d] text-white shadow-md font-bold"
-                                    : isLightModeActive
-                                      ? "bg-transparent border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
-                                      : "bg-transparent border-transparent text-white/30 hover:text-white hover:bg-white/5"
+                                    : "bg-transparent border-transparent text-white/30 hover:text-white hover:bg-white/5"
                                 )}
                               >
                                  <opt.icon size={14} className={themeMode === opt.id ? "animate-pulse" : ""} />
@@ -4750,7 +4930,7 @@ export default function AdventureMap() {
                              animate={{ opacity: 1, y: 0 }}
                              className={cn(
                                "p-3 rounded-sm border flex items-start gap-2 text-left",
-                               isLightModeActive 
+                               isTacticalDayActive 
                                  ? "bg-amber-500/5 border-amber-500/20 text-slate-600" 
                                  : "bg-amber-500/10 border-amber-500/20 text-amber-300"
                              )}
@@ -4769,7 +4949,7 @@ export default function AdventureMap() {
                      {/* FILTRO DE FADIGA OCULAR / DIMMER */}
                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                           <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em]", isLightModeActive ? "text-slate-400" : "text-white/20")}>DIMMER TÁTICO NOTURNO</label>
+                           <label className="text-[8px] font-mono uppercase tracking-[0.4em] text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium">DIMMER TÁTICO NOTURNO</label>
                            <span className={cn(
                              "text-[6px] font-mono px-1 py-0.5 rounded-xs border uppercase",
                              eyeDimmerEnabled ? "border-amber-500/40 text-amber-400 bg-amber-500/5" : "border-white/10 text-white/20"
@@ -4779,12 +4959,10 @@ export default function AdventureMap() {
                         <button
                           onClick={() => setEyeDimmerEnabled(!eyeDimmerEnabled)}
                           className={cn(
-                            "w-full p-4 border rounded-sm flex items-center justify-between transition-all group/toggle text-left",
+                            "w-full p-4 border rounded-sm flex items-center justify-between transition-all group/toggle text-left cursor-pointer",
                             eyeDimmerEnabled
                               ? "bg-amber-500/10 border-amber-500/40 hover:bg-amber-500/15"
-                              : isLightModeActive
-                                ? "bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100"
-                                : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
+                              : "bg-white/[0.01] border-white/5 hover:border-white/10 hover:bg-white/[0.03]"
                           )}
                         >
                            <div className="flex items-start gap-3">
@@ -4792,18 +4970,16 @@ export default function AdventureMap() {
                                 "p-2 rounded-xs border shrink-0 transition-all",
                                 eyeDimmerEnabled
                                   ? "bg-amber-500/20 border-amber-500/30 text-amber-400 animate-pulse"
-                                  : isLightModeActive
-                                    ? "bg-slate-200/50 border-slate-300 text-slate-400"
-                                    : "bg-white/5 border-white/10 text-white/20"
+                                  : "bg-white/5 border-white/10 text-white/20"
                               )}>
                                  <Eye size={14} />
                               </div>
                               <div className="space-y-0.5">
                                  <span className={cn(
                                    "text-[10px] font-mono font-black uppercase tracking-wider group-hover/toggle:text-amber-400 transition-colors",
-                                   eyeDimmerEnabled ? "text-amber-400" : isLightModeActive ? "text-slate-800" : "text-white"
+                                   eyeDimmerEnabled ? "text-amber-400" : "text-white"
                                  )}>Filtro de Luz Âmbar</span>
-                                 <p className={cn("text-[7.5px] font-mono uppercase leading-relaxed max-w-[240px]", isLightModeActive ? "text-slate-500" : "text-white/40")}>
+                                 <p className="text-[7.5px] font-mono uppercase leading-relaxed max-w-[240px] text-white/40">
                                     Aplica uma película tática suave de matiz quente para uso em rodovias sem iluminação e pedaladas à noite.
                                  </p>
                               </div>
@@ -4822,22 +4998,22 @@ export default function AdventureMap() {
 
                      {/* AJUSTES ADICIONAIS DE MAPA */}
                      <div className="space-y-3">
-                        <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em] block", isLightModeActive ? "text-slate-400" : "text-white/20")}>COBERTURA DE TRÁFEGO</label>
-                        <div className={cn("p-4 rounded-sm border space-y-4", isLightModeActive ? "bg-slate-50 border-slate-200" : "bg-white/[0.01] border-white/5")}>
+                        <label className="text-[8px] font-mono uppercase tracking-[0.4em] block text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium">COBERTURA DE TRÁFEGO</label>
+                        <div className="p-4 rounded-sm border space-y-4 bg-white/[0.01] border-white/5">
                            <div className="space-y-1">
                               <div className="flex items-center justify-between">
-                                 <span className={cn("text-[9px] font-mono uppercase tracking-wider", isLightModeActive ? "text-slate-700" : "text-white/60")}>Estilo do Mapa Base</span>
+                                 <span className="text-[9px] font-mono uppercase tracking-wider text-white/60">Estilo do Mapa Base</span>
                                  <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase">{mapStyle}</span>
                               </div>
-                              <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-400" : "text-white/30")}>
+                              <p className="text-[7.5px] font-mono uppercase leading-normal text-white/30">
                                  O sistema adapta o mapa tático e de calor conforme a seleção de iluminação atual para maximizar a visibilidade da tripulação.
                               </p>
                            </div>
 
-                           <div className={cn("border-t pt-3 space-y-2", isLightModeActive ? "border-slate-200" : "border-white/5")}>
+                           <div className="border-t pt-3 space-y-2 border-white/5">
                               <div className="flex items-center justify-between">
-                                 <span className={cn("text-[9px] font-mono uppercase tracking-wider", isLightModeActive ? "text-slate-700" : "text-white/60")}>Foco do Mapa de Calor</span>
-                                 <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase">
+                                 <span className="text-[9px] font-mono uppercase tracking-wider text-white/60">Foco do Mapa de Calor</span>
+                                 <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase font-bold">
                                     {heatmapType === 'density' ? 'CONCENTRAÇÃO' : 'VENTO >40 KM/h'}
                                  </span>
                               </div>
@@ -4867,7 +5043,7 @@ export default function AdventureMap() {
                                    Vento &gt;40km/h
                                 </button>
                               </div>
-                              <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-400" : "text-white/30")}>
+                              <p className="text-[7.5px] font-mono uppercase leading-normal text-white/30">
                                  Selecione 'Vento' para visualizar no mapa de calor em tempo real as rajadas meteorológicas por localidade do mapa.
                               </p>
                            </div>
@@ -4876,10 +5052,10 @@ export default function AdventureMap() {
 
                      {/* SIMULADOR CLIMÁTICO CRÍTICO */}
                      <div className="space-y-3">
-                        <label className={cn("text-[8px] font-mono uppercase tracking-[0.4em] block", isLightModeActive ? "text-slate-400" : "text-white/20")}>TESTE DE ALERTAS DE CLIMA</label>
-                        <div className={cn("p-4 rounded-sm border space-y-2.5", isLightModeActive ? "bg-slate-50 border-slate-200" : "bg-white/[0.01] border-white/5")}>
-                           <span className={cn("text-[9px] font-mono font-black uppercase tracking-wider block", isLightModeActive ? "text-slate-800" : "text-white")}>Simulador de Condição Crítica</span>
-                           <p className={cn("text-[7.5px] font-mono uppercase leading-normal", isLightModeActive ? "text-slate-500" : "text-white/40")}>
+                        <label className="text-[8px] font-mono uppercase tracking-[0.4em] block text-black hover:text-white transition-colors cursor-pointer select-none">TESTE DE ALERTAS DE CLIMA</label>
+                        <div className="p-4 rounded-sm border space-y-2.5 bg-white/[0.01] border-white/5">
+                           <span className="text-[9px] font-mono font-black uppercase tracking-wider block text-white">Simulador de Condição Crítica</span>
+                           <p className="text-[7.5px] font-mono uppercase leading-normal font-bold" style={{ color: '#2eceff', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(46,206,255,0.6)' }}>
                               Dispara uma simulação de clima extremo em um ponto de interesse (vento de 45km/h e chuva forte com 8mm) para testar a notificação visual do banner de segurança.
                            </p>
                            <button
@@ -4901,9 +5077,9 @@ export default function AdventureMap() {
                      </div>
 
                      {/* SISTEMA OPERACIONAL ESTÁTICA */}
-                     <div className={cn("pt-4 border-t text-center space-y-1.5", isLightModeActive ? "border-slate-200" : "border-white/5")}>
-                        <div className={cn("text-[7px] font-mono uppercase tracking-[0.2em]", isLightModeActive ? "text-slate-400" : "text-white/30")}>CENTRAL DE AJUSTES TAC-REDE</div>
-                        <div className={cn("text-[8px] font-mono font-bold uppercase", isLightModeActive ? "text-slate-500" : "text-white/40")}>FUSO: BRT // LOCAL_GPS_READY</div>
+                     <div className="pt-4 border-t text-center space-y-1.5 border-white/5">
+                        <div className="text-[7px] font-mono uppercase tracking-[0.2em] text-white/30">CENTRAL DE AJUSTES TAC-REDE</div>
+                        <div className="text-[8px] font-mono font-bold uppercase text-white/40">FUSO: BRT // LOCAL_GPS_READY</div>
                      </div>
                   </motion.div>
                )}
@@ -4969,23 +5145,36 @@ export default function AdventureMap() {
               
               {mapStyle === 'tactical' && (
                 <>
-                  <TileLayer
-                    key={isLightModeActive ? "tile-layer-tactical-base-light" : "tile-layer-tactical-base-dark"}
-                    attribution='&copy; CARTO'
-                    url={isLightModeActive 
-                      ? "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-                      : "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-                    }
-                  />
-                  <TileLayer
-                    key={isLightModeActive ? "tile-layer-tactical-labels-light" : "tile-layer-tactical-labels-dark"}
-                    url={isLightModeActive 
-                      ? "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
-                      : "https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-                    }
-                    className="map-contrast-labels-layer"
-                    zIndex={10}
-                  />
+                  {isTacticalDayActive ? (
+                    <>
+                      <TileLayer
+                        key="tile-layer-tactical-base-light"
+                        attribution='&copy; CARTO'
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
+                        className="map-tactical-day-base"
+                      />
+                      <TileLayer
+                        key="tile-layer-tactical-labels-light"
+                        attribution='&copy; CARTO'
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+                        className="map-contrast-labels-layer-light map-tactical-day-labels"
+                        zIndex={10}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <TileLayer
+                        key="tile-layer-tactical-base-dark"
+                        attribution='&copy; CARTO'
+                        url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+                      />
+                      <TileLayer
+                        key="tile-layer-tactical-labels-dark"
+                        url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+                        zIndex={10}
+                      />
+                    </>
+                  )}
                 </>
               )}
               {mapStyle === 'google_roadmap' && (
@@ -5321,7 +5510,7 @@ export default function AdventureMap() {
       {/* HUD OVERLAYS */}
 
       {/* Left Sidebar HUD (Categories - Universal) */}
-      <div className="hidden lg:flex absolute left-4 lg:left-6 top-[20%] lg:top-1/2 -translate-y-1/2 z-[2000] flex-col gap-1.5 pointer-events-auto">
+      <div className="hidden lg:flex absolute left-4 lg:left-6 top-[20%] lg:top-1/2 -translate-y-1/2 z-[2000] flex-col gap-1.5 pointer-events-auto map-left-hud-sidebar">
          <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-2 rounded-xs mb-2 shadow-2xl">
             <Filter size={14} className="text-[#ff641d] mx-auto animate-pulse" />
          </div>
@@ -5443,11 +5632,11 @@ export default function AdventureMap() {
               transition={{ duration: 0.3 }}
               className="w-full max-w-2xl pointer-events-auto border-2 rounded-sm p-4 shadow-xl flex items-start gap-4 relative isolate backdrop-blur-md"
               style={{
-                background: isLightModeActive 
+                background: isTacticalDayActive 
                   ? 'rgba(254, 242, 242, 0.95)' 
                   : 'rgba(24, 9, 9, 0.95)',
                 borderColor: '#ef4444',
-                color: isLightModeActive ? '#991b1b' : '#fecaca'
+                color: isTacticalDayActive ? '#991b1b' : '#fecaca'
               }}
             >
               <div className="p-2 bg-red-500 text-white rounded-xs shrink-0 animate-pulse">
@@ -5457,7 +5646,7 @@ export default function AdventureMap() {
                 <div className="text-[9px] font-mono uppercase tracking-[0.25em] font-black" style={{ color: '#ef4444' }}>
                   ALERTA METEOROLÓGICO CRÍTICO // SISTEMA_TAC
                 </div>
-                <h3 className="text-xs font-display font-black uppercase tracking-tight" style={{ color: isLightModeActive ? '#7f1d1d' : '#fbcfe8' }}>
+                <h3 className="text-xs font-display font-black uppercase tracking-tight" style={{ color: isTacticalDayActive ? '#7f1d1d' : '#fbcfe8' }}>
                   {criticalWeatherAlert.poiName}
                 </h3>
                 <p className="text-[10px] font-mono uppercase leading-relaxed opacity-90">
@@ -6044,7 +6233,7 @@ export default function AdventureMap() {
 
       {/* Right Action Stack (Vertical controls) - Positioned as floating OVERLAY over the map on both Mobile (top) and Desktop (centered) */}
       <div className={cn(
-        "flex absolute right-4 top-[94px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto flex-col gap-1 lg:gap-1.5 pointer-events-auto transition-all",
+        "flex absolute right-4 top-[94px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto flex-col gap-1 lg:gap-1.5 pointer-events-auto transition-all map-right-action-stack",
         selectedPoint && !isPointDetailsMinimized ? "z-[3000]" : "z-[4000]"
       )}>
          {/* Tactical Mobile Menu Trigger */}
@@ -6663,13 +6852,13 @@ export default function AdventureMap() {
             className={cn(
               "absolute bottom-[80px] lg:bottom-6 z-[3000] p-4 rounded-sm border backdrop-blur-md shadow-2xl flex flex-col gap-3 min-w-[300px] max-w-[340px] pointer-events-auto transition-all duration-300",
               isSidebarMinimized ? "left-4 lg:left-[72px]" : "left-4 lg:left-[440px]",
-              isLightModeActive 
+              isTacticalDayActive 
                 ? "bg-white/95 border-slate-200 text-slate-800" 
                 : "bg-[#0b0c0d]/95 border-[#ff641d]/30 text-white"
             )}
           >
             {/* Header */}
-            <div className={cn("flex items-center justify-between border-b pb-2", isLightModeActive ? "border-slate-200" : "border-white/10")}>
+            <div className={cn("flex items-center justify-between border-b pb-2", isTacticalDayActive ? "border-slate-200" : "border-white/10")}>
               <div className="flex items-center gap-2">
                 <Layers size={14} className="text-[#ff641d] animate-pulse" />
                 <span className="text-[9px] font-mono font-black uppercase tracking-wider">
@@ -6678,7 +6867,7 @@ export default function AdventureMap() {
               </div>
               <button
                 onClick={() => setShowHeatmap(false)}
-                className={cn("transition-colors cursor-pointer", isLightModeActive ? "text-slate-400 hover:text-slate-600" : "text-white/40 hover:text-white")}
+                className={cn("transition-colors cursor-pointer", isTacticalDayActive ? "text-slate-400 hover:text-slate-600" : "text-white/40 hover:text-white")}
                 title="Desativar Mapa de Calor"
               >
                 <X size={12} />
@@ -6687,8 +6876,8 @@ export default function AdventureMap() {
 
             {/* Mode selection buttons */}
             <div className="space-y-1.5">
-              <span className={cn("text-[7.5px] font-mono uppercase tracking-widest block font-bold", isLightModeActive ? "text-slate-400" : "text-white/40")}>FONTE_DADOS</span>
-              <div className={cn("grid grid-cols-2 gap-1 p-1 rounded-sm border", isLightModeActive ? "bg-slate-100 border-slate-200" : "bg-black/30 border-white/5")}>
+              <span className={cn("text-[7.5px] font-mono uppercase tracking-widest block font-bold", isTacticalDayActive ? "text-slate-400" : "text-white/40")}>FONTE_DADOS</span>
+              <div className={cn("grid grid-cols-2 gap-1 p-1 rounded-sm border", isTacticalDayActive ? "bg-slate-100 border-slate-200" : "bg-black/30 border-white/5")}>
                 <button
                   type="button"
                   onClick={() => setHeatmapType('density')}
@@ -6696,7 +6885,7 @@ export default function AdventureMap() {
                     "px-2 py-1.5 rounded-xs transition-all font-mono text-[8px] uppercase tracking-wider cursor-pointer font-bold",
                     heatmapType === 'density'
                       ? "bg-[#ff641d] text-white shadow-sm"
-                      : isLightModeActive
+                      : isTacticalDayActive
                         ? "text-slate-500 hover:text-slate-800"
                         : "text-white/40 hover:text-white/80"
                   )}
@@ -6710,7 +6899,7 @@ export default function AdventureMap() {
                     "px-2 py-1.5 rounded-xs transition-all font-mono text-[8px] uppercase tracking-wider cursor-pointer font-bold flex items-center justify-center gap-1",
                     heatmapType === 'weather_wind'
                       ? "bg-red-600 text-white shadow-sm"
-                      : isLightModeActive
+                      : isTacticalDayActive
                         ? "text-slate-500 hover:text-slate-800"
                         : "text-white/40 hover:text-white/80"
                   )}
@@ -6724,22 +6913,22 @@ export default function AdventureMap() {
             <div className="space-y-2 text-left">
               {heatmapType === 'density' ? (
                 <>
-                  <p className={cn("text-[8.5px] font-mono uppercase leading-relaxed", isLightModeActive ? "text-slate-500" : "text-white/50")}>
+                  <p className={cn("text-[8.5px] font-mono uppercase leading-relaxed", isTacticalDayActive ? "text-slate-500" : "text-white/50")}>
                     Exibe a concentração de pontos de interesse (POIs) cadastrados de suporte (comida, água, combustível, campings) para identificar áreas guarnecidas.
                   </p>
-                  <div className={cn("flex items-center justify-between text-[7px] font-mono border-t pt-1.5", isLightModeActive ? "text-slate-400 border-slate-200" : "text-white/40 border-white/5")}>
+                  <div className={cn("flex items-center justify-between text-[7px] font-mono border-t pt-1.5", isTacticalDayActive ? "text-slate-400 border-slate-200" : "text-white/40 border-white/5")}>
                     <span>Baixa Conc. (#00d4ff)</span>
                     <span>Alta Conc. (#ff641d)</span>
                   </div>
                 </>
               ) : (
                 <>
-                  <p className={cn("text-[8.5px] font-mono uppercase leading-relaxed", isLightModeActive ? "text-slate-500" : "text-white/50")}>
+                  <p className={cn("text-[8.5px] font-mono uppercase leading-relaxed", isTacticalDayActive ? "text-slate-500" : "text-white/50")}>
                     Mapeamento de rajadas de vento em tempo real. Destaca zonas com risco de instabilidade física (motos/bicicletas) acima de <strong className="text-red-500 underline">40km/h</strong>.
                   </p>
                   
                   {/* Legend: Wind scale / colors */}
-                  <div className={cn("space-y-1.5 pt-1.5 border-t", isLightModeActive ? "border-slate-200" : "border-white/5")}>
+                  <div className={cn("space-y-1.5 pt-1.5 border-t", isTacticalDayActive ? "border-slate-200" : "border-white/5")}>
                     <div className="h-2 w-full rounded-full overflow-hidden flex bg-gradient-to-r from-blue-500 via-green-500 via-yellow-500 to-red-600" />
                     <div className="flex justify-between items-center text-[7px] font-mono font-black">
                       <span className="text-blue-500">&lt;15 km/h</span>
