@@ -3184,7 +3184,7 @@ export default function AdventureMap() {
       "h-auto lg:h-[calc(100vh-96px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden isolate relative no-scrollbar scroll-smooth transition-colors duration-300",
       isTacticalDayActive ? "bg-[#ECE6DA] tactical-day-mode" : "bg-[#0b0c0d]"
     )}>
-      {/* Dynamic SVG Filter for Map Tiles in Tactical Day Mode */}
+      {/* Dynamic SVG Filters for Map Tiles in Tactical Modes */}
       <svg width="0" height="0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} className="pointer-events-none">
         <defs>
           <filter id="tactical-day-map-filter">
@@ -3202,8 +3202,7 @@ export default function AdventureMap() {
           </filter>
         </defs>
       </svg>
-      {isTacticalDayActive && (
-        <style>{`
+      <style>{`
           .tactical-day-mode {
             background-color: #ECE6DA !important;
             color: #1a150e !important;
@@ -3516,7 +3515,6 @@ export default function AdventureMap() {
             background-color: rgba(243, 238, 228, 0.9) !important;
           }
         `}</style>
-      )}
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
       {/* --- TACTICAL SIDEBAR (CONSOLIDATED) --- */}
@@ -5170,6 +5168,7 @@ export default function AdventureMap() {
                       />
                       <TileLayer
                         key="tile-layer-tactical-labels-dark"
+                        attribution='&copy; CARTO'
                         url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
                         zIndex={10}
                       />
