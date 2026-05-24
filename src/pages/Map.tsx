@@ -21,6 +21,7 @@ import WeatherWidget from '@/src/components/WeatherWidget';
 import RiskRadar from '@/src/components/RiskRadar';
 import SEO from '@/src/components/SEO';
 import GPSTracker from '@/src/components/GPSTracker';
+import MiniCompass from '@/src/components/MiniCompass';
 import { cn } from '@/src/lib/utils';
 import { LocationPoint } from '@/src/types';
 import { db, auth } from '@/src/lib/firebase';
@@ -1797,6 +1798,7 @@ export default function AdventureMap() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
   const [selectedPreDefinedRoute, setSelectedPreDefinedRoute] = useState<typeof preDefinedRoutes[0] | null>(null);
+  const [isCompassOpen, setIsCompassOpen] = useState(true);
 
   // Community Operational Validation state
   const [routeEvaluations, setRouteEvaluations] = useState<Record<string, {
@@ -2077,6 +2079,33 @@ export default function AdventureMap() {
   const [autoDiscoveredPoints, setAutoDiscoveredPoints] = useState<LocationPoint[]>([]);
   const [isDiscoveringPOIs, setIsDiscoveringPOIs] = useState(false);
   const [showRoutesMenu, setShowRoutesMenu] = useState(false);
+
+  // Active Destination / Route calculation for Compass Target Bearing Guidance
+  const activeDestinationCoords = useMemo<[number, number] | null>(() => {
+    if (selectedPoint) {
+      return [selectedPoint.lat, selectedPoint.lng];
+    }
+    if (routePoints.length > 0) {
+      return routePoints[routePoints.length - 1]; // Last node of currently drawn path
+    }
+    if (selectedPreDefinedRoute && selectedPreDefinedRoute.points.length > 0) {
+      return selectedPreDefinedRoute.points[selectedPreDefinedRoute.points.length - 1]; // End of predefined route
+    }
+    return null;
+  }, [selectedPoint, routePoints, selectedPreDefinedRoute]);
+
+  const activeDestinationName = useMemo<string>(() => {
+    if (selectedPoint) {
+      return selectedPoint.name;
+    }
+    if (selectedPreDefinedRoute) {
+      return selectedPreDefinedRoute.name;
+    }
+    if (routePoints.length > 0) {
+      return `COORD_NODE_${routePoints.length}`;
+    }
+    return '';
+  }, [selectedPoint, routePoints, selectedPreDefinedRoute]);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const routesMenuContainerRef = useRef<HTMLDivElement>(null);
@@ -5183,6 +5212,21 @@ export default function AdventureMap() {
             }}
           />
 
+          {/* Mini Bússola Minimalista Flutuante & Arrastável */}
+          <AnimatePresence>
+            {isCompassOpen && (
+              <MiniCompass 
+                lat={mapCenter[0]}
+                lng={mapCenter[1]}
+                zoom={mapZoom}
+                isOpen={isCompassOpen}
+                onClose={() => setIsCompassOpen(false)}
+                destinationCoords={activeDestinationCoords}
+                destinationName={activeDestinationName}
+              />
+            )}
+          </AnimatePresence>
+
           {/* --- MAP CORE (Layer 0) --- */}
           <div id="map-container" className="relative flex-1 min-h-0 lg:absolute lg:inset-0 z-0 w-full">
             <MapContainer 
@@ -6325,6 +6369,19 @@ export default function AdventureMap() {
             <LocateFixed size={16} />
             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Minha_Posição</div>
          </button>
+
+         <button 
+           onClick={() => setIsCompassOpen(!isCompassOpen)}
+           className={cn(
+             "w-9 h-9 lg:w-12 lg:h-12 border rounded-sm backdrop-blur-md transition-all flex items-center justify-center group relative",
+             isCompassOpen ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-black/80 border-white/10 text-[#ff641d]/80 hover:border-[#ff641d]/40 hover:text-white"
+           )}
+           title="BÚSSOLA DE EXPEDIÇÃO"
+           id="toggle-compass-stack-btn"
+         >
+            <CompassIcon size={16} className={cn(isCompassOpen && "animate-spin-slow")} />
+            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Bússola_GPS</div>
+         </button>
          
          <button 
            onClick={() => setIsTracing(!isTracing)}
@@ -6659,6 +6716,13 @@ export default function AdventureMap() {
           0% { transform: translateY(0vh); }
           50% { transform: translateY(100vh); }
           100% { transform: translateY(0vh); }
+        }
+        @keyframes spinSlow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spinSlow 12s linear infinite;
         }
         .leaflet-container { background: #0b0c0d !important; }
         .leaflet-popup-content-wrapper { background: #0b0c0d !important; padding: 0 !important; border: 1px solid rgba(255,255,255,0.05); }
