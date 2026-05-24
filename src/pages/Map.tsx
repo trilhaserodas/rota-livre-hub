@@ -3218,31 +3218,31 @@ export default function AdventureMap() {
           
           /* As user zooms in, dynamically isolate and highlight roads, BRs, RUTAs, and local routes */
           .map-zoom-6 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: contrast(1.1) brightness(1.05) !important;
+            filter: brightness(1.8) contrast(1.6) saturate(0.8) !important;
           }
           .map-zoom-7 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: contrast(1.18) brightness(1.1) !important;
+            filter: brightness(2.2) contrast(2.0) saturate(0.8) !important;
           }
           .map-zoom-8 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: contrast(1.25) brightness(1.15) !important;
+            filter: brightness(2.6) contrast(2.3) saturate(0.8) !important;
           }
           .map-zoom-9 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: contrast(1.35) brightness(1.2) !important;
+            filter: brightness(3.0) contrast(2.7) saturate(0.8) !important;
           }
           .map-zoom-10 .map-tactical-dark-base-layer .leaflet-tile,
           .map-zoom-11 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: contrast(1.45) brightness(1.25) !important;
+            filter: brightness(3.3) contrast(3.1) saturate(0.8) !important;
           }
           .map-zoom-12 .map-tactical-dark-base-layer .leaflet-tile,
           .map-zoom-13 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: contrast(1.58) brightness(1.3) !important;
+            filter: brightness(3.7) contrast(3.5) saturate(0.8) !important;
           }
           .map-zoom-14 .map-tactical-dark-base-layer .leaflet-tile,
           .map-zoom-15 .map-tactical-dark-base-layer .leaflet-tile,
           .map-zoom-16 .map-tactical-dark-base-layer .leaflet-tile,
           .map-zoom-17 .map-tactical-dark-base-layer .leaflet-tile,
           .map-zoom-18 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: contrast(1.7) brightness(1.35) !important;
+            filter: brightness(4.3) contrast(4.0) saturate(0.8) !important;
           }
 
           /* Ensure labels are perfectly matching the crispness of the road network at high zoom */
