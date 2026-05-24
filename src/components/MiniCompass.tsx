@@ -23,12 +23,36 @@ export default function MiniCompass({
   destinationName
 }: MiniCompassProps) {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
   
   // Custom course angle / offset set by user rotating the bezel
   const [bezelRotation, setBezelRotation] = useState(0);
   
   // Needle wobble simulation state when position changes
   const [needleWobble, setNeedleWobble] = useState(0);
+
+  // Auto-minimize after 30 seconds under expanded state
+  useEffect(() => {
+    if (!isMinimized && isOpen) {
+      setTimeLeft(30);
+    }
+  }, [isMinimized, isOpen]);
+
+  useEffect(() => {
+    if (isMinimized || !isOpen) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setIsMinimized(true);
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isMinimized, isOpen]);
 
   // Trigger wobble effect on coordinate change to simulate fluid/magnetic dampening
   useEffect(() => {
@@ -103,13 +127,14 @@ export default function MiniCompass({
       dragMomentum={false}
       dragElastic={0.05}
       initial={{ opacity: 0, scale: 0.95, y: 30 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
+      animate={{ opacity: 0.65, scale: 1, y: 0 }}
+      whileHover={{ opacity: 0.85 }}
       exit={{ opacity: 0, scale: 0.95, y: 30 }}
       className={cn(
-        "fixed z-[4500] bg-[#0c0d0f]/95 hover:bg-[#0c0d0f]/99 backdrop-blur-xl border select-none transition-shadow",
+        "fixed z-[4500] bg-[#0c0d0f]/65 backdrop-blur-xl border select-none transition-all duration-300 shadow-md",
         isMinimized 
           ? "w-44 border-white/10 rounded-lg p-2.5 shadow-lg shadow-black/80" 
-          : "w-72 border-[#ff641d]/20 rounded-xl p-4.5 shadow-[0_20px_50px_rgba(0,0,0,0.92)]"
+          : "w-72 border-[#ff641d]/20 rounded-xl p-4.5"
       )}
       style={{
         left: 'calc(50% - 144px)', // Initial desktop center positioning
@@ -125,9 +150,17 @@ export default function MiniCompass({
         <div className="flex items-center gap-2">
           <Move id="compass-drag-icon" className="w-3.5 h-3.5 text-white/40" />
           <div className="flex flex-col">
-            <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase tracking-widest leading-none">
-              GPS BÚSSOLA
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase tracking-widest leading-none">
+                GPS BÚSSOLA
+              </span>
+              {!isMinimized && (
+                <div className="flex items-center gap-1 bg-[#ff641d]/10 px-1 py-[1.5px] rounded-xs border border-[#ff641d]/25 text-[7px] font-mono text-[#ff641d] font-black leading-none tracking-wider" title="Minimiza em 30s">
+                  <span className="animate-ping w-1 h-1 rounded-full bg-[#ff641d] inline-block mr-0.5" />
+                  {timeLeft}S
+                </div>
+              )}
+            </div>
             {!isMinimized && (
               <span className="text-[6.5px] font-mono text-white/30 uppercase tracking-tighter mt-0.5">
                 Instrumentação de Navegação
