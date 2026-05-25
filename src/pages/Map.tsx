@@ -1701,6 +1701,23 @@ const initialPoints: LocationPoint[] = [
       'https://i.ibb.co/0RzRc6cg/Captura-de-tela-2026-05-25-152344.png'
     ],
     description: 'Rústico e aconchegante hostel posicionado em Porto Alegre (RS), ideal para suporte, repouso estratégico e apoio ao cicloturista ou mochileiro de longa distância. ⚠️ Status Operacional Yellow: Utilizável com atenção pela comunidade de expedicionários e viajantes de estrada.'
+  },
+  {
+    id: 'hostel-refugio-cochamo',
+    name: '🏨 Refugio Cochamó',
+    address: 'Valle La Junta Décima, Cochamo, Los Lagos, Chile',
+    lat: -41.32050,
+    lng: -72.03060,
+    category: 'hostel',
+    plusCode: 'HVPG+XV La Junta, Cochamo, Chile',
+    operationalStatus: 'STABLE',
+    image: 'https://i.ibb.co/TMKJ5gTx/capa-hostel.png',
+    images: [
+      'https://i.ibb.co/TMKJ5gTx/capa-hostel.png',
+      'https://i.ibb.co/219TM787/Captura-de-tela-2026-05-25-162715.png',
+      'https://i.ibb.co/3mGkRc64/Captura-de-tela-2026-05-25-162740.png'
+    ],
+    description: 'Localizado no icônico e majestoso Valle de Cochamó (Los Lagos, Patagônia Chilena), também conhecido como o Yosemite da América do Sul. Um refúgio operacional e tático lendário para montanhistas, escaladores, cicloturistas de longa distância e mochileiros que desbravam as florestas nativas e montanhas de granito na Décima Região.'
   }
 ];
 
