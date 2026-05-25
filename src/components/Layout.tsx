@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle, Wifi, WifiOff, RotateCw, UploadCloud, Trash2 } from 'lucide-react';
+import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle, Wifi, WifiOff, RotateCw, UploadCloud, Trash2, Store } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { auth, db } from '@/src/lib/firebase';
@@ -18,6 +18,7 @@ const navItems = [
   { name: 'Moedas', path: '/conversor', icon: Coins },
   { name: 'Fusos', path: '/horarios', icon: Clock },
   { name: 'Blog', path: '/blog', icon: BookOpen },
+  { name: 'Parceiros', path: '/parceiros', icon: Store },
   { name: 'Sobre', path: '/sobre', icon: Compass },
 ];
 
@@ -447,6 +448,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link to="/horarios" className="hover:text-white transition-colors">Time_Zones</Link>
               <Link to="/mapa" className="hover:text-white transition-colors">Live_Maps</Link>
               <Link to="/rotas" className="hover:text-white transition-colors">Global_Routes</Link>
+              <Link to="/parceiros" className="hover:text-white hover:text-[#ff641d] transition-colors text-[11px] text-[#ff641d]/80 font-bold">Parceiros_Operacionais</Link>
               <div className="h-[1px] bg-white/5 my-2" />
               <Link to="/privacidade" className="hover:text-white transition-colors text-[10px]">Privacy_Protocol</Link>
               <Link to="/termos" className="hover:text-white transition-colors text-[10px]">Service_Terms</Link>

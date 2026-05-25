@@ -18,6 +18,7 @@ import Admin from './pages/Admin';
 import RoutesPage from './pages/Routes';
 import CarreteraAustral from './pages/CarreteraAustral';
 import About from './pages/About';
+import Partners from './pages/Partners';
 import AirTravel from './pages/AirTravel';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/sobre" element={<About />} />
+            <Route path="/parceiros" element={<Partners />} />
             <Route path="/privacidade" element={<Privacy />} />
             <Route path="/termos" element={<Terms />} />
             {/* Fallback */}
