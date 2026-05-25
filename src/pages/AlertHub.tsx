@@ -29,7 +29,8 @@ import {
   Smartphone,
   Eye,
   Zap,
-  Shield
+  Shield,
+  Radar
 } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
@@ -439,6 +440,187 @@ const PRIORITY_THEMES = {
   CRITICAL: { color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', glow: 'shadow-[0_0_25px_rgba(239,68,68,0.2)]' },
 };
 
+function TacticalAlertActivation() {
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingStep, setSubmittingStep] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('alert_hub_subscribed') === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    let interval: any;
+    if (isSubmitting) {
+      setSubmittingStep(0);
+      interval = setInterval(() => {
+        setSubmittingStep((prev) => {
+          if (prev >= 4) {
+            clearInterval(interval);
+            setTimeout(() => {
+              setIsSubmitting(false);
+              setIsSubmitted(true);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('alert_hub_subscribed', 'true');
+              }
+            }, 600);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 500);
+    }
+    return () => clearInterval(interval);
+  }, [isSubmitting]);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setIsSubmitting(true);
+  };
+
+  return (
+    <div className="relative p-6 md:p-8 rounded-3xl border border-white/[0.04] bg-gradient-to-br from-[#ff641d]/[0.03] via-white/[0.01] to-transparent overflow-hidden my-8">
+      {/* Corner Brackets */}
+      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[#ff641d]/30" />
+      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-[#ff641d]/30" />
+      <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#ff641d]/30" />
+      <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#ff641d]/30" />
+      
+      {/* Glow & Signal lines */}
+      <div className="absolute top-0 right-4 flex items-center gap-1.5 px-3 py-1 bg-[#ff641d]/5 border-x border-b border-[#ff641d]/10 rounded-b-lg">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#ff641d] animate-pulse" />
+        <span className="font-mono text-[8px] text-[#ff641d] uppercase tracking-[0.25em] font-bold">OPS_CHANNEL: ONLINE</span>
+      </div>
+
+      <div className="md:grid md:grid-cols-12 md:gap-8 items-center">
+        {/* Left column */}
+        <div className="md:col-span-7 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#ff641d]/10 text-[#ff641d] rounded-xl shadow-[0_0_15px_rgba(255,100,29,0.1)]">
+              <Radar size={20} className="animate-spin" style={{ animationDuration: '6s' }} />
+            </div>
+            <div>
+              <span className="text-[8px] font-mono text-[#ff641d] uppercase tracking-[0.35em] font-black block">SATELLITE INTEL FEED</span>
+              <h3 className="text-lg md:text-xl font-display font-black text-white uppercase tracking-tight mt-0.5">
+                ATIVAR ALERTAS OPERACIONAIS
+              </h3>
+            </div>
+          </div>
+          
+          <p className="text-white/55 text-xs font-sans leading-relaxed">
+            Receba alertas relevantes da estrada: clima extremo, mudanças em rotas, fronteiras, riscos operacionais e informações úteis para viajantes da América Latina.
+          </p>
+          
+          <div className="text-[8px] font-mono text-white/20 uppercase tracking-[0.25em] flex items-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500/50" />
+            Criptografia de ponta a ponta
+            <span className="text-white/10">•</span>
+            Atualizações em tempo real
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className="md:col-span-5 mt-6 md:mt-0">
+          <AnimatePresence mode="wait">
+            {isSubmitted ? (
+              <motion.div 
+                key="submitted-state"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="p-5 rounded-2xl border border-green-500/20 bg-green-500/[0.02] flex flex-col items-center text-center gap-3 relative"
+              >
+                {/* Embedded Grid Dots Background */}
+                <div className="absolute inset-0 bg-[radial-gradient(#22c55e_0.5px,transparent_0.5px)] [background-size:12px_12px] opacity-[0.03] pointer-events-none rounded-2xl" />
+                <div className="p-2.5 rounded-full bg-green-500/10 text-green-400 relative z-10">
+                  <CheckCircle2 size={22} className="animate-pulse" />
+                </div>
+                <div className="relative z-10">
+                  <h5 className="font-mono text-[10px] text-green-400 font-bold uppercase tracking-[0.2em]">MONITORAMENTO ATIVO</h5>
+                  <p className="font-mono text-[9px] text-white/40 uppercase tracking-widest mt-1.5 leading-relaxed max-w-[240px] mx-auto">
+                    Pipeline conectado. Seu endpoint está registrado para receber transmissões de contingência e boletins táticos.
+                  </p>
+                </div>
+                <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.25em] mt-1">
+                  SECURE_OPS_HASH: {Math.random().toString(36).substring(2, 8).toUpperCase()}-NODE
+                </div>
+              </motion.div>
+            ) : isSubmitting ? (
+              <motion.div 
+                key="submitting-state"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] space-y-4"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[9px] font-mono text-white/50">
+                    <span className="tracking-widest uppercase">CONECTANDO_NÓ_DE_SEGURANÇA...</span>
+                    <span className="text-[#ff641d] animate-pulse font-bold">{Math.round((submittingStep / 4) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-[#ff641d] h-full rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(255,100,29,0.5)]"
+                      style={{ width: `${(submittingStep / 4) * 100}%` }}
+                    />
+                  </div>
+                  <div className="text-[8px] font-mono text-white/35 uppercase tracking-widest h-5 flex items-center bg-black/40 px-3 rounded-lg border border-white/[0.03]">
+                    <span className="text-[#ff641d] mr-1.5 animate-pulse">&gt;</span>
+                    {submittingStep === 0 && 'SYN_HANDSHAKE_SSL_ACTIVE...'}
+                    {submittingStep === 1 && 'CONNECTING_COMS_PIPELINE_PROP_02...'}
+                    {submittingStep === 2 && 'ENCRYPTING_METADATA_RECEIVER...'}
+                    {submittingStep === 3 && 'FINALIZING_SECURE_DATA_LINK...'}
+                    {submittingStep >= 4 && 'REGISTRATION_COMPLETE_AUTHORIZED...'}
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.form 
+                key="form-state"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onSubmit={handleSubscribe} 
+                className="space-y-3"
+              >
+                <div className="relative group/input">
+                  <input 
+                    type="email" 
+                    required
+                    placeholder="INSIRA SEU ENDEREÇO DE E-MAIL..."
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-[10px] sm:text-[11px] font-mono tracking-widest text-white uppercase placeholder-white/25 focus:border-[#ff641d]/40 focus:ring-1 focus:ring-[#ff641d]/15 transition-all outline-none"
+                  />
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[7px] font-mono text-white/20 uppercase tracking-widest group-focus-within/input:text-[#ff641d]/60 select-none">
+                    SECURE_SSL
+                  </div>
+                </div>
+                
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-[#ff641d] hover:bg-[#ff7b34] active:scale-[0.98] text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-[0.25em] uppercase rounded-xl transition-all shadow-[0_4px_20px_rgba(255,100,29,0.15)] hover:shadow-[0_8px_25px_rgba(255,100,29,0.3)] flex items-center justify-center gap-2 border border-white/10 select-none"
+                >
+                  <Radar size={12} className="animate-pulse" />
+                  ATIVAR MONITORAMENTO
+                </button>
+              </motion.form>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <div className="mt-6 pt-4 border-t border-white/[0.03] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[8px] font-mono text-white/35 uppercase tracking-widest text-left">
+        <span>Sem spam. Apenas alertas relevantes para estrada e expedições.</span>
+        <span className="text-[#ff641d]/40">OPS_SECURE: 3072-BIT BITWISE ENCRYPTION</span>
+      </div>
+    </div>
+  );
+}
+
 const ADMIN_EMAIL = "trilhaserodas@gmail.com";
 
 export default function AlertHub() {
@@ -706,6 +888,9 @@ export default function AlertHub() {
               </div>
             )}
           </div>
+
+          {/* Tactical Alert Activation Section */}
+          {activeCategory !== 'SEGURANÇA' && <TacticalAlertActivation />}
 
           {/* Community Tactical Feed */}
           <div className="mt-12 pt-12 border-t border-white/5">

@@ -11,6 +11,8 @@ interface MiniCompassProps {
   onClose: () => void;
   destinationCoords?: [number, number] | null;
   destinationName?: string;
+  mapRotation?: number;
+  onMapRotationChange?: (angle: number) => void;
 }
 
 export default function MiniCompass({
@@ -20,16 +22,48 @@ export default function MiniCompass({
   isOpen,
   onClose,
   destinationCoords,
-  destinationName
+  destinationName,
+  mapRotation = 0,
+  onMapRotationChange
 }: MiniCompassProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
   
   // Custom course angle / offset set by user rotating the bezel
-  const [bezelRotation, setBezelRotation] = useState(0);
+  const [bezelRotation, setBezelRotation] = useState(mapRotation);
   
-  // Needle wobble simulation state when position changes
+  // Needle wobble simulation state when position changes or rotation occurs
   const [needleWobble, setNeedleWobble] = useState(0);
+
+  const [prevMapRotation, setPrevMapRotation] = useState(mapRotation);
+
+  // Sync bezelRotation with incoming mapRotation prop
+  useEffect(() => {
+    setBezelRotation(mapRotation);
+  }, [mapRotation]);
+
+  // Physical inertia deflection effect when the map rotates
+  useEffect(() => {
+    if (mapRotation !== prevMapRotation) {
+      const diff = mapRotation - prevMapRotation;
+      
+      // Simulate real-world physical inertia sliding slip:
+      // A physical needle resists turning immediately when the map rotates,
+      // creating an opposite-direction deflection before oscillating back.
+      const startWobble = -diff * 0.65; // inertial slip angle
+      setNeedleWobble(startWobble);
+
+      const timeouts = [
+        setTimeout(() => setNeedleWobble(-startWobble * 0.6), 140),
+        setTimeout(() => setNeedleWobble(startWobble * 0.35), 280),
+        setTimeout(() => setNeedleWobble(-startWobble * 0.15), 420),
+        setTimeout(() => setNeedleWobble(0), 550)
+      ];
+
+      setPrevMapRotation(mapRotation);
+      return () => timeouts.forEach(clearTimeout);
+    }
+  }, [mapRotation, prevMapRotation]);
 
   // Auto-minimize after 30 seconds under expanded state
   useEffect(() => {
@@ -116,6 +150,9 @@ export default function MiniCompass({
   const resetCompass = () => {
     setBezelRotation(0);
     setNeedleWobble(0);
+    if (onMapRotationChange) {
+      onMapRotationChange(0);
+    }
   };
 
   if (!isOpen) return null;
@@ -331,7 +368,11 @@ export default function MiniCompass({
             <div id="bezel-controls" className="flex items-center gap-1.5 mt-3 pt-1">
               <button
                 id="bezel-left-btn"
-                onClick={() => setBezelRotation(prev => prev - 5)}
+                onClick={() => {
+                  const nextRot = bezelRotation - 5;
+                  setBezelRotation(nextRot);
+                  if (onMapRotationChange) onMapRotationChange(nextRot);
+                }}
                 className="px-2.5 py-1 bg-black/40 border border-white/10 rounded-xs text-[8px] font-mono font-bold text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/30 transition-all uppercase"
                 title="Girar Bezel para Esquerda (Ajuste fino -5°)"
               >
@@ -344,7 +385,11 @@ export default function MiniCompass({
 
               <button
                 id="bezel-right-btn"
-                onClick={() => setBezelRotation(prev => prev + 5)}
+                onClick={() => {
+                  const nextRot = bezelRotation + 5;
+                  setBezelRotation(nextRot);
+                  if (onMapRotationChange) onMapRotationChange(nextRot);
+                }}
                 className="px-2.5 py-1 bg-black/40 border border-white/10 rounded-xs text-[8px] font-mono font-bold text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/30 transition-all uppercase"
                 title="Girar Bezel para Direita (Ajuste fino +5°)"
               >

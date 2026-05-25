@@ -11,6 +11,7 @@ import {
   Camera, AlertTriangle, ShieldCheck, Layers, ArrowUpRight, 
   Bike, Triangle, Plus, Minus, Crosshair, Fuel, Shield, 
   LocateFixed, Zap, Navigation, Globe, Navigation2, Compass as CompassIcon,
+  RotateCw, RotateCcw,
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer, Send,
   Cloud, Sun, Moon, Settings, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck,
@@ -393,6 +394,140 @@ const OperationalMetric = ({ label, value, icon: Icon, color = "text-[#ff641d]" 
 // --- Definitions & Constants ---
 
 const initialPoints: LocationPoint[] = [
+  {
+    id: 'cicle-rans',
+    name: 'Cicle Rans',
+    lat: -19.4594,
+    lng: -44.2461,
+    category: 'repair',
+    description: 'Bicicletaria e oficina mecânica de bicicletas no Centro de Sete Lagoas. Oferecem manutenção especializada, peças de reposição e acessórios em geral.',
+    address: 'R. Prof. Abeylard, 751 - Centro, Sete Lagoas - MG, 35700-069',
+    phone: '031995356916',
+    hours: 'Monday-Thursday: 8 AM–7 PM\nFriday: 8 AM–6 PM\nSaturday: 9 AM–3 PM',
+    plusCode: 'HQ23+2P Centro, Sete Lagoas - State of Minas Gerais',
+    image: 'https://i.ibb.co/1t81fSHk/Captura-de-tela-2026-05-24-200915.png',
+    images: [
+      'https://i.ibb.co/1t81fSHk/Captura-de-tela-2026-05-24-200915.png'
+    ]
+  },
+  {
+    id: 'bike-reis-gravatai',
+    name: 'Bike Reis',
+    lat: -29.9602,
+    lng: -51.0189,
+    category: 'repair',
+    description: 'Loja de bicicletas e oficina de mecânica especializada em Gravataí - RS. Atendimento nota 10, personalizado, preço justo e estoque completo de tudo que você procura.',
+    address: 'Av. Dorival Cândido Luz de Oliveira, 6314 - São Vicente, Gravataí - RS, 94060-001',
+    phone: '05134977374',
+    plusCode: '3W8R+PR São Vicente, Gravataí - RS',
+    image: 'https://i.ibb.co/Qj7xhBWB/Captura-de-tela-2026-05-24-204201.png',
+    images: [
+      'https://i.ibb.co/Qj7xhBWB/Captura-de-tela-2026-05-24-204201.png'
+    ]
+  },
+  {
+    id: 'bike-show-shimano-gravatai',
+    name: 'Bike Show Shimano',
+    lat: -29.9582,
+    lng: -51.0115,
+    category: 'repair',
+    description: 'Serviço de mecânica especializada Shimano, peças e acessórios de alta qualidade para ciclistas profissionais e entusiastas.',
+    address: 'R. Soledade, 41 - Vera Cruz, Gravataí - RS, 94090-390',
+    phone: '05130421260',
+    hours: 'Monday-Saturday: 8:30 AM–6:30 PM',
+    plusCode: '3W8W+PM Vera Cruz, Gravataí - RS',
+    image: 'https://i.ibb.co/0p2BjkVg/Captura-de-tela-2026-05-24-204547.png',
+    images: [
+      'https://i.ibb.co/0p2BjkVg/Captura-de-tela-2026-05-24-204547.png'
+    ]
+  },
+  {
+    id: 'theo-bikes-gravatai',
+    name: 'Théo Bikes Gravataí',
+    lat: -29.9320,
+    lng: -50.9995,
+    category: 'repair',
+    description: 'Oficina especializada e venda de bicicletas de diversos tipos com ótimo custo-benefício, atendimento de excelência e mecânica qualificada em Gravataí.',
+    address: 'Av. dos Estados, N:1140 - sala 1 - Bom Sucesso, Gravataí - RS, 94000-001',
+    hours: 'Monday-Wednesday: 8:30 AM–6 PM\nThursday-Friday: 8 AM–6 PM\nSaturday: 8:30 AM–12 PM',
+    plusCode: '3XF4+QX Bom Sucesso, Gravataí - RS',
+    image: 'https://i.ibb.co/8g0sNQrz/Captura-de-tela-2026-05-24-205952.png',
+    images: [
+      'https://i.ibb.co/8g0sNQrz/Captura-de-tela-2026-05-24-205952.png'
+    ]
+  },
+  {
+    id: 'lukas-mecanico-sete-lagoas',
+    name: 'Lukas Mecânico - Oficina Mecânica em Sete Lagoas',
+    lat: -19.44422,
+    lng: -44.25301,
+    category: 'repair',
+    description: 'Oficina mecânica em Sete Lagoas com excelente prestação de serviços e agilidade no suporte. 💬 Experiência Real: Serviços bem prestados e com agilidade. Lukas sempre prestativo, atencioso e sempre procurando uma melhor forma de ajudar. Super recomendo',
+    address: 'ZAP ( 31 - 92006.9394 - Montreal, Sete Lagoas - MG, 35701-367',
+    phone: '031983266891',
+    rating: '100%',
+    operationalStatus: 'STABLE',
+    hours: '24 hours',
+    plusCode: 'GQH3+FP Sete Lagoas, State of Minas Gerais',
+    image: 'https://i.ibb.co/HfY9WtFv/Captura-de-tela-2026-05-24-194138.png',
+    images: [
+      'https://i.ibb.co/HfY9WtFv/Captura-de-tela-2026-05-24-194138.png'
+    ]
+  },
+  {
+    id: 'taller-mecanico-el-chueco',
+    name: 'Taller Mecanico El Chueco',
+    lat: -45.86461,
+    lng: -67.51175,
+    category: 'repair',
+    description: 'Oficina mecânica localizada em Comodoro Rivadavia, Chubut, Argentina. Conhecida pela hospitalidade e presteza no atendimento a viajantes de toda a América do Sul. 💬 Experiência Real: Somos brasileiros e estávamos numa viagem por toda a Argentina quando próximo a Comodoro Rivadavia ouvimos um barulho estranho na roda traseira do carro. Fomos ao El Chueco por volta das 17:30h da tarde. Apesar de já estar com 3 ou 4 carros, fomos atendidos da melhor forma e com bastante agilidade.',
+    address: 'Manuel de Arburua 3386, 9000 Comodoro Rivadavia, Chubut, Argentina',
+    phone: '+5492976210021',
+    rating: '100%',
+    operationalStatus: 'STABLE',
+    hours: 'Monday-Friday: 9:30 AM–7 PM\nSaturday: 9:30 AM–1:30 PM\nSunday: Closed',
+    plusCode: '4F7F+7F Comodoro Rivadavia, Chubut Province, Argentina',
+    image: 'https://i.ibb.co/mkGdCYf/Captura-de-tela-2026-05-25-101954.png',
+    images: [
+      'https://i.ibb.co/mkGdCYf/Captura-de-tela-2026-05-25-101954.png'
+    ]
+  },
+  {
+    id: 'maxiconsumo-sa',
+    name: 'Maxiconsumo SA',
+    lat: -45.8857202,
+    lng: -67.5213443,
+    category: 'market',
+    description: 'Grande supermercado atacadista em Comodoro Rivadavia, Chubut, Argentina. Excelente ponto estratégico para viajantes realizarem abastecimento completo de mantimentos, alimentos para trilha/viagem e utilidades em geral com preços competitivos.',
+    address: 'Av. Hipólito Yrigoyen 3057, U9000 Comodoro Rivadavia, Chubut, Argentina',
+    phone: '+542974485630',
+    operationalStatus: 'WARNING',
+    hours: 'Tuesday-Saturday: 8 AM–7 PM\nSunday: 9 AM–5 PM',
+    image: 'https://i.ibb.co/sJF87rXX/Captura-de-tela-2026-05-25-105343.png',
+    images: [
+      'https://i.ibb.co/sJF87rXX/Captura-de-tela-2026-05-25-105343.png'
+    ]
+  },
+  {
+    id: 'pousada-recanto-pau-brasil',
+    name: 'Pousada Recanto Pau Brasil',
+    lat: -19.4608,
+    lng: -44.2393,
+    category: 'hostel',
+    description: 'Pousada aconchegante em Sete Lagoas com excelente custo-benefício, cercada pela natureza e ótima hospitalidade.',
+    address: 'R. Japi, 324 - Nossa Sra. do Carmo, Sete Lagoas - MG, 35700-418',
+    phone: '031991987000',
+    rating: '60%',
+    operationalStatus: 'WARNING',
+    hours: 'Check-in time: 14:00\nCheck-out time: 11:00',
+    plusCode: 'HQ22+PH Nossa Sra. do Carmo, Sete Lagoas - State of Minas Gerais',
+    image: 'https://i.ibb.co/1Gv142Sn/Captura-de-tela-2026-05-24-190312.png',
+    images: [
+      'https://i.ibb.co/1Gv142Sn/Captura-de-tela-2026-05-24-190312.png',
+      'https://i.ibb.co/JwcjD50d/Captura-de-tela-2026-05-24-190127.png',
+      'https://i.ibb.co/MD9cngGM/Captura-de-tela-2026-05-24-190226.png'
+    ]
+  },
   { 
     id: '1', 
     name: 'Camping El Chorro - Villa O\'Higgins', 
@@ -1688,17 +1823,41 @@ function MapEventsHandler({ onMapClick, active }: { onMapClick: (latlng: L.LatLn
   return null;
 }
 
-function MapInteractionsHandler({ onMapClick, onZoomChange }: { onMapClick: () => void, onZoomChange?: (zoom: number) => void }) {
+function MapInteractionsHandler({ 
+  onMapClick, 
+  onZoomChange,
+  onCenterChange,
+  onManualInteraction
+}: { 
+  onMapClick: () => void;
+  onZoomChange?: (zoom: number) => void;
+  onCenterChange?: (center: [number, number]) => void;
+  onManualInteraction?: () => void;
+}) {
   const map = useMapEvents({
     click: () => {
       onMapClick();
     },
     dragstart: () => {
       onMapClick();
+      if (onManualInteraction) onManualInteraction();
+    },
+    dragend: () => {
+      if (onCenterChange) {
+        const c = map.getCenter();
+        onCenterChange([c.lat, c.lng]);
+      }
+    },
+    zoomstart: () => {
+      if (onManualInteraction) onManualInteraction();
     },
     zoomend: () => {
       if (onZoomChange) {
         onZoomChange(map.getZoom());
+      }
+      if (onCenterChange) {
+        const c = map.getCenter();
+        onCenterChange([c.lat, c.lng]);
       }
     }
   });
@@ -1816,6 +1975,7 @@ export default function AdventureMap() {
   const [isExpeditionMode, setIsExpeditionMode] = useState(false);
   const [selectedPreDefinedRoute, setSelectedPreDefinedRoute] = useState<typeof preDefinedRoutes[0] | null>(null);
   const [isCompassOpen, setIsCompassOpen] = useState(true);
+  const [mapRotation, setMapRotation] = useState(0);
 
   // Community Operational Validation state
   const [routeEvaluations, setRouteEvaluations] = useState<Record<string, {
@@ -5240,12 +5400,22 @@ export default function AdventureMap() {
                 onClose={() => setIsCompassOpen(false)}
                 destinationCoords={activeDestinationCoords}
                 destinationName={activeDestinationName}
+                mapRotation={mapRotation}
+                onMapRotationChange={setMapRotation}
               />
             )}
           </AnimatePresence>
 
           {/* --- MAP CORE (Layer 0) --- */}
-          <div id="map-container" className="relative flex-1 min-h-0 lg:absolute lg:inset-0 z-0 w-full">
+          <div 
+            id="map-container" 
+            className="relative flex-1 min-h-0 lg:absolute lg:inset-0 z-0 w-full overflow-hidden"
+            style={{
+              transform: `rotate(${mapRotation}deg) scale(${mapRotation !== 0 ? 1.15 : 1})`,
+              transformOrigin: 'center center',
+              transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
             <MapContainer 
               center={mapCenter} 
               zoom={mapZoom} 
@@ -5265,6 +5435,12 @@ export default function AdventureMap() {
                 }} 
                 onZoomChange={(zoom) => {
                   setMapZoom(zoom);
+                }}
+                onCenterChange={(center) => {
+                  setMapCenter(center);
+                }}
+                onManualInteraction={() => {
+                  setMapBounds(null);
                 }}
               />
               {showHeatmap && <HeatmapLayer points={filteredPoints} type={heatmapType} weatherCacheRef={weatherCache} />}
@@ -5453,6 +5629,7 @@ export default function AdventureMap() {
                         setSelectedPoint(p);
                         setIsPointDetailsMinimized(false);
                         setMapCenter([p.lat, p.lng]);
+                        setMapZoom(16);
                       }
                     }}
                     zIndexOffset={isSelected ? 1000 : 0}
@@ -6398,6 +6575,36 @@ export default function AdventureMap() {
          >
             <CompassIcon size={16} className={cn(isCompassOpen && "animate-spin-slow")} />
             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Bússola_GPS</div>
+         </button>
+
+         <button 
+           onClick={() => setMapRotation(prev => prev - 15)}
+           className="w-9 h-9 lg:w-12 lg:h-12 bg-black/80 border border-white/10 rounded-sm text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/40 transition-all flex items-center justify-center group relative"
+           title="ROTACIONAR MAPA ANTI-HORÁRIO (-15°)"
+         >
+            <RotateCcw size={16} />
+            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Girar_Anti-Horário</div>
+         </button>
+
+         {mapRotation !== 0 && (
+           <button 
+             onClick={() => setMapRotation(0)}
+             className="w-9 h-9 lg:w-12 lg:h-12 bg-[#ff641d]/10 border border-[#ff641d]/50 rounded-sm text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all flex flex-col items-center justify-center group relative text-[8px] font-mono font-bold"
+             title="RESTAURAR ORIENTAÇÃO NORTE (0°)"
+           >
+              <span className="leading-none text-[8.5px] font-black">{Math.round(mapRotation % 360 + 360) % 360}°</span>
+              <span className="text-[6.5px] uppercase font-bold text-[#ff641d]/70">NOR</span>
+              <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Norte_Verdadeiro</div>
+           </button>
+         )}
+
+         <button 
+           onClick={() => setMapRotation(prev => prev + 15)}
+           className="w-9 h-9 lg:w-12 lg:h-12 bg-black/80 border border-white/10 rounded-sm text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/40 transition-all flex items-center justify-center group relative"
+           title="ROTACIONAR MAPA HORÁRIO (+15°)"
+         >
+            <RotateCw size={16} />
+            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Girar_Horário</div>
          </button>
          
          <button 
