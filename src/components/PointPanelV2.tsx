@@ -287,15 +287,15 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
           animate={isMinimized ? { opacity: 1, y: 0, scale: 1 } : { opacity: 1, x: 0 }}
           exit={isMinimized ? { opacity: 0, y: 100, scale: 0.95 } : { opacity: 0, x: 20 }}
           className={cn(
-            "fixed z-[99999] bg-[#0b0c0d]/95 backdrop-blur-xl border border-white/10 flex flex-col shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden",
+            "fixed z-[100000] bg-[#0b0c0d]/95 backdrop-blur-xl border border-white/10 flex flex-col shadow-[0_25px_100px_rgba(0,0,0,0.95)] overflow-hidden",
             isMinimized 
-              ? "bottom-24 right-6 w-64 h-24 rounded-lg" 
-              : "bottom-4 left-4 right-4 h-auto max-h-[80vh] md:max-h-[85vh] md:bottom-auto md:top-24 md:right-8 md:left-auto md:w-[450px] rounded-2xl md:rounded-xl"
+              ? "bottom-24 right-6 w-64 h-24 rounded-lg z-[100000]" 
+              : "bottom-4 left-4 right-4 h-auto max-h-[80vh] md:max-h-[85vh] md:bottom-auto md:top-24 md:right-28 md:left-auto md:w-[450px] rounded-2xl md:rounded-xl z-[100000]"
           )}
           style={{ 
-            zIndex: 99999,
-            boxShadow: !isMinimized ? "0 0 50px rgba(255, 100, 29, 0.2), 0 0 100px rgba(0,0,0,0.9)" : "none",
-            border: !isMinimized ? "1px solid rgba(255, 100, 29, 0.3)" : "1px solid rgba(255,255,255,0.1)"
+            zIndex: 100000,
+            boxShadow: !isMinimized ? "0 25px 80px rgba(255, 100, 29, 0.25), 0 0 120px rgba(0,0,0,0.95)" : "none",
+            border: !isMinimized ? "1px solid rgba(255, 100, 29, 0.45)" : "1px solid rgba(255,255,255,0.1)"
           }}
         >
           {/* Header Controls (Minimize/Close) */}

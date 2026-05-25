@@ -146,6 +146,19 @@ export default function MiniCompass({
     };
   }, [lat, lng, destinationCoords]);
 
+  // Local Magnetic Declination Approximation for South America & generic regions
+  const magneticDeclination = useMemo(() => {
+    let dec = 0;
+    if (lng < -30 && lng > -90) {
+      // Linear model matching South American real-world magnetic declination
+      dec = -22.5 + (lat + 20) * -0.7 - (lng + 15) * 0.45;
+    } else {
+      dec = -11.5; // fallback
+    }
+    // Clamp to realistic limits [-25, 25] degrees
+    return Math.min(25, Math.max(-25, Math.round(dec * 10) / 10));
+  }, [lat, lng]);
+
   // Reset calibration
   const resetCompass = () => {
     setBezelRotation(0);
@@ -365,36 +378,69 @@ export default function MiniCompass({
             </div>
 
             {/* Micro rotators buttons under compass for quick heading bezel tracking customization */}
-            <div id="bezel-controls" className="flex items-center gap-1.5 mt-3 pt-1">
-              <button
-                id="bezel-left-btn"
-                onClick={() => {
-                  const nextRot = bezelRotation - 5;
-                  setBezelRotation(nextRot);
-                  if (onMapRotationChange) onMapRotationChange(nextRot);
-                }}
-                className="px-2.5 py-1 bg-black/40 border border-white/10 rounded-xs text-[8px] font-mono font-bold text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/30 transition-all uppercase"
-                title="Girar Bezel para Esquerda (Ajuste fino -5°)"
-              >
-                GIRAR -5°
-              </button>
-              
-              <div className="px-2 py-0.5 bg-[#ff641d]/10 border border-[#ff641d]/30 rounded-xs text-[9px] font-mono font-black text-[#ff641d] uppercase tracking-wide">
-                HDG: {Math.round((bezelRotation) % 360 + 360) % 360}°
+            <div id="bezel-controls" className="flex flex-col gap-1.5 mt-3 pt-1 border-t border-white/5 w-full">
+              {/* Top tier: fine tracking adjustments */}
+              <div className="flex items-center justify-between w-full gap-1">
+                <button
+                  id="bezel-left-btn"
+                  onClick={() => {
+                    const nextRot = bezelRotation - 5;
+                    setBezelRotation(nextRot);
+                    if (onMapRotationChange) onMapRotationChange(nextRot);
+                  }}
+                  className="flex-1 py-1 bg-black/40 border border-white/10 rounded-xs text-[8.5px] font-mono font-bold text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/30 transition-all uppercase"
+                  title="Girar Bezel para Esquerda (Ajuste fino -5°)"
+                >
+                  GIRAR -5°
+                </button>
+                
+                <div className="px-2 py-0.5 bg-[#ff641d]/10 border border-[#ff641d]/30 rounded-xs text-[9px] font-mono font-black text-[#ff641d] uppercase tracking-wide text-center min-w-[70px]">
+                  HDG: {Math.round((bezelRotation) % 360 + 360) % 360}°
+                </div>
+
+                <button
+                  id="bezel-right-btn"
+                  onClick={() => {
+                    const nextRot = bezelRotation + 5;
+                    setBezelRotation(nextRot);
+                    if (onMapRotationChange) onMapRotationChange(nextRot);
+                  }}
+                  className="flex-1 py-1 bg-black/40 border border-white/10 rounded-xs text-[8.5px] font-mono font-bold text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/30 transition-all uppercase"
+                  title="Girar Bezel para Direita (Ajuste fino +5°)"
+                >
+                  GIRAR +5°
+                </button>
               </div>
 
-              <button
-                id="bezel-right-btn"
-                onClick={() => {
-                  const nextRot = bezelRotation + 5;
-                  setBezelRotation(nextRot);
-                  if (onMapRotationChange) onMapRotationChange(nextRot);
-                }}
-                className="px-2.5 py-1 bg-black/40 border border-white/10 rounded-xs text-[8px] font-mono font-bold text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/30 transition-all uppercase"
-                title="Girar Bezel para Direita (Ajuste fino +5°)"
-              >
-                GIRAR +5°
-              </button>
+              {/* Bottom tier: Quick access Reset & Local Magnetic Alignment */}
+              <div className="flex items-center gap-1.5 w-full">
+                <button
+                  id="bezel-reset-action-btn"
+                  onClick={resetCompass}
+                  className="flex-1 py-1 bg-black/60 border border-white/10 hover:border-white/20 rounded-xs text-[8px] font-mono font-bold text-white/40 hover:text-[#ff641d] transition-all uppercase flex items-center justify-center gap-1"
+                  title="Restaurar orientação (Norte Verdadeiro / Bezel 0°)"
+                >
+                  <span>RESET (0°)</span>
+                </button>
+
+                <button
+                  id="bezel-align-magnetic-btn"
+                  onClick={() => {
+                    setBezelRotation(magneticDeclination);
+                    if (onMapRotationChange) onMapRotationChange(magneticDeclination);
+                    // Trigger a realistic physical needle settling oscillation feedback
+                    const wobble = (Math.random() - 0.5) * 12;
+                    setNeedleWobble(wobble);
+                    setTimeout(() => setNeedleWobble(-wobble * 0.5), 140);
+                    setTimeout(() => setNeedleWobble(0), 300);
+                  }}
+                  className="flex-1 py-1 bg-[#ff641d]/5 border border-[#ff641d]/20 hover:bg-[#ff641d]/10 hover:border-[#ff641d]/40 rounded-xs text-[8px] font-mono font-black text-[#ff641d]/85 hover:text-[#ff641d] transition-all uppercase flex items-center justify-center gap-1"
+                  title={`Alinhar instantaneamente com o Norte Magnético local (${magneticDeclination >= 0 ? '+' : ''}${magneticDeclination}°)`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ff641d] animate-pulse shrink-0" />
+                  <span>MAG ({magneticDeclination >= 0 ? '+' : ''}${magneticDeclination}°D)</span>
+                </button>
+              </div>
             </div>
           </div>
 

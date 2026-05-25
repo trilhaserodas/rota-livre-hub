@@ -3619,27 +3619,48 @@ export default function AdventureMap() {
           }
 
           /* --- PIN DETAIL PANEL / FEED-TATICAL-V2 (#442914 with 80% opacity) --- */
+          .tactical-day-mode [class*="PointPanelV2"],
           .tactical-day-mode .fixed.z-\\[99999\\],
-          .tactical-day-mode [class*="PointPanelV2"] {
-            background-color: rgba(68, 41, 20, 0.8) !important;
+          .tactical-day-mode .fixed.z-\\[100000\\] {
+            background-color: rgba(68, 41, 10, 0.8) !important;
             border-color: rgba(255, 100, 29, 0.35) !important;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.95), 0 0 30px rgba(255, 100, 29, 0.25) !important;
           }
           /* Ensure text inside the Pin panel is light & readable */
+          .tactical-day-mode [class*="PointPanelV2"] .text-white,
           .tactical-day-mode .fixed.z-\\[99999\\] .text-white,
+          .tactical-day-mode .fixed.z-\\[100000\\] .text-white,
+          .tactical-day-mode [class*="PointPanelV2"] h1,
+          .tactical-day-mode [class*="PointPanelV2"] h2,
+          .tactical-day-mode [class*="PointPanelV2"] h3,
+          .tactical-day-mode [class*="PointPanelV2"] h4,
+          .tactical-day-mode [class*="PointPanelV2"] p,
+          .tactical-day-mode [class*="PointPanelV2"] span,
+          .tactical-day-mode [class*="PointPanelV2"] div,
           .tactical-day-mode .fixed.z-\\[99999\\] h1,
           .tactical-day-mode .fixed.z-\\[99999\\] h2,
           .tactical-day-mode .fixed.z-\\[99999\\] h3,
           .tactical-day-mode .fixed.z-\\[99999\\] h4,
           .tactical-day-mode .fixed.z-\\[99999\\] p,
           .tactical-day-mode .fixed.z-\\[99999\\] span,
-          .tactical-day-mode .fixed.z-\\[99999\\] div {
+          .tactical-day-mode .fixed.z-\\[99999\\] div,
+          .tactical-day-mode .fixed.z-\\[100000\\] h1,
+          .tactical-day-mode .fixed.z-\\[100000\\] h2,
+          .tactical-day-mode .fixed.z-\\[100000\\] h3,
+          .tactical-day-mode .fixed.z-\\[100000\\] h4,
+          .tactical-day-mode .fixed.z-\\[100000\\] p,
+          .tactical-day-mode .fixed.z-\\[100000\\] span,
+          .tactical-day-mode .fixed.z-\\[100000\\] div {
             color: #F8FAFC !important;
           }
-          .tactical-day-mode .fixed.z-\\[99999\\] .text-white\\/40 {
+          .tactical-day-mode [class*="PointPanelV2"] .text-white\\/40,
+          .tactical-day-mode .fixed.z-\\[99999\\] .text-white\\/40,
+          .tactical-day-mode .fixed.z-\\[100000\\] .text-white\\/40 {
             color: rgba(248, 250, 252, 0.5) !important;
           }
-          .tactical-day-mode .fixed.z-\\[99999\\] .text-white\\/60 {
+          .tactical-day-mode [class*="PointPanelV2"] .text-white\\/60,
+          .tactical-day-mode .fixed.z-\\[99999\\] .text-white\\/60,
+          .tactical-day-mode .fixed.z-\\[100000\\] .text-white\\/60 {
             color: rgba(248, 250, 252, 0.75) !important;
           }
 
