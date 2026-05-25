@@ -15,7 +15,7 @@ import {
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer, Send,
   Cloud, Sun, Moon, Settings, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck,
-  Map as MapIcon, ChevronLeft, ChevronRight, X, Menu, MoreVertical, Printer, Download
+  Map as MapIcon, ChevronLeft, ChevronRight, X, Menu, MoreVertical, Printer, Download, Store
 } from 'lucide-react';
 import PointPanelV2 from '@/src/components/PointPanelV2';
 import WeatherWidget from '@/src/components/WeatherWidget';
@@ -1481,7 +1481,9 @@ const initialPoints: LocationPoint[] = [
     rating: '4.4 (8.915 avaliações)',
     phone: '(31) 3488-4977',
     hours: '8h–19h',
-    description: 'Mercado Pompéia com ampla variedade e excelente avaliação local.'
+    description: 'Mercado Pompéia com ampla variedade e excelente avaliação local.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-2',
@@ -1492,7 +1494,9 @@ const initialPoints: LocationPoint[] = [
     category: 'market',
     rating: '4.5 (2.601 avaliações)',
     hours: '8h as 19h',
-    description: 'Ponto de abastecimento na região da Cachoeirinha.'
+    description: 'Ponto de abastecimento na região da Cachoeirinha.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-3',
@@ -1504,7 +1508,9 @@ const initialPoints: LocationPoint[] = [
     rating: '4.4 (4.278 avaliações)',
     phone: '(31) 3117-2600',
     hours: '8h–14h',
-    description: 'Mercado Prado localizado na Av. Silva Lobo.'
+    description: 'Mercado Prado localizado na Av. Silva Lobo.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-4',
@@ -1515,8 +1521,10 @@ const initialPoints: LocationPoint[] = [
     category: 'market',
     rating: '4.4 (2.791 avaliações)',
     phone: '(31) 3259-3201',
-    hours: '08h–14h',
-    description: 'Mercado estratégico no bairro Santa Efigênia.'
+    hours: '7h30–14h AM as 8h PM',
+    description: 'Mercado estratégico no bairro Santa Efigênia.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-5',
@@ -1527,8 +1535,10 @@ const initialPoints: LocationPoint[] = [
     category: 'market',
     rating: '4.1 (7.417 avaliações)',
     phone: '(31) 3272-1725',
-    hours: 'FECHADO',
-    description: 'Mercado central na Av. Paraná. Verifique status de operação.'
+    hours: '❌ FECHADO',
+    description: 'Mercado central na Av. Paraná. Atualmente fechado.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-6',
@@ -1538,8 +1548,10 @@ const initialPoints: LocationPoint[] = [
     lng: -43.9351,
     category: 'market',
     rating: '4.1 (8.856 avaliações)',
-    hours: 'FECHADO',
-    description: 'Unidade central dos Andradas. Verifique status de operação.'
+    hours: '❌ FECHADO',
+    description: 'Unidade central dos Andradas. Atualmente fechada.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-7',
@@ -1550,7 +1562,9 @@ const initialPoints: LocationPoint[] = [
     category: 'market',
     rating: '4.4 (4.419 avaliações)',
     phone: '(31) 3117-2600',
-    description: 'Ponto de apoio no bairro Estoril.'
+    description: 'Ponto de apoio no bairro Estoril.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-8',
@@ -1562,7 +1576,9 @@ const initialPoints: LocationPoint[] = [
     category: 'market',
     phone: '(31) 3428-9743',
     hours: '7h30–14h',
-    description: 'Mercado na região do Parque Riachuelo.'
+    description: 'Mercado na região do Parque Riachuelo.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-9',
@@ -1574,7 +1590,9 @@ const initialPoints: LocationPoint[] = [
     rating: '4.3 (2.209 avaliações)',
     phone: '(31) 3313-2966',
     hours: '7h30–14h',
-    description: 'Unidade Nova Suíça do mercado local.'
+    description: 'Unidade Nova Suíça do mercado local.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'mkt-bh-10',
@@ -1584,7 +1602,9 @@ const initialPoints: LocationPoint[] = [
     lng: -43.9369,
     category: 'market',
     phone: '(31) 3426-7117',
-    description: 'Ponto de atacado no Anel Rodoviário.'
+    description: 'Ponto de atacado no Anel Rodoviário.',
+    image: 'https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg',
+    images: ['https://i.ibb.co/27LpMMPb/Whats-App-Image-2021-10-25-at-14-58-34.jpg']
   },
   {
     id: 'fl-camp-1',
@@ -1967,8 +1987,8 @@ export default function AdventureMap() {
   const [mapStyle, setMapStyle] = useState<'tactical' | 'google_roadmap' | 'google_satellite' | 'google_hybrid'>('tactical');
   const [showRtcMenu, setShowRtcMenu] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([-34.603, -58.381]);
-  const [mapZoom, setMapZoom] = useState(4);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([-19.9213, -43.9312]);
+  const [mapZoom, setMapZoom] = useState(12);
   const [mapBounds, setMapBounds] = useState<L.LatLngBoundsExpression | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -6114,6 +6134,32 @@ export default function AdventureMap() {
                       className="absolute top-full left-0 right-0 mt-2 bg-[#0b0c0d]/95 backdrop-blur-3xl border border-[#ff641d]/20 rounded-sm overflow-hidden z-[5000] shadow-[0_20px_50px_rgba(0,0,0,0.9)]"
                     >
                       <div className="max-h-80 overflow-y-auto no-scrollbar">
+                        {/* Section 0: Tactical Jump Shortcuts */}
+                        <div className="p-2 border-b border-white/5 bg-[#a78bfa]/5 flex justify-between items-center sticky top-0 z-30 backdrop-blur-md">
+                          <span className="text-[7px] font-mono text-[#a78bfa] uppercase tracking-[0.3em] font-bold">ATALHOS DE BUSCA TÁTICA</span>
+                          <span className="text-[7px] font-mono text-white/30 uppercase tracking-widest">SISTEMA_VETOR</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setMapCenter([-19.9213, -43.9312]);
+                            setMapZoom(12);
+                            setSelectedCategory('market');
+                            setShowSuggestions(false);
+                          }}
+                          className="w-full flex items-center justify-between p-3 hover:bg-[#a78bfa]/10 transition-colors border-b border-[#a78bfa]/20 last:border-0 group/sh"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xs bg-[#a78bfa]/10 flex items-center justify-center border border-[#a78bfa]/30 text-[#a78bfa]">
+                              <Store size={14} />
+                            </div>
+                            <div className="flex flex-col items-start gap-0.5">
+                              <span className="text-[9px] font-mono font-black text-white group-hover/sh:text-[#a78bfa] uppercase tracking-widest transition-colors">MINAS GERAIS, BRASIL (10 MERCADOS)</span>
+                              <span className="text-[6.5px] font-mono text-white/40 uppercase tracking-wider">FOCAR NO VETOR METROPOLITANO DE BELO HORIZONTE</span>
+                            </div>
+                          </div>
+                          <ArrowUpRight size={12} className="text-white/20 group-hover/sh:text-[#a78bfa] transition-colors" />
+                        </button>
+
                         {/* Section 1: Pre-defined Routes */}
                         {routeSuggestions.length > 0 && (
                           <>
@@ -6583,6 +6629,19 @@ export default function AdventureMap() {
          >
             <LocateFixed size={16} />
             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Minha_Posição</div>
+         </button>
+
+         <button 
+           onClick={() => {
+             setMapCenter([-19.9213, -43.9312]);
+             setMapZoom(12);
+             setSelectedCategory('market');
+           }}
+           title="🎯 MERCADOS MINAS GERAIS (10)"
+           className="w-9 h-9 lg:w-12 lg:h-12 bg-black/80 border border-[#a78bfa]/50 rounded-sm text-[#a78bfa] hover:bg-[#a78bfa] hover:text-black transition-all shadow-xl flex flex-col items-center justify-center group relative"
+         >
+            <Store size={15} />
+            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Minas_Gerais_Markets</div>
          </button>
 
          <button 
