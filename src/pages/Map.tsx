@@ -1683,6 +1683,24 @@ const initialPoints: LocationPoint[] = [
       'https://i.ibb.co/Q3qZjrhv/Captura-de-tela-2026-05-23-145420.png'
     ],
     description: 'Ponto de captação e abastecimento de água potável estrategicamente posicionado na Trilha do Canal, próximo ao histórico Rio Juquery, em Mairiporã, SP. Apoio fundamental de hidratação para viajantes da natureza e expedições terrestres na serra.'
+  },
+  {
+    id: 'hostel-casa-ipanema',
+    name: '🏨 Casa de Ipanema Hostel',
+    address: 'R. Déa Coufal, 588 - Ipanema, Porto Alegre - RS, 91760-020',
+    lat: -30.12644,
+    lng: -51.22187,
+    category: 'hostel',
+    phone: '(51) 996866281',
+    hours: 'Check-in: 14:00 | Check-out: 12:00',
+    plusCode: 'VQ99+MH Ipanema, Porto Alegre - RS',
+    operationalStatus: 'WARNING',
+    image: 'https://i.ibb.co/twQf7NQb/Captura-de-tela-2026-05-25-152610.png',
+    images: [
+      'https://i.ibb.co/twQf7NQb/Captura-de-tela-2026-05-25-152610.png',
+      'https://i.ibb.co/0RzRc6cg/Captura-de-tela-2026-05-25-152344.png'
+    ],
+    description: 'Rústico e aconchegante hostel posicionado em Porto Alegre (RS), ideal para suporte, repouso estratégico e apoio ao cicloturista ou mochileiro de longa distância. ⚠️ Status Operacional Yellow: Utilizável com atenção pela comunidade de expedicionários e viajantes de estrada.'
   }
 ];
 
