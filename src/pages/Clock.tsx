@@ -64,15 +64,26 @@ export default function Clock() {
                   <span className="text-[10px] font-mono font-bold uppercase tracking-[0.4em] text-[#ff641d]">{city.country}</span>
                   <h3 className="text-2xl font-display font-black tracking-tight text-[#F8FAFC] uppercase">{city.name}</h3>
                 </div>
-                <div className="text-[10px] font-mono text-white/10 uppercase tracking-widest bg-white/[0.02] px-3 py-1 border border-white/5">
+                <div 
+                  className="text-[10px] font-mono text-white/50 uppercase tracking-widest bg-white/[0.02] px-3 py-1 border rounded"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.15)' }}
+                >
                   GMT {offset}
                 </div>
               </div>
 
               <div className="flex items-end justify-between">
                 <div>
-                  <div className="text-5xl font-display font-black tracking-tighter text-[#F8FAFC] group-hover:text-[#ff641d] transition-colors leading-none mb-4">
-                    {timeString}
+                  <div 
+                    className="inline-flex items-center justify-center bg-black/40 px-5 py-2.5 rounded-lg border transition-all mb-4"
+                    style={{
+                      borderColor: 'rgba(255, 255, 255, 0.28)',
+                      boxShadow: '0 0 12px rgba(255, 120, 40, 0.06)'
+                    }}
+                  >
+                    <span className="text-4xl sm:text-4xl font-oxanium font-bold tracking-wide text-[#F8FAFC] group-hover:text-[#ff641d] transition-colors leading-none">
+                      {timeString}
+                    </span>
                   </div>
                   <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-white/20">
                     {dateString}
