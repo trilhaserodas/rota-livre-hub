@@ -419,9 +419,9 @@ export default function WeatherHub() {
                   <span className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.4em] font-black">Live_Ops_Signal</span>
                 </div>
               </div>
-              <h1 className="text-5xl md:text-8xl font-display font-black text-white uppercase tracking-tighter leading-none">
+              <h1 className="text-3xl sm:text-5xl md:text-8xl font-display font-black text-white uppercase tracking-tighter leading-none">
                 HUB<span className="text-[#ff641d]">.</span>CLIMA
-                <span className="block text-2xl md:text-3xl text-white/20 mt-2">OPERACIONAL // LATAM_GRID</span>
+                <span className="block text-sm sm:text-xl md:text-3xl text-white/20 mt-2">OPERACIONAL // LATAM_GRID</span>
               </h1>
             </div>
 
@@ -444,8 +444,8 @@ export default function WeatherHub() {
           {/* Search Bar - Tactical Style */}
           <div className="mb-12 relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#ff641d] to-transparent opacity-10 blur group-focus-within:opacity-30 transition-opacity" />
-            <div className="relative flex items-center gap-4 bg-white/[0.02] border border-white/10 rounded-2xl p-2 focus-within:border-[#ff641d]/40 transition-all shadow-2xl">
-              <div className="pl-4 text-white/20">
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 bg-white/[0.02] border border-white/10 rounded-2xl p-2 focus-within:border-[#ff641d]/40 transition-all shadow-2xl">
+              <div className="pl-4 text-white/20 hidden sm:block">
                 <Search size={20} />
               </div>
               <input 
@@ -454,12 +454,12 @@ export default function WeatherHub() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="BUSCAR LOCAL OU REGIÃO... (Ex: Ushuaia, Atacama, Cusco)"
-                className="flex-1 bg-transparent border-none text-white font-mono text-sm focus:ring-0 placeholder:text-white/10 uppercase tracking-widest py-4"
+                className="flex-1 bg-transparent border-none text-white font-mono text-xs sm:text-sm focus:ring-0 placeholder:text-white/10 uppercase tracking-widest py-3 sm:py-4 px-3 sm:px-0"
               />
               <button 
                 onClick={handleSearch}
                 disabled={isSearching}
-                className="bg-[#ff641d] hover:bg-[#ff844d] text-black px-8 py-4 rounded-xl font-mono font-black text-[10px] uppercase tracking-[0.2em] transition-all disabled:opacity-50"
+                className="w-full sm:w-auto bg-[#ff641d] hover:bg-[#ff844d] text-black px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-mono font-black text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all disabled:opacity-50"
               >
                 {isSearching ? 'Buscando...' : 'Executar_Busca'}
               </button>
@@ -480,7 +480,7 @@ export default function WeatherHub() {
                       <Navigation2 size={24} />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-display font-black text-white uppercase tracking-tight">
+                      <h2 className="text-lg xs:text-2xl sm:text-3xl font-display font-black text-white uppercase tracking-tight">
                         {searchResult?.name || 'Localização Atual'}<span className="text-[#ff641d]">.</span>
                       </h2>
                       <p className="text-[10px] font-mono text-white/40 uppercase tracking-[0.3em]">
@@ -519,14 +519,14 @@ export default function WeatherHub() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {/* Current Day Detailed Card */}
-                  <div className="flex-shrink-0 w-80 snap-start">
+                  <div className="flex-shrink-0 w-[280px] xs:w-80 snap-start">
                     <div className="dashboard-card p-6 border-[#ff641d]/30 bg-[#ff641d]/5 relative overflow-hidden h-full">
                       <div className="absolute top-0 right-0 p-4 opacity-10">
                         {getWeatherIcon(currentLocationWeather.code, 80)}
                       </div>
                       <div className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.5em] mb-4 font-black">AGORA</div>
-                      <div className="flex items-end gap-2 mb-8">
-                        <span className="text-6xl font-display font-black text-white leading-none">{currentLocationWeather.temp}°</span>
+                      <div className="flex items-end gap-2 mb-8 block xs:flex">
+                        <span className="text-5xl xs:text-6xl font-display font-black text-white leading-none">{currentLocationWeather.temp}°</span>
                         <div className="flex flex-col pb-1">
                           <span className="text-xs font-mono text-white/40 uppercase tracking-widest">Sensação</span>
                           <span className="text-lg font-display font-black text-[#ff641d]">{currentLocationWeather.feelsLike}°</span>
@@ -663,7 +663,7 @@ export default function WeatherHub() {
 
                         <div className="mb-8">
                           <div className="text-[8px] font-mono text-white/20 uppercase tracking-[0.4em] mb-1">{region.sub}</div>
-                          <h3 className="text-2xl font-display font-black text-white uppercase tracking-tight group-hover:text-[#ff641d] transition-colors">
+                          <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight group-hover:text-[#ff641d] transition-colors leading-tight">
                             {region.name}
                           </h3>
                           <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mt-1">{region.country}</div>

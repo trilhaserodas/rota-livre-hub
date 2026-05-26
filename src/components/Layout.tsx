@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle, Wifi, WifiOff, RotateCw, UploadCloud, Trash2, Store } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,6 +37,57 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [showSyncBanner, setShowSyncBanner] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
+  const [syncedCount, setSyncedCount] = useState(0);
+
+  const isSyncingRef = useRef(false);
+
+  const autoSyncReports = async (reportsToSync: any[]) => {
+    if (isSyncingRef.current || reportsToSync.length === 0) return;
+    
+    isSyncingRef.current = true;
+    setSyncing(true);
+    setShowSyncBanner(true);
+    setSyncedCount(reportsToSync.length);
+    
+    try {
+      console.log(`[AutoSync] Iniciando sincronização automática de ${reportsToSync.length} reportes.`);
+      
+      for (const report of reportsToSync) {
+        const payload: any = {
+          userName: report.userName || 'Anônimo',
+          content: report.content,
+          category: report.category,
+          location: report.location || '',
+          status: 'PENDING',
+          createdAt: serverTimestamp(),
+        };
+
+        if (report.pointId) payload.pointId = report.pointId;
+        if (report.reportType) payload.reportType = report.reportType;
+        if (report.operationalStatus) payload.operationalStatus = report.operationalStatus;
+        if (report.userId) payload.userId = report.userId;
+        if (report.fileName) payload.fileName = report.fileName;
+        if (report.userEmail) payload.userEmail = report.userEmail;
+
+        await addDoc(collection(db, 'reports'), payload);
+      }
+      
+      localStorage.removeItem('offline_reports');
+      setOfflineReports([]);
+      setSyncSuccess(true);
+      
+      setTimeout(() => {
+        setSyncSuccess(false);
+        setShowSyncBanner(false);
+        isSyncingRef.current = false;
+        setSyncedCount(0);
+      }, 4000);
+    } catch (error) {
+      console.error("[AutoSync] Erro na sincronização automática de reportes:", error);
+      isSyncingRef.current = false;
+      setSyncing(false);
+    }
+  };
 
   const checkOfflineReports = () => {
     const reportsStr = localStorage.getItem('offline_reports');
@@ -46,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         if (Array.isArray(parsed) && parsed.length > 0) {
           setOfflineReports(parsed);
           if (typeof navigator !== 'undefined' && navigator.onLine) {
-            setShowSyncBanner(true);
+            autoSyncReports(parsed);
           }
           return;
         }
@@ -54,43 +105,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         console.error("Erro ao analisar offline_reports:", e);
       }
     }
-    setOfflineReports([]);
-    setShowSyncBanner(false);
+    if (!isSyncingRef.current) {
+      setOfflineReports([]);
+      setShowSyncBanner(false);
+    }
   };
 
   const handleSyncReports = async () => {
-    if (offlineReports.length === 0) return;
-    setSyncing(true);
-    try {
-      for (const report of offlineReports) {
-        await addDoc(collection(db, 'reports'), {
-          userName: report.userName || 'Anônimo',
-          content: report.content,
-          category: report.category,
-          location: report.location || '',
-          status: 'PENDING',
-          createdAt: serverTimestamp(),
-        });
+    const reportsStr = localStorage.getItem('offline_reports');
+    if (reportsStr) {
+      try {
+        const parsed = JSON.parse(reportsStr);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          await autoSyncReports(parsed);
+        }
+      } catch (e) {
+        console.error(e);
       }
-      localStorage.removeItem('offline_reports');
-      setOfflineReports([]);
-      setSyncSuccess(true);
-      setTimeout(() => {
-        setSyncSuccess(false);
-        setShowSyncBanner(false);
-      }, 3000);
-    } catch (error) {
-      console.error("Erro na sincronização de reportes:", error);
-    } finally {
-      setSyncing(false);
     }
   };
 
   const handleDiscardReports = () => {
-    if (window.confirm(`Deseja mesmo descartar os ${offlineReports.length} reportes salvos offline?`)) {
+    const count = offlineReports.length || syncedCount;
+    if (window.confirm(`Deseja mesmo descartar os ${count} reportes salvos offline?`)) {
       localStorage.removeItem('offline_reports');
       setOfflineReports([]);
       setShowSyncBanner(false);
+      isSyncingRef.current = false;
+      setSyncedCount(0);
     }
   };
 
@@ -514,7 +556,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Toast de Sincronização de Reportes Offline */}
       <AnimatePresence>
-        {showSyncBanner && offlineReports.length > 0 && (
+        {showSyncBanner && (offlineReports.length > 0 || syncedCount > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -535,9 +577,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <X size={14} />
                   </button>
                 </div>
-                <h5 className="text-xs font-display font-black text-white uppercase tracking-tight">Reportes Offline Pendentes</h5>
+                <h5 className="text-xs font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
+                  {syncing && <Loader2 size={12} className="animate-spin text-[#ff641d]" />}
+                  Sincronização Automática Ativa
+                </h5>
                 <p className="text-[9px] text-white/50 leading-relaxed uppercase">
-                  Detectamos {offlineReports.length} {offlineReports.length === 1 ? 'reporte salvo' : 'reportes salvos'} localmente durante o período offline. Deseja sincronizar agora?
+                  {syncSuccess ? (
+                    `Sincronizado ${syncedCount} ${syncedCount === 1 ? 'reporte offline' : 'reportes offline'} com sucesso para o Firestore!`
+                  ) : (
+                    `Detectamos ${offlineReports.length} ${offlineReports.length === 1 ? 'reporte salvo' : 'reportes salvos'} localmente. Sincronizando com o banco de dados...`
+                  )}
                 </p>
                 
                 <div className="pt-2 flex gap-2">
@@ -546,33 +595,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <CheckCircle size={12} /> Sincronizado com Sucesso!
                     </div>
                   ) : (
-                    <>
-                      <button
-                        onClick={handleSyncReports}
-                        disabled={syncing}
-                        className="flex-grow flex items-center justify-center gap-1.5 py-2 px-3 bg-[#ff641d] hover:bg-[#ff844d] disabled:opacity-50 text-white text-[9px] font-bold uppercase tracking-wider rounded-md transition-all font-mono"
+                    <div className="w-full flex items-center justify-between gap-1.5 py-1.5 px-3 bg-[#ff641d]/10 border border-[#ff641d]/20 rounded-md text-[#ff641d] text-[9px] font-bold uppercase tracking-wider font-mono">
+                      <span className="flex items-center gap-1.5 animate-pulse">
+                        <RotateCw size={10} className="animate-spin" /> Enviando dados...
+                      </span>
+                      <button 
+                        onClick={handleDiscardReports} 
+                        className="p-1 text-white/40 hover:text-red-400 font-mono text-[8px] uppercase font-bold tracking-widest cursor-pointer"
                       >
-                        {syncing ? (
-                          <>
-                            <Loader2 size={10} className="animate-spin" />
-                            Sincronizando...
-                          </>
-                        ) : (
-                          <>
-                            <UploadCloud size={10} />
-                            Sincronizar
-                          </>
-                        )}
+                        [Descartar]
                       </button>
-                      <button
-                        onClick={handleDiscardReports}
-                        disabled={syncing}
-                        className="py-2 px-3 border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-white/40 hover:text-red-400 text-[9px] font-bold uppercase tracking-wider rounded-md transition-all font-mono flex items-center justify-center gap-1 shrink-0"
-                      >
-                        <Trash2 size={10} />
-                        Descartar
-                      </button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

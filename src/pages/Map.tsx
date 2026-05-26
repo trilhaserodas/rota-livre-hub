@@ -1718,6 +1718,22 @@ const initialPoints: LocationPoint[] = [
       'https://i.ibb.co/3mGkRc64/Captura-de-tela-2026-05-25-162740.png'
     ],
     description: 'Localizado no icônico e majestoso Valle de Cochamó (Los Lagos, Patagônia Chilena), também conhecido como o Yosemite da América do Sul. Um refúgio operacional e tático lendário para montanhistas, escaladores, cicloturistas de longa distância e mochileiros que desbravam as florestas nativas e montanhas de granito na Décima Região.'
+  },
+  {
+    id: 'hostel-pousada-cadan',
+    name: '🏨 Pousada Cadan',
+    address: 'B: São Tiago - R. Barão do Rio Branco, 161 - Mazagão, AP, 68940-000',
+    lat: -0.114755,
+    lng: -51.289139,
+    category: 'hostel',
+    phone: '(96) 99198-7831',
+    plusCode: 'VPQ8+MG Mazagão, State of Amapá',
+    operationalStatus: 'STABLE',
+    image: 'https://i.ibb.co/6712yX3K/Captura-de-tela-2026-05-25-172143.png',
+    images: [
+      'https://i.ibb.co/6712yX3K/Captura-de-tela-2026-05-25-172143.png'
+    ],
+    description: 'Aconchegante e confortável pousada de suporte operacional e tático no Amapá. Situada estrategicamente em Mazagão, oferece excelente infraestrutura com banho quente, climatização e acolhimento focado em cicloturistas de longa distância, mochileiros e aventureiros desbravando as rotas da Amazônia.'
   }
 ];
 

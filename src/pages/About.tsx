@@ -1,8 +1,11 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Shield, Users, Zap, Map as MapIcon, Heart, Instagram, Info } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 
 export default function About() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
     <div className="max-w-7xl mx-auto px-6 pb-24 relative z-10">
       <SEO 
@@ -108,6 +111,60 @@ export default function About() {
         </div>
       </section>
 
+      {/* --- SEÇÃO FAQ — SOBRE O ROTA LIVRE HUB --- */}
+      <section className="mb-32 scroll-mt-24">
+        <div className="dashboard-card p-8 md:p-16 border-white/[0.03] space-y-12">
+          <div className="text-left space-y-4">
+            <div className="text-[8px] font-mono tracking-[0.4em] text-[#ff641d] uppercase font-black">DOCUMENTAÇÃO_OFICIAL // CENTRAL_DE_DÚVIDAS</div>
+            <h2 className="text-3xl md:text-5xl font-display font-black uppercase tracking-tighter text-[#F8FAFC]">
+              FAQ — Sobre o Rota Livre Hub
+            </h2>
+            <p className="text-[#F8FAFC]/40 text-xs font-mono uppercase tracking-widest max-w-xl">
+              Dúvidas frequentes sobre a plataforma tática definitiva para os estradeiros da América Latina.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqAbout.map((item, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div 
+                  key={idx} 
+                  className={`bg-white/[0.01] border ${isOpen ? 'border-[#ff641d]/30' : 'border-white/[0.03] hover:border-white/[0.08]'} rounded-sm transition-all overflow-hidden`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full py-5 px-6 flex items-center justify-between text-left focus:outline-none"
+                  >
+                    <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-[#F8FAFC]">
+                      {item.question}
+                    </span>
+                    <span className={`text-[10px] font-mono shrink-0 ml-4 ${isOpen ? 'text-[#ff641d]' : 'text-white/30'}`}>
+                      {isOpen ? '[ - ]' : '[ + ]'}
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                      >
+                        <div className="border-t border-white/[0.03] py-5 px-6 text-[11px] text-[#F8FAFC]/50 space-y-3 font-medium uppercase tracking-wide leading-relaxed bg-black/10">
+                          {item.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Credits Block */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
         <div className="dashboard-card p-10 border-white/[0.03] flex flex-col justify-center">
@@ -144,3 +201,285 @@ export default function About() {
     </div>
   );
 }
+
+interface FaqItem {
+  question: string;
+  answer: React.ReactNode;
+}
+
+const faqAbout: FaqItem[] = [
+  {
+    question: "O que é o Rota Livre Hub?",
+    answer: (
+      <>
+        <p className="mb-2">O Rota Livre Hub é uma plataforma digital criada para viajantes da América Latina.</p>
+        <p className="mb-2">O projeto funciona como uma base operacional para aventureiros da estrada, reunindo ferramentas úteis em um único lugar.</p>
+        <p className="mb-1 font-bold text-[#ff641d]">A plataforma integra:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>mapas operacionais</li>
+          <li>clima e previsão do tempo</li>
+          <li>conversor de moedas LATAM</li>
+          <li>fusos horários</li>
+          <li>HUB ALERTA</li>
+          <li>rotas salvas</li>
+          <li>pontos de apoio</li>
+          <li>sistema colaborativo</li>
+          <li>blog tático para viajantes</li>
+          <li>monitoramento operacional de estrada</li>
+        </ul>
+        <p className="mt-2">Tudo pensado para quem vive viajando.</p>
+      </>
+    )
+  },
+  {
+    question: "O Rota Livre Hub é apenas um aplicativo de mapas?",
+    answer: (
+      <>
+        <p className="mb-2">Não. O mapa é apenas uma parte do ecossistema.</p>
+        <p className="mb-2">O objetivo do projeto é centralizar ferramentas realmente úteis para:</p>
+        <ul className="list-disc pl-4 space-y-1 mb-2">
+          <li>cicloturistas</li>
+          <li>mochileiros</li>
+          <li>overlanders</li>
+          <li>motorhome</li>
+          <li>moto viajantes</li>
+          <li>exploradores independentes</li>
+        </ul>
+        <p>A proposta é funcionar como uma central operacional da estrada.</p>
+      </>
+    )
+  },
+  {
+    question: "Quais ferramentas existem dentro da plataforma?",
+    answer: (
+      <>
+        <p className="mb-3">O Rota Livre Hub reúne diversas ferramentas em um único sistema:</p>
+        
+        <div className="space-y-3">
+          <div>
+            <h5 className="font-bold text-white mb-1">Navegação e Estrada</h5>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>mapa operacional</li>
+              <li>visão satélite</li>
+              <li>rotas salvas</li>
+              <li>pontos estratégicos</li>
+              <li>oficinas</li>
+              <li>campings</li>
+              <li>hostels</li>
+              <li>sistema de avaliação operacional</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h5 className="font-bold text-white mb-1">Clima e Monitoramento</h5>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>clima em tempo real</li>
+              <li>radar climático</li>
+              <li>monitoramento operacional</li>
+              <li>alertas de risco</li>
+              <li>previsão estratégica de estrada</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h5 className="font-bold text-white mb-1">Ferramentas de Viagem</h5>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>conversor de moedas LATAM</li>
+              <li>fusos horários</li>
+              <li>horários internacionais</li>
+              <li>calculadoras de viagem</li>
+              <li>planejamento operacional</li>
+            </ul>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-white mb-1">HUB ALERTA</h5>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>fronteiras</li>
+              <li>clima severo</li>
+              <li>alertas operacionais</li>
+              <li>mudanças em rotas</li>
+              <li>informações úteis para estrada</li>
+            </ul>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-white mb-1">Conteúdo Estratégico</h5>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>blog tático</li>
+              <li>sobrevivência</li>
+              <li>documentação</li>
+              <li>manutenção</li>
+              <li>logística de expedição</li>
+              <li>cicloturismo</li>
+              <li>mochilão</li>
+            </ul>
+          </div>
+        </div>
+      </>
+    )
+  },
+  {
+    question: "O que diferencia o Rota Livre Hub do Google Maps?",
+    answer: (
+      <>
+        <p className="mb-2">O Google Maps mostra locais.</p>
+        <p className="mb-1 font-bold text-[#ff641d]">O Rota Livre Hub reúne:</p>
+        <ul className="list-disc pl-4 space-y-1 mb-2">
+          <li>contexto operacional</li>
+          <li>clima</li>
+          <li>logística</li>
+          <li>apoio ao viajante</li>
+          <li>informações úteis da estrada</li>
+          <li>inteligência comunitária</li>
+          <li>ferramentas integradas para expedições</li>
+        </ul>
+        <p>A plataforma foi criada especificamente para quem vive viajando.</p>
+      </>
+    )
+  },
+  {
+    question: "O que é o HUB ALERTA?",
+    answer: (
+      <>
+        <p className="mb-2">O HUB ALERTA é a central de monitoramento operacional do projeto.</p>
+        <p className="mb-1">Ele reúne:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>alertas climáticos</li>
+          <li>condições de estrada</li>
+          <li>mudanças operacionais</li>
+          <li>fronteiras</li>
+          <li>riscos regionais</li>
+          <li>avisos importantes para viajantes</li>
+        </ul>
+        <p className="mt-2 text-white">Tudo com linguagem objetiva e foco em utilidade real.</p>
+      </>
+    )
+  },
+  {
+    question: "O Rota Livre Hub possui previsão do tempo?",
+    answer: (
+      <>
+        <p className="mb-2">Sim.</p>
+        <p className="mb-1">A plataforma possui integração com sistemas meteorológicos e monitoramento climático para ajudar viajantes a entender:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>vento</li>
+          <li>chuva</li>
+          <li>clima severo</li>
+          <li>condições da rota</li>
+          <li>regiões críticas</li>
+          <li>comportamento climático operacional</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Existe conversor de moedas dentro da plataforma?",
+    answer: (
+      <>
+        <p className="mb-2">Sim.</p>
+        <p className="mb-1">O sistema possui ferramentas de conversão para viajantes da América Latina, incluindo:</p>
+        <ul className="list-disc pl-4 space-y-1 mb-2">
+          <li>Real</li>
+          <li>Dólar</li>
+          <li>Peso Argentino</li>
+          <li>Peso Chileno</li>
+          <li>Guarani</li>
+          <li>Sol Peruano</li>
+          <li>Peso Colombiano</li>
+        </ul>
+        <p>O objetivo é facilitar planejamento financeiro durante viagens internacionais.</p>
+      </>
+    )
+  },
+  {
+    question: "O sistema possui fusos horários?",
+    answer: (
+      <>
+        <p className="mb-2">Sim.</p>
+        <p className="mb-1">O Rota Livre Hub também reúne:</p>
+        <ul className="list-disc pl-4 space-y-1 font-mono">
+          <li>horários internacionais</li>
+          <li>fusos LATAM</li>
+          <li>relógio mundial</li>
+          <li>comparação entre países</li>
+        </ul>
+        <p className="mt-2 text-white">Tudo integrado ao ecossistema de viagem.</p>
+      </>
+    )
+  },
+  {
+    question: "Quem pode usar o Rota Livre Hub?",
+    answer: (
+      <>
+        <p className="mb-1 font-bold text-white">A plataforma foi criada para:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>cicloturistas</li>
+          <li>mochileiros</li>
+          <li>overlanders</li>
+          <li>viajantes de motorhome</li>
+          <li>moto viajantes</li>
+          <li>exploradores da América Latina</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "O Rota Livre Hub é gratuito?",
+    answer: (
+      <>
+        <p>Sim. Grande parte das ferramentas da plataforma são gratuitas e voltadas para utilidade pública de viagem.</p>
+      </>
+    )
+  },
+  {
+    question: "O projeto possui sistema colaborativo?",
+    answer: (
+      <>
+        <p className="mb-2">Sim.</p>
+        <p className="mb-1">Os próprios usuários podem contribuir com:</p>
+        <ul className="list-disc pl-4 space-y-1 mb-2">
+          <li>avaliações operacionais</li>
+          <li>alertas</li>
+          <li>informações da estrada</li>
+          <li>condições das rotas</li>
+          <li>pontos de apoio táticos</li>
+        </ul>
+        <p>O objetivo é construir uma inteligência coletiva da estrada.</p>
+      </>
+    )
+  },
+  {
+    question: "O Rota Livre Hub funciona apenas no Brasil?",
+    answer: (
+      <>
+        <p className="mb-2">Não. O projeto foi criado pensando em toda a América Latina.</p>
+        <p className="mb-1">O foco inclui:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>expedições continentais</li>
+          <li>travessias internacionais</li>
+          <li>rotas LATAM</li>
+          <li>logística para viajantes de longa distância</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Qual a missão do projeto?",
+    answer: (
+      <>
+        <p className="mb-2">Construir a maior base operacional colaborativa para aventureiros da América Latina.</p>
+        <p className="mb-1">Unindo:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>tecnologia</li>
+          <li>mapas</li>
+          <li>clima</li>
+          <li>ferramentas úteis</li>
+          <li>inteligência operacional</li>
+          <li>comunidade</li>
+          <li>informação estratégica para estrada</li>
+        </ul>
+      </>
+    )
+  }
+];

@@ -291,7 +291,7 @@ export default function SerraDoRioDoRastroWidget() {
   const currentStyle = styles[data.statusColor] || styles.SAFE;
 
   return (
-    <div className={`relative overflow-hidden border ${currentStyle.border} ${currentStyle.bg} rounded-3xl p-6 md:p-8 transition-all shadow-2xl`}>
+    <div className={`relative overflow-hidden border ${currentStyle.border} ${currentStyle.bg} rounded-3xl p-4 sm:p-6 md:p-8 transition-all shadow-2xl`}>
       {/* Background visual glows */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] via-transparent to-transparent pointer-events-none" />
       <div 
@@ -310,7 +310,7 @@ export default function SerraDoRioDoRastroWidget() {
               <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest font-black">Serra do Rio do Rastro - SC</span>
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
             </div>
-            <h3 className="text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
+            <h3 className="text-sm xs:text-base sm:text-xl lg:text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2 break-all leading-tight">
               TERMÔMETRO_TÁTICO_DA_COMUNIDADE
             </h3>
           </div>
@@ -342,7 +342,7 @@ export default function SerraDoRioDoRastroWidget() {
           <div className="space-y-4">
             <span className="text-[10px] font-mono text-[#ff641d] uppercase tracking-[0.3em] font-black block">RESULTADO DA INTELIGÊNCIA</span>
             <div>
-              <div className={`text-4xl font-display font-black uppercase tracking-tighter mb-2 ${currentStyle.color}`}>
+              <div className={`text-xl sm:text-2xl lg:text-4xl font-display font-black uppercase tracking-tighter mb-2 leading-tight ${currentStyle.color}`}>
                 {data.alertTitle || "SINAL OPERACIONAL ATIVO"}
               </div>
               <p className="text-white/70 text-xs font-mono uppercase tracking-wide leading-relaxed p-4 bg-white/[0.02] border border-white/5 rounded-2xl border-l-[3px] border-l-[#ff641d]">

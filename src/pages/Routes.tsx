@@ -229,6 +229,39 @@ function ContributionModal({ isOpen, onClose }: ContributionModalProps) {
     
     setIsSubmitting(true);
     try {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        const savedOfflineStr = localStorage.getItem('offline_reports') || '[]';
+        let savedOffline = [];
+        try {
+          savedOffline = JSON.parse(savedOfflineStr);
+        } catch (e) {
+          savedOffline = [];
+        }
+
+        const offlinePayload = {
+          id: 'offline_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11),
+          userId: auth.currentUser.uid,
+          userName: auth.currentUser.displayName || 'Explorer',
+          content: description,
+          category: 'TRAIL_LOG',
+          location: 'PENDING_ANALYSIS',
+          fileName: file?.name || 'manual_entry',
+          createdAt: new Date().toISOString()
+        };
+
+        savedOffline.push(offlinePayload);
+        localStorage.setItem('offline_reports', JSON.stringify(savedOffline));
+
+        setSubmitted(true);
+        setTimeout(() => {
+          onClose();
+          setSubmitted(false);
+          setFile(null);
+          setDescription('');
+        }, 3000);
+        return;
+      }
+
       await addDoc(collection(db, 'reports'), {
         userId: auth.currentUser.uid,
         userName: auth.currentUser.displayName || 'Explorer',

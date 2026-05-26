@@ -24,6 +24,7 @@ export default function Partners() {
   const [photoUrl, setPhotoUrl] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Status states
   const [loading, setLoading] = useState(false);
@@ -84,6 +85,55 @@ export default function Partners() {
     setErrorMessage('');
 
     try {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        const savedOfflineStr = localStorage.getItem('offline_reports') || '[]';
+        let savedOffline = [];
+        try {
+          savedOffline = JSON.parse(savedOfflineStr);
+        } catch (e) {
+          savedOffline = [];
+        }
+
+        const offlinePayload = {
+          id: 'offline_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11),
+          category: 'PARTNERSHIP_APPLY',
+          userName: businessName,
+          userEmail: instagramAccount || 'N/A',
+          location: cityCountry,
+          content: `
+            === PROTOCOLO DE NOVA PARCERIA OPERACIONAL ===
+            Nome do Negócio: ${businessName}
+            Cidade / País: ${cityCountry}
+            Tipo de Negócio: ${businessType}
+            WhatsApp / Contato: ${whatsapp}
+            Instagram: ${instagramAccount || 'Não informado'}
+            Site / Link: ${websiteUrl || 'Não informado'}
+            Descrição / Detalhes: ${descriptionTxt || 'Não informado'}
+            Como ajuda os viajantes: ${howHelps || 'Não informado'}
+            Imagens fornecidas: ${photoUrl || 'Não informado'} (Arquivos locais anexados: ${selectedFiles.length})
+          `.trim(),
+          createdAt: new Date().toISOString()
+        };
+
+        savedOffline.push(offlinePayload);
+        localStorage.setItem('offline_reports', JSON.stringify(savedOffline));
+
+        setSuccess(true);
+        setBusinessName('');
+        setCityCountry('');
+        setBusinessType('');
+        setWhatsapp('');
+        setInstagramAccount('');
+        setWebsiteUrl('');
+        setDescriptionTxt('');
+        setHowHelps('');
+        setPhotoUrl('');
+        setSelectedFiles([]);
+        
+        setTimeout(() => setSuccess(false), 12000);
+        return;
+      }
+
       // Create a nice human-readable message to save or submit
       await addDoc(collection(db, 'reports'), {
         category: 'PARTNERSHIP_APPLY',
@@ -748,6 +798,60 @@ export default function Partners() {
         </div>
       </section>
 
+      {/* --- SEÇÃO FAQ — PERGUNTAS FREQUENTES --- */}
+      <section className="py-24 border-t border-white/5 scroll-mt-24">
+        <div className="max-w-4xl mx-auto space-y-12">
+          <div className="text-center space-y-4">
+            <div className="text-[8px] font-mono tracking-[0.4em] text-[#ff641d] uppercase font-black">DOCUMENTAÇÃO_DE_SUPORTE // PERGUNTAS_FREQUENTES</div>
+            <h2 className="text-3xl sm:text-5xl font-display font-black uppercase tracking-tighter text-white">
+              FAQ / PARCEIROS OPERACIONAIS
+            </h2>
+            <p className="text-xs font-mono text-white/40 uppercase tracking-widest max-w-xl mx-auto">
+              Tirando as dúvidas comuns sobre o ecossistema, integração georreferenciada e regras de visibilidade.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqPartners.map((item, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div 
+                  key={idx} 
+                  className={`bg-[#0b0c0d] border ${isOpen ? 'border-[#ff641d]/30 shadow-[0_0_15px_rgba(255,100,29,0.03)]' : 'border-white/5 hover:border-white/10'} rounded-sm transition-all overflow-hidden`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full py-5 px-6 flex items-center justify-between text-left focus:outline-none"
+                  >
+                    <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
+                      {item.question}
+                    </span>
+                    <span className={`text-[10px] font-mono shrink-0 ml-4 ${isOpen ? 'text-[#ff641d]' : 'text-white/30'}`}>
+                      {isOpen ? '[ - ]' : '[ + ]'}
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                      >
+                        <div className="border-t border-white/5 py-5 px-6 text-[11px] text-white/50 space-y-3 font-medium uppercase tracking-wide leading-relaxed bg-black/10">
+                          {item.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* --- FOOTER BANNER / RODAPÉ --- */}
       <section className="py-12 border-t border-white/5 mt-16 text-center">
         <div className="max-w-3xl mx-auto space-y-4">
@@ -763,3 +867,168 @@ export default function Partners() {
     </div>
   );
 }
+
+interface FaqItem {
+  question: string;
+  answer: React.ReactNode;
+}
+
+const faqPartners: FaqItem[] = [
+  {
+    question: "Como funciona a parceria com o Rota Livre Hub?",
+    answer: (
+      <>
+        <p className="mb-2">O Rota Livre Hub conecta negócios úteis da estrada diretamente às rotas utilizadas por viajantes da América Latina.</p>
+        <p>Oficinas, hostels, campings, cafés e pontos de apoio podem aparecer dentro do mapa operacional da plataforma.</p>
+      </>
+    )
+  },
+  {
+    question: "O Rota Livre Hub substitui o Google Maps?",
+    answer: (
+      <>
+        <p className="mb-2">Não. A proposta é diferente.</p>
+        <p className="mb-2">O Google mostra locais. O Rota Livre Hub mostra relevância operacional para viajantes.</p>
+        <p className="mb-1 font-bold text-[#ff641d]">Exemplo:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>apoio ao cicloturista</li>
+          <li>atendimento emergencial</li>
+          <li>suporte para estrada</li>
+          <li>estrutura útil para expedições</li>
+          <li>localização estratégica em rotas</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Como meu negócio aparece no mapa?",
+    answer: (
+      <>
+        <p className="mb-2">Após análise básica, o ponto é adicionado dentro das rotas e categorias relevantes da plataforma.</p>
+        <p className="mb-1">Dependendo do tipo de parceria, o perfil pode incluir:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>fotos</li>
+          <li>Instagram</li>
+          <li>WhatsApp</li>
+          <li>descrição</li>
+          <li>serviços</li>
+          <li>avaliações da comunidade</li>
+          <li>destaque operacional</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Quem pode participar?",
+    answer: (
+      <>
+        <p className="mb-1">Atualmente:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>oficinas de bicicleta</li>
+          <li>mecânicas</li>
+          <li>hostels</li>
+          <li>campings</li>
+          <li>cafés</li>
+          <li>mercados</li>
+          <li>postos</li>
+          <li>pontos de apoio</li>
+          <li>negócios úteis para viajantes</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Existe algum custo para participar?",
+    answer: (
+      <>
+        <p className="mb-2">A plataforma está em expansão e algumas integrações iniciais podem ocorrer gratuitamente.</p>
+        <p className="mb-1">No futuro existirão:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>destaques premium</li>
+          <li>prioridade operacional</li>
+          <li>selos especiais</li>
+          <li>recursos avançados de visibilidade</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Como funciona a validação da comunidade?",
+    answer: (
+      <>
+        <p className="mb-2">Os próprios viajantes poderão validar operacionalmente:</p>
+        <ul className="list-disc pl-4 space-y-1 mb-2">
+          <li>qualidade do atendimento</li>
+          <li>apoio ao viajante</li>
+          <li>utilidade real na estrada</li>
+          <li>condição operacional do local</li>
+        </ul>
+        <p>O objetivo é criar uma infraestrutura confiável construída pela própria comunidade.</p>
+      </>
+    )
+  },
+  {
+    question: "Meu negócio pode receber mais visibilidade?",
+    answer: (
+      <>
+        <p className="mb-2">Sim.</p>
+        <p className="mb-1">A plataforma está sendo preparada para:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>destaque em rotas populares</li>
+          <li>prioridade regional</li>
+          <li>integração visual premium</li>
+          <li>campanhas operacionais</li>
+          <li>destaque estratégico dentro do mapa</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "O Rota Livre Hub atende apenas cicloturistas?",
+    answer: (
+      <>
+        <p className="mb-2">Não.</p>
+        <p className="mb-1 font-bold text-white">A plataforma foi criada para:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>cicloturistas</li>
+          <li>mochileiros</li>
+          <li>moto viajantes</li>
+          <li>overlanders</li>
+          <li>motorhome</li>
+          <li>aventureiros da estrada</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Como solicitar entrada no sistema?",
+    answer: (
+      <>
+        <p className="mb-2">Basta preencher o formulário da página de Parceiros Operacionais.</p>
+        <p className="mb-1 font-bold text-[#ff641d]">A equipe do Rota Livre Hub analisará:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>localização</li>
+          <li>relevância da rota</li>
+          <li>utilidade operacional</li>
+          <li>potencial de apoio ao viajante</li>
+        </ul>
+      </>
+    )
+  },
+  {
+    question: "Qual o objetivo do projeto?",
+    answer: (
+      <>
+        <p className="mb-2">Criar a maior infraestrutura colaborativa de apoio ao viajante da América Latina.</p>
+        <p className="mb-1">Unindo:</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>comunidade</li>
+          <li>tecnologia</li>
+          <li>inteligência operacional</li>
+          <li>rotas</li>
+          <li>suporte real para estrada</li>
+        </ul>
+      </>
+    )
+  }
+];
