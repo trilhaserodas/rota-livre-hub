@@ -291,7 +291,15 @@ const preDefinedRoutes = [
 
 // --- Tactical Utility Components ---
 
-const ElevationChart = ({ data, isLoading }: { data: any[]; isLoading?: boolean }) => {
+const ElevationChart = ({ 
+  data, 
+  isLoading,
+  isTacticalDayActive = false
+}: { 
+  data: any[]; 
+  isLoading?: boolean;
+  isTacticalDayActive?: boolean;
+}) => {
   const altitudes = data.map(d => d.alt);
   const maxAlt = altitudes.length > 0 ? Math.max(...altitudes) : 0;
   const minAlt = altitudes.length > 0 ? Math.min(...altitudes) : 0;
@@ -304,74 +312,156 @@ const ElevationChart = ({ data, isLoading }: { data: any[]; isLoading?: boolean 
   }, 0);
 
   return (
-    <div className="border-t border-white/5 bg-black/50 p-4 font-mono">
-      <div className="flex items-center justify-between mb-2">
+    <div className={cn(
+      "border-t p-4 relative transition-all duration-300",
+      isTacticalDayActive 
+        ? "border-[#5A5046]/18 bg-[#ECE6DA]/40 font-sans" 
+        : "border-white/5 bg-black/50 font-mono"
+    )}>
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Mountain size={12} className="text-[#ff641d] animate-pulse" />
-          <span className="text-[8px] font-bold text-white uppercase tracking-[0.2em]">PERFIL DE ELEVAÇÃO (M)</span>
+          <Mountain size={12} className={cn("animate-pulse transition-colors duration-300", isTacticalDayActive ? "text-[#FF6B2E]" : "text-[#ff641d]")} />
+          <span className={cn(
+            "text-[9px] font-black uppercase tracking-[0.25em] transition-colors duration-300",
+            isTacticalDayActive ? "font-sharetech text-[#5F5A54]" : "font-bold text-white font-mono"
+          )}>PERFIL DE ELEVAÇÃO (M)</span>
         </div>
         {isLoading && (
-          <span className="text-[7px] text-[#ff641d] uppercase tracking-widest animate-pulse flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-[#ff641d] rounded-full animate-ping" />
+          <span className={cn(
+            "text-[8px] uppercase tracking-widest animate-pulse flex items-center gap-1 font-sharetech font-bold",
+            isTacticalDayActive ? "text-[#FF6B2E]" : "text-[#ff641d]"
+          )}>
+            <span className={cn("w-1.5 h-1.5 rounded-full animate-ping", isTacticalDayActive ? "bg-[#FF6B2E]" : "bg-[#ff641d]")} />
             CONECTANDO SATÉLITE...
           </span>
         )}
       </div>
 
       <div className="grid grid-cols-4 gap-2 mb-3">
-        <div className="bg-white/[0.02] border border-white/5 p-1.5 rounded-xs">
-          <div className="text-[6px] text-white/30 uppercase">Ganho Total</div>
-          <div className="text-[10px] font-black text-emerald-400">+{Math.round(elevationGain)}m</div>
+        {/* Metric 1 */}
+        <div className={cn(
+          "border p-2 rounded-xs transition-all duration-300 flex flex-col justify-between",
+          isTacticalDayActive 
+            ? "bg-[#F3EEE4]/70 border-[#5A5046]/18 shadow-[inset_0_1px_3px_rgba(90,80,70,0.05)]" 
+            : "bg-white/[0.02] border-white/5"
+        )}>
+          <div className={cn(
+            "text-[7px] uppercase tracking-widest font-sharetech font-bold leading-normal transition-colors duration-300",
+            isTacticalDayActive ? "text-[#8A847B]" : "text-white/30"
+          )}>Campo Total</div>
+          <div className={cn(
+            "text-sm font-black font-oxanium tracking-wide leading-none transition-colors duration-300 mt-1",
+            isTacticalDayActive ? "text-[#ec2c86]" : "text-emerald-400"
+          )}>+{Math.round(elevationGain)}M</div>
         </div>
-        <div className="bg-white/[0.02] border border-white/5 p-1.5 rounded-xs">
-          <div className="text-[6px] text-white/30 uppercase">Altitude Máx</div>
-          <div className="text-[10px] font-black text-[#ff641d]">{Math.round(maxAlt)}m</div>
+
+        {/* Metric 2 */}
+        <div className={cn(
+          "border p-2 rounded-xs transition-all duration-300 flex flex-col justify-between",
+          isTacticalDayActive 
+            ? "bg-[#F3EEE4]/70 border-[#5A5046]/18 shadow-[inset_0_1px_3px_rgba(90,80,70,0.05)]" 
+            : "bg-white/[0.02] border-white/5"
+        )}>
+          <div className={cn(
+            "text-[7px] uppercase tracking-widest font-sharetech font-bold leading-normal transition-colors duration-300",
+            isTacticalDayActive ? "text-[#8A847B]" : "text-white/30"
+          )}>Altitude MAX</div>
+          <div className={cn(
+            "text-sm font-black font-oxanium tracking-wide leading-none transition-colors duration-300 mt-1",
+            isTacticalDayActive ? "text-[#FF6B2E]" : "text-[#ff641d]"
+          )}>{Math.round(maxAlt)}m</div>
         </div>
-        <div className="bg-white/[0.02] border border-white/5 p-1.5 rounded-xs">
-          <div className="text-[6px] text-white/30 uppercase">Altitude Mín</div>
-          <div className="text-[10px] font-black text-cyan-400">{Math.round(minAlt)}m</div>
+
+        {/* Metric 3 */}
+        <div className={cn(
+          "border p-2 rounded-xs transition-all duration-300 flex flex-col justify-between",
+          isTacticalDayActive 
+            ? "bg-[#F3EEE4]/70 border-[#5A5046]/18 shadow-[inset_0_1px_3px_rgba(90,80,70,0.05)]" 
+            : "bg-white/[0.02] border-white/5"
+        )}>
+          <div className={cn(
+            "text-[7px] uppercase tracking-widest font-sharetech font-bold leading-normal transition-colors duration-300",
+            isTacticalDayActive ? "text-[#8A847B]" : "text-white/30"
+          )}>Altitude Min</div>
+          <div className={cn(
+            "text-sm font-black font-oxanium tracking-wide leading-none transition-colors duration-300 mt-1",
+            isTacticalDayActive ? "text-[#FF6B2E]" : "text-cyan-400"
+          )}>{Math.round(minAlt)}m</div>
         </div>
-        <div className="bg-white/[0.02] border border-white/5 p-1.5 rounded-xs">
-          <div className="text-[6px] text-white/30 uppercase">Partida / Chegada</div>
-          <div className="text-[10px] font-black text-white/80">{Math.round(startAlt)}m / {Math.round(endAlt)}m</div>
+
+        {/* Metric 4 */}
+        <div className={cn(
+          "border p-2 rounded-xs transition-all duration-300 flex flex-col justify-between",
+          isTacticalDayActive 
+            ? "bg-[#F3EEE4]/70 border-[#5A5046]/18 shadow-[inset_0_1px_3px_rgba(90,80,70,0.05)]" 
+            : "bg-white/[0.02] border-white/5"
+        )}>
+          <div className={cn(
+            "text-[7px] uppercase tracking-widest font-sharetech font-bold leading-normal transition-colors duration-300",
+            isTacticalDayActive ? "text-[#8A847B]" : "text-white/30"
+          )}>PARTIDA | CHEGADA</div>
+          <div className={cn(
+            "text-sm font-black font-oxanium tracking-wide leading-none transition-colors duration-300 mt-1",
+            isTacticalDayActive ? "text-[#5F5A54]" : "text-white/80"
+          )}>{Math.round(startAlt)}m / {Math.round(endAlt)}m</div>
         </div>
       </div>
 
-      <div className="h-28 w-full relative">
+      <div className={cn(
+        "h-28 w-full relative transition-all duration-300 rounded-sm overflow-hidden p-1 border",
+        isTacticalDayActive 
+          ? "shadow-[0_0_18px_rgba(255,107,46,0.08)] bg-[#F3EEE4]/30 border-[#5A5046]/12" 
+          : "border-transparent"
+      )}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
             <defs>
               <linearGradient id="colorElev" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ff641d" stopOpacity={0.4}/>
-                <stop offset="95%" stopColor="#ff641d" stopOpacity={0}/>
+                <stop 
+                  offset="5%" 
+                  stopColor={isTacticalDayActive ? "#FF6B2E" : "#ff641d"} 
+                  stopOpacity={isTacticalDayActive ? 0.35 : 0.4}
+                />
+                <stop 
+                  offset="95%" 
+                  stopColor={isTacticalDayActive ? "#FF6B2E" : "#ff641d"} 
+                  stopOpacity={0}
+                />
               </linearGradient>
             </defs>
             <XAxis 
               dataKey="name" 
-              stroke="rgba(255,255,255,0.2)" 
-              fontSize={7}
+              stroke={isTacticalDayActive ? "rgba(95,90,84,0.3)" : "rgba(255,255,255,0.2)"} 
+              fontSize={8}
+              fontFamily='"Share Tech Mono", monospace'
               tickLine={false}
               axisLine={false}
+              tick={{ fill: isTacticalDayActive ? '#726C64' : 'rgba(255,255,255,0.7)', fontSize: 8, fontWeight: 500 }}
             />
             <YAxis 
-              stroke="rgba(255,255,255,0.2)" 
-              fontSize={7}
+              stroke={isTacticalDayActive ? "rgba(95,90,84,0.3)" : "rgba(255,255,255,0.2)"} 
+              fontSize={8}
+              fontFamily='"Share Tech Mono", monospace'
               tickLine={false}
               axisLine={false}
               domain={['dataMin - 50', 'dataMax + 50']}
+              tick={{ fill: isTacticalDayActive ? '#726C64' : 'rgba(255,255,255,0.7)', fontSize: 8, fontWeight: 500 }}
             />
             <Area 
               type="monotone" 
               dataKey="alt" 
-              stroke="#ff641d" 
+              stroke={isTacticalDayActive ? "#FF6B2E" : "#ff641d"} 
               fillOpacity={1} 
               fill="url(#colorElev)" 
-              strokeWidth={1.5} 
+              strokeWidth={2} 
             />
             <Tooltip 
-              contentStyle={{ backgroundColor: '#0b0c0d', border: '1px solid rgba(255,100,29,0.3)', fontSize: '8px', color: '#fff', fontFamily: 'monospace' }}
-              itemStyle={{ color: '#ff641d', padding: 0 }}
-              labelStyle={{ color: 'rgba(255,255,255,0.4)', fontSize: '7px' }}
+              contentStyle={isTacticalDayActive 
+                ? { backgroundColor: '#F3EEE4', border: '1px solid rgba(255,107,46,0.3)', fontSize: '9px', color: '#5F5A54', fontFamily: '"Share Tech Mono", monospace' }
+                : { backgroundColor: '#0b0c0d', border: '1px solid rgba(255,100,29,0.3)', fontSize: '8px', color: '#fff', fontFamily: 'monospace' }
+              }
+              itemStyle={{ color: isTacticalDayActive ? '#FF6B2E' : '#ff641d', padding: 0 }}
+              labelStyle={{ color: isTacticalDayActive ? '#8A847B' : 'rgba(255,255,255,0.4)', fontSize: '8px' }}
               formatter={(value: any) => [`${value} m`, 'Altitude']}
             />
           </AreaChart>
@@ -7104,35 +7194,89 @@ export default function AdventureMap() {
                 isSidebarMinimized ? "lg:left-[72px]" : "lg:left-[440px]"
               )}
             >
-               <div className="w-full bg-black/80 backdrop-blur-md border border-white/10 lg:rounded-xs shadow-[0_15px_50px_rgba(0,0,0,0.9)] overflow-hidden">
-                  <div className="p-5 flex items-center justify-between border-b border-white/5">
+               <div className={cn(
+                  "w-full transition-all duration-300 overflow-hidden lg:rounded-xs",
+                  isTacticalDayActive 
+                    ? "bg-[#ECE6DA]/78 backdrop-blur-[10px] border border-[#5A5046]/18 shadow-[0_15px_40px_rgba(90,80,70,0.15)]" 
+                    : "bg-black/80 backdrop-blur-md border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.9)]"
+               )}>
+                  <div className={cn(
+                     "p-5 flex items-center justify-between border-b transition-colors duration-300",
+                     isTacticalDayActive ? "border-[#5A5046]/10" : "border-white/5"
+                  )}>
                      <div className="flex gap-8">
                         <div className="flex flex-col gap-1">
-                           <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">TOTAL_KM</div>
-                           <div className="text-lg font-display font-black text-white">{totalDistance.toFixed(2)} KM</div>
+                           <div className={cn(
+                              "text-[8px] font-sharetech uppercase tracking-[0.34em] transition-colors duration-300",
+                              isTacticalDayActive ? "text-[#5F5A54]/80 font-bold" : "text-white/20"
+                           )}>TOTAL_KM</div>
+                           <div className={cn(
+                              "text-lg font-oxanium font-black tracking-normal leading-tight transition-colors duration-300",
+                              isTacticalDayActive ? "text-[#5F5A54]" : "text-white"
+                           )}>{totalDistance.toFixed(2)} KM</div>
                         </div>
                         <div className="flex flex-col gap-1">
-                           <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">ESTIMATED_TIME</div>
-                           <div className="text-lg font-display font-black text-[#ff641d]">{estimatedTime}</div>
+                           <div className={cn(
+                              "text-[8px] font-sharetech uppercase tracking-[0.34em] transition-colors duration-300",
+                              isTacticalDayActive ? "text-[#5F5A54]/80 font-bold" : "text-white/20"
+                           )}>ESTIMATED_TIME</div>
+                           <div className={cn(
+                              "text-lg font-oxanium font-black tracking-normal leading-tight transition-colors duration-300",
+                              isTacticalDayActive ? "text-[#FF6B2E]" : "text-[#ff641d]"
+                           )}>{estimatedTime}</div>
                         </div>
                         <div className="flex flex-col gap-1">
-                           <div className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em]">WAYPOINTS</div>
-                           <div className="text-lg font-display font-black text-white/40">{routePoints.length}</div>
+                           <div className={cn(
+                              "text-[8px] font-sharetech uppercase tracking-[0.34em] transition-colors duration-300",
+                              isTacticalDayActive ? "text-[#5F5A54]/80 font-bold" : "text-white/20"
+                           )}>WAYPOINTS</div>
+                           <div className={cn(
+                              "text-lg font-oxanium font-black tracking-normal leading-tight transition-colors duration-300",
+                              isTacticalDayActive ? "text-[#5F5A54]" : "text-white/40"
+                           )}>{routePoints.length}</div>
                         </div>
                      </div>
                      <div className="flex gap-2">
                         <button 
                           onClick={() => setIsBottomPanelMinimized(true)}
-                          className="p-2.5 text-white/20 hover:text-white transition-colors border border-white/5 hover:border-white/20"
+                          className={cn(
+                             "p-2.5 transition-all duration-300 border rounded-xs",
+                             isTacticalDayActive 
+                               ? "text-[#726C64] hover:text-[#FF6B2E] border-[#5A5046]/18 hover:border-[#FF6B2E]/40 hover:bg-[#DDD6CA]/40 bg-transparent shadow-xs" 
+                               : "text-white/20 hover:text-white border-white/5 hover:border-white/20"
+                          )}
                           title="MINIMIZAR"
                         >
                            <Minimize2 size={12} />
                         </button>
-                        <button onClick={handleClearRoute} className="h-9 px-3 border border-white/10 text-white/40 hover:text-red-500 hover:border-red-500/30 text-[8px] font-mono uppercase font-black tracking-widest transition-all">LIMPAR</button>
-                        <button className="h-9 px-4 bg-[#ff641d] text-white text-[8px] font-mono uppercase font-black tracking-widest hover:bg-white hover:text-[#ff641d] transition-all">INICIAR_EXP</button>
+                        <button 
+                          onClick={handleClearRoute} 
+                          className={cn(
+                             "h-9 px-3 border text-[8px] font-sharetech uppercase font-black tracking-widest transition-all duration-300 rounded-xs",
+                             isTacticalDayActive
+                               ? "bg-[#DDD6CA]/60 border-[#5A5046]/20 text-[#FF6B2E] hover:bg-[#FF6B2E] hover:text-white hover:border-[#FF6B2E] shadow-sm hover:shadow-[0_0_12px_rgba(255,107,46,0.2)]"
+                               : "border-white/10 text-white/40 hover:text-red-500 hover:border-red-500/30 font-mono inline-flex items-center justify-center"
+                          )}
+                        >
+                          LIMPAR
+                        </button>
+                        <button 
+                          className={cn(
+                             "h-9 px-4 text-[8px] font-sharetech uppercase font-black tracking-widest transition-all duration-300 rounded-xs",
+                             isTacticalDayActive
+                               ? "bg-[#FF6B2E] text-white hover:bg-white hover:text-[#FF6B2E] border border-[#FF6B2E] hover:border-[#FF6B2E]/50 shadow-[0_2px_10px_rgba(255,107,46,0.15)] hover:shadow-[0_0_18px_rgba(255,107,46,0.3)]"
+                               : "bg-[#ff641d] text-white hover:bg-white hover:text-[#ff641d] inline-flex items-center justify-center font-mono"
+                          )}
+                        >
+                          INICIAR EXPEDIÇÃO
+                        </button>
                      </div>
                   </div>
-                  <ElevationChart data={elevationData} isLoading={isLoadingElevation} />
+                  <ElevationChart 
+                    data={elevationData} 
+                    isLoading={isLoadingElevation} 
+                    isTacticalDayActive={isTacticalDayActive} 
+                  />
                </div>
             </motion.div>
           ) : (
