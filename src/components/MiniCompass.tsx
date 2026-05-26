@@ -13,6 +13,7 @@ interface MiniCompassProps {
   destinationName?: string;
   mapRotation?: number;
   onMapRotationChange?: (angle: number) => void;
+  isDark?: boolean;
 }
 
 export default function MiniCompass({
@@ -24,7 +25,8 @@ export default function MiniCompass({
   destinationCoords,
   destinationName,
   mapRotation = 0,
-  onMapRotationChange
+  onMapRotationChange,
+  isDark = true
 }: MiniCompassProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
@@ -177,18 +179,26 @@ export default function MiniCompass({
       dragMomentum={false}
       dragElastic={0.05}
       initial={{ opacity: 0, scale: 0.95, y: 30 }}
-      animate={{ opacity: 0.65, scale: 1, y: 0 }}
-      whileHover={{ opacity: 0.85 }}
+      animate={{ opacity: 0.75, scale: 1, y: 0 }}
+      whileHover={{ opacity: 0.92 }}
       exit={{ opacity: 0, scale: 0.95, y: 30 }}
       className={cn(
-        "fixed z-[4500] bg-[#0c0d0f]/65 backdrop-blur-xl border select-none transition-all duration-300 shadow-md",
+        "fixed z-[4500] select-none transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.5)]",
+        isDark 
+          ? "border-white/5" 
+          : "bg-[#0c0d0f]/65 backdrop-blur-xl border-[#ff641d]/20",
         isMinimized 
           ? "w-44 border-white/10 rounded-lg p-2.5 shadow-lg shadow-black/80" 
-          : "w-72 border-[#ff641d]/20 rounded-xl p-4.5"
+          : "w-72 rounded-xl p-4.5"
       )}
       style={{
         left: 'calc(50% - 144px)', // Initial desktop center positioning
         top: '180px',
+        ...(isDark && {
+          background: 'rgba(0, 0, 0, 0.18)',
+          backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+        })
       }}
     >
       {/* Title / Drag Bar Header */}
@@ -201,12 +211,20 @@ export default function MiniCompass({
           <Move id="compass-drag-icon" className="w-3.5 h-3.5 text-white/40" />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className="text-[8px] font-mono text-[#ff641d] font-black uppercase tracking-widest leading-none">
+              <span className={cn(
+                "text-[8px] font-mono font-black uppercase tracking-widest leading-none",
+                isDark ? "text-[#6CFF8F]" : "text-[#ff641d]"
+              )}>
                 GPS BÚSSOLA
               </span>
               {!isMinimized && (
-                <div className="flex items-center gap-1 bg-[#ff641d]/10 px-1 py-[1.5px] rounded-xs border border-[#ff641d]/25 text-[7px] font-mono text-[#ff641d] font-black leading-none tracking-wider" title="Minimiza em 30s">
-                  <span className="animate-ping w-1 h-1 rounded-full bg-[#ff641d] inline-block mr-0.5" />
+                <div className={cn(
+                  "flex items-center gap-1 px-1 py-[1.5px] rounded-xs border text-[7px] font-mono font-black leading-none tracking-wider",
+                  isDark 
+                    ? "bg-[#6CFF8F]/10 border-[#6CFF8F]/25 text-[#6CFF8F]" 
+                    : "bg-[#ff641d]/10 border-[#ff641d]/25 text-[#ff641d]"
+                )} title="Minimiza em 30s">
+                  <span className={cn("animate-ping w-1 h-1 rounded-full inline-block mr-0.5", isDark ? "bg-[#6CFF8F]" : "bg-[#ff641d]")} />
                   {timeLeft}S
                 </div>
               )}
@@ -240,7 +258,10 @@ export default function MiniCompass({
             id="close-compass-btn"
             onClick={onClose}
             title="Fechar Bússola"
-            className="p-1 hover:bg-white/5 rounded-xs text-[#ff641d]/80 hover:text-[#ff641d] transition-colors"
+            className={cn(
+              "p-1 hover:bg-white/5 rounded-xs transition-colors",
+              isDark ? "text-[#6CFF8F]/80 hover:text-[#6CFF8F]" : "text-[#ff641d]/80 hover:text-[#ff641d]"
+            )}
           >
             <X className="w-3.5 h-3.5 font-bold" />
           </button>
@@ -250,24 +271,40 @@ export default function MiniCompass({
       {/* COMPACT MINIMIZED VIEW */}
       {isMinimized ? (
         <div id="compass-minimized-content" className="flex items-center justify-between gap-3 px-1">
-          {/* Mini Rotating Dial */}
-          <div className="relative w-10 h-10 rounded-full border border-white/10 shrink-0 bg-black/40 flex items-center justify-center overflow-hidden">
+          {/* Mini Rotating Dial with tactical highlights */}
+          <div className={cn(
+            "relative w-10 h-10 rounded-full border shrink-0 flex items-center justify-center overflow-hidden transition-all duration-300",
+            isDark 
+              ? "border-[#6CFF8F]/20 bg-[#070809]/80 shadow-[inset_0_0_8px_rgba(108,255,143,0.15)]" 
+              : "border-white/10 bg-black/40"
+          )}>
             <svg className="absolute inset-0 w-full h-full p-1 opacity-25" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" className="text-white" />
+              <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" className={isDark ? "text-[#6CFF8F]" : "text-white"} />
             </svg>
             <motion.div 
               style={{ rotate: bezelRotation + needleWobble }}
               className="relative w-full h-full flex items-center justify-center p-1.5"
             >
-              {/* Central Needle pointer */}
-              <div className="w-0.5 h-6 bg-gradient-to-t from-white/30 via-red-500 to-red-500 relative flex justify-center">
-                <div className="absolute top-0 w-1.5 h-1.5 bg-red-500 rotate-45 transform origin-center -translate-y-0.5" />
+              {/* Central Needle pointer with contrast */}
+              <div className={cn(
+                "w-0.5 h-6 relative flex justify-center rounded-sm",
+                isDark 
+                  ? "bg-gradient-to-t from-[#6CFF8F]/30 via-[#ff4500] to-white" 
+                  : "bg-gradient-to-t from-white/30 via-red-500 to-red-500"
+              )}>
+                <div className={cn(
+                  "absolute top-0 w-1.5 h-1.5 rotate-45 transform origin-center -translate-y-0.5 rounded-xs",
+                  isDark ? "bg-white border-t border-l border-[#ff4500]" : "bg-red-500"
+                )} />
               </div>
             </motion.div>
           </div>
 
           <div className="flex-1 flex flex-col justify-center min-w-0">
-            <span className="text-[10px] font-mono font-black text-white leading-none">
+            <span className={cn(
+              "text-[10px] font-mono font-black leading-none",
+              isDark ? "text-[#6CFF8F]" : "text-white"
+            )}>
               N_RUMO : {Math.round((bezelRotation) % 360 + 360) % 360}°
             </span>
             <span className="text-[7.5px] font-mono text-white/40 leading-normal uppercase truncate mt-0.5">
@@ -280,13 +317,44 @@ export default function MiniCompass({
         <div id="compass-main-expanded-content" className="space-y-4">
           <div className="flex flex-col items-center justify-center relative">
             {/* Main Outer Compass Face */}
-            <div className="relative w-44 h-44 rounded-full border border-white/10 bg-[#070809]/90 flex items-center justify-center shadow-[inset_0_0_15px_rgba(0,0,0,0.9),_0_0_20px_rgba(255,100,29,0.03)] overflow-hidden">
+            <div className={cn(
+              "relative w-44 h-44 rounded-full flex items-center justify-center overflow-hidden transition-all duration-300",
+              isDark 
+                ? "border border-white/10 bg-[#070809]/85 shadow-[inset_0_0_20px_rgba(0,0,0,0.95)]" 
+                : "border border-white/10 bg-[#070809]/90 shadow-[inset_0_0_15px_rgba(0,0,0,0.9)]"
+            )}>
               
+              {/* Dynamic Inner Glow Layer (Only in Dark Mode as inner glow) */}
+              {isDark && (
+                <motion.div 
+                  className="absolute inset-0 rounded-full pointer-events-none z-0"
+                  animate={{
+                    boxShadow: [
+                      "inset 0 0 10px rgba(108, 255, 143, 0.04)",
+                      "inset 0 0 25px rgba(108, 255, 143, 0.18)",
+                      "inset 0 0 10px rgba(108, 255, 143, 0.04)"
+                    ]
+                  }}
+                  transition={{
+                    duration: 3.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+
               {/* Coordinate Reticle Grid Overlay */}
-              <div className="absolute inset-0 border border-white/[0.02] m-6 rounded-full pointer-events-none" />
-              <div className="absolute inset-0 border border-white/[0.02] m-14 rounded-full pointer-events-none" />
-              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/[0.02] pointer-events-none" />
-              <div className="absolute left-0 right-0 top-1/2 h-px bg-white/[0.02] pointer-events-none" />
+              <div className={cn("absolute inset-0 border rounded-full pointer-events-none transition-all", isDark ? "border-[#6CFF8F]/5 m-6" : "border-white/[0.02] m-6")} />
+              <motion.div 
+                className={cn("absolute inset-0 border rounded-full pointer-events-none transition-all", isDark ? "border-[#6CFF8F]/8 m-14" : "border-white/[0.02] m-14")}
+                animate={isDark ? {
+                  opacity: [0.3, 0.7, 0.3],
+                  borderColor: ["rgba(108, 255, 143, 0.04)", "rgba(108, 255, 143, 0.16)", "rgba(108, 255, 143, 0.04)"]
+                } : {}}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <div className={cn("absolute top-0 bottom-0 left-1/2 w-[0.5px] pointer-events-none", isDark ? "bg-[#6CFF8F]/5" : "bg-white/[0.02]")} />
+              <div className={cn("absolute left-0 right-0 top-1/2 h-[0.5px] pointer-events-none", isDark ? "bg-[#6CFF8F]/5" : "bg-white/[0.02]")} />
 
               {/* ROTATING OUTER BEZEL (Includes N L S O marker text & ticks) */}
               <motion.div 
@@ -303,7 +371,7 @@ export default function MiniCompass({
                     const isMedium = angle % 45 === 0 && !isMajor;
                     const length = isMajor ? 6 : isMedium ? 4 : 2;
                     const width = isMajor ? 1.5 : 1;
-                    const color = isMajor ? '#ff641d' : '#888';
+                    const color = isMajor ? (isDark ? '#6CFF8F' : '#ff641d') : (isDark ? '#3d6c46' : '#888');
                     return (
                       <line
                         key={`tick-${angle}`}
@@ -320,10 +388,27 @@ export default function MiniCompass({
                 </svg>
 
                 {/* Cardinal Points Texts (N, L, S, O) precisely placed on rotation ring */}
-                <span className="absolute top-3.5 left-1/2 -translate-x-1/2 font-black text-[#ff641d] text-xs">N</span>
-                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-black text-white/80">L</span>
-                <span className="absolute bottom-3.5 left-1/2 -translate-x-1/2 font-black text-white/50">S</span>
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-white/80">O</span>
+                {isDark ? (
+                  <motion.span 
+                    animate={{
+                      opacity: [0.65, 1, 0.65],
+                      textShadow: [
+                        "0 0 1px rgba(108,255,143,0.2)",
+                        "0 0 6px rgba(108,255,143,0.7)",
+                        "0 0 1px rgba(108,255,143,0.2)"
+                      ]
+                    }}
+                    transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-3.5 left-1/2 -translate-x-1/2 font-black text-[#6CFF8F] text-xs tracking-wider"
+                  >
+                    N
+                  </motion.span>
+                ) : (
+                  <span className="absolute top-3.5 left-1/2 -translate-x-1/2 font-black text-[#ff641d] text-xs">N</span>
+                )}
+                <span className={cn("absolute right-3.5 top-1/2 -translate-y-1/2 font-black", isDark ? "text-[#6CFF8F]/60" : "text-white/80")}>L</span>
+                <span className={cn("absolute bottom-3.5 left-1/2 -translate-x-1/2 font-black", isDark ? "text-[#6CFF8F]/30" : "text-white/50")}>S</span>
+                <span className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 font-black", isDark ? "text-[#6CFF8F]/60" : "text-white/80")}>O</span>
 
                 {/* Ordinal directions */}
                 <span className="absolute top-9 right-9 text-[6.5px] font-medium text-white/30 rotate-45">NE</span>
@@ -342,20 +427,53 @@ export default function MiniCompass({
                 {/* Gorgeous high contrast tactical arrow */}
                 <div className="relative w-full h-full flex items-center justify-center">
                   {/* Top Arrow (Red pointed needle towards North) */}
-                  <div className="absolute top-0 bottom-1/2 w-1.5 bg-gradient-to-t from-[#ff641d] to-[#ff2c1d] flex justify-center origin-bottom rounded-t-sm shadow-[0_0_8px_rgba(255,100,29,0.5)]">
+                  <div className={cn(
+                    "absolute top-0 bottom-1/2 w-1.5 flex justify-center origin-bottom rounded-t-sm transition-all duration-300",
+                    isDark 
+                      ? "bg-gradient-to-t from-[#ff5500] via-[#ff7300] to-white shadow-[0_0_12px_rgba(255,100,29,0.75)] border-l border-r border-white/30" 
+                      : "bg-gradient-to-t from-[#ff641d] to-[#ff2c1d] shadow-[0_0_8px_rgba(255,100,29,0.5)]"
+                  )}>
                     {/* Glowing arrowhead */}
-                    <div className="absolute top-0 w-3.5 h-3.5 bg-[#ff641d] rotate-45 transform origin-center -translate-y-1 rounded-xs" />
+                    <div className={cn(
+                      "absolute top-0 w-3.5 h-3.5 rotate-45 transform origin-center -translate-y-1 rounded-xs flex items-center justify-center",
+                      isDark 
+                        ? "bg-[#ff4500] border-t border-l border-white/50" 
+                        : "bg-[#ff641d]"
+                    )}>
+                      {/* Active tiny highlighting center dot inside the arrow */}
+                      {isDark && (
+                        <div className="w-1.5 h-1.5 bg-[#6CFF8F] rounded-full shrink-0 shadow-[0_0_4px_#6CFF8F]" style={{ transform: 'rotate(-45deg)' }} />
+                      )}
+                    </div>
                   </div>
 
                   {/* Bottom Arrow (Dark metal needle pointing South) */}
-                  <div className="absolute bottom-0 top-1/2 w-1.5 bg-gradient-to-b from-white/10 via-white/30 to-white/60 flex justify-center origin-top rounded-b-sm">
+                  <div className={cn(
+                    "absolute bottom-0 top-1/2 w-1.5 flex justify-center origin-top rounded-b-sm transition-all duration-300",
+                    isDark 
+                      ? "bg-gradient-to-b from-white/20 via-white/50 to-white/90 border-l border-r border-white/10"
+                      : "bg-gradient-to-b from-white/10 via-white/30 to-white/60"
+                  )}>
                     {/* Metal pointer head */}
-                    <div className="absolute bottom-0 w-3 h-3 bg-white/40 rotate-45 transform origin-center translate-y-1 rounded-xs border border-white/5" />
+                    <div className={cn(
+                      "absolute bottom-0 w-3 h-3 rotate-45 transform origin-center translate-y-1 rounded-xs border transition-all",
+                      isDark 
+                        ? "bg-white/60 border-white/20 shadow-[0_0_3px_rgba(255,255,255,0.2)]"
+                        : "bg-white/40 border-white/5"
+                    )} />
                   </div>
 
                   {/* Center Brass Hub Pivot cap */}
-                  <div className="w-3.5 h-3.5 rounded-full bg-[#1c1d21] border-2 border-[#ff641d] flex items-center justify-center shadow-xl z-20">
-                    <div className="w-1 h-1 rounded-full bg-[#ff641d] scale-90" />
+                  <div className={cn(
+                    "w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-xl z-20 transition-all duration-300",
+                    isDark 
+                      ? "bg-[#121315] border-2 border-[#6CFF8F]" 
+                      : "bg-[#1c1d21] border-2 border-[#ff641d]"
+                  )}>
+                    <div className={cn(
+                      "w-1 h-1 rounded-full",
+                      isDark ? "bg-[#6CFF8F] animate-pulse" : "bg-[#ff641d] scale-90"
+                    )} />
                   </div>
                 </div>
               </motion.div>

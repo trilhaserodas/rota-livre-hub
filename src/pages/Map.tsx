@@ -5494,6 +5494,7 @@ export default function AdventureMap() {
                 destinationName={activeDestinationName}
                 mapRotation={mapRotation}
                 onMapRotationChange={setMapRotation}
+                isDark={!isTacticalDayActive}
               />
             )}
           </AnimatePresence>
