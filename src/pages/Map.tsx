@@ -3946,11 +3946,15 @@ export default function AdventureMap() {
       <motion.aside 
         ref={sidebarRef as any}
         className={cn(
-          "w-full flex-shrink-0 flex flex-col transition-colors duration-300",
-          "bg-[#0b0c0d]/60 backdrop-blur-3xl border-t lg:border-t-0 lg:border-r border-white/10 shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)] text-white",
-          "relative lg:relative lg:order-first order-last h-[85vh] lg:h-full z-[1000] lg:z-[5000]",
+          "flex-shrink-0 flex flex-col transition-colors duration-300",
+          "bg-[#0b0c0d]/60 backdrop-blur-3xl text-white shadow-[0_-15px_50px_rgba(0,0,0,0.9)] lg:shadow-[20px_0_60px_rgba(0,0,0,0.8)]",
+          "relative lg:relative lg:order-first order-last z-[1000] lg:z-[5000]",
+          isMobile 
+            ? "w-[calc(100%-2rem)] mx-4 my-8 h-auto rounded-xl border border-[#ff641d]/15 shadow-[0_20px_50px_rgba(0,0,0,0.95)] overflow-visible" 
+            : "w-full border-t lg:border-t-0 lg:border-r border-white/10 h-[85vh] lg:h-full",
           isSidebarMinimized ? "lg:w-[52px]" : "lg:w-[420px]"
         )}
+        style={isMobile ? { width: 'auto' } : {}}
         initial={false}
         animate={isMobile ? {} : { width: isSidebarMinimized ? 52 : 420 }}
         transition={{ type: "spring", damping: 25, stiffness: 220 }}
@@ -4012,7 +4016,10 @@ export default function AdventureMap() {
           </div>
         ) : (
           /* FULL SIDEBAR CONTENT */
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
+          <div className={cn(
+            "flex-1 flex flex-col",
+            isMobile ? "h-auto overflow-visible" : "h-full overflow-hidden"
+          )}>
          {/* Decorative Drag Handle Mobile */}
          <div 
            className="lg:hidden w-full flex flex-col items-center pt-4 pb-3 cursor-pointer select-none shrink-0"
@@ -4083,7 +4090,10 @@ export default function AdventureMap() {
              ))}
           </div>
 
-         <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
+         <div className={cn(
+           "flex-1 flex flex-col",
+           isMobile ? "overflow-visible" : "overflow-y-auto no-scrollbar"
+         )}>
             <AnimatePresence mode="wait">
                {activeTab === 'explore' && (
                  <motion.div 
@@ -4091,9 +4101,15 @@ export default function AdventureMap() {
                    initial={{ opacity: 0, x: -10 }}
                    animate={{ opacity: 1, x: 0 }}
                    exit={{ opacity: 0, x: 10 }}
-                   className="flex-1 flex flex-col overflow-hidden"
+                   className={cn(
+                     "flex-1 flex flex-col",
+                     isMobile ? "overflow-visible" : "overflow-hidden"
+                   )}
                  >
-                    <div className="p-5 lg:p-8 space-y-8 overflow-y-auto no-scrollbar">
+                    <div className={cn(
+                      "p-5 lg:p-8 space-y-8",
+                      isMobile ? "overflow-visible" : "overflow-y-auto no-scrollbar"
+                    )}>
                        {/* Integrated Search */}
                        <div className="space-y-4">
                           <label className="text-[8px] font-mono text-white/70 hover:text-[#d35400] transition-colors cursor-pointer font-medium uppercase tracking-[0.4em]">LOCALIZAR_VETOR_DE_COORDENADAS</label>
@@ -4407,7 +4423,10 @@ export default function AdventureMap() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="flex-1 flex flex-col overflow-hidden"
+                    className={cn(
+                      "flex-1 flex flex-col",
+                      isMobile ? "overflow-visible" : "overflow-hidden"
+                    )}
                   >
                     <div className="p-5 border-b border-white/5 bg-[#ff641d]/5 flex items-center justify-between">
                        <div className="flex flex-col gap-1">
@@ -4417,7 +4436,10 @@ export default function AdventureMap() {
                        <Heart size={16} className="text-[#ff641d] animate-pulse" />
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+                    <div className={cn(
+                      "flex-1 pb-10",
+                      isMobile ? "overflow-visible" : "overflow-y-auto no-scrollbar"
+                    )}>
                       {/* Favoritos (Remote) */}
                       <div className="p-4 bg-white/[0.02] border-b border-white/5">
                         <span className="text-[7px] font-mono text-white/20 uppercase tracking-[0.4em] mb-4 block">NUVEM_SYNC</span>
@@ -4490,7 +4512,10 @@ export default function AdventureMap() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="flex-1 flex flex-col overflow-hidden"
+                    className={cn(
+                      "flex-1 flex flex-col",
+                      isMobile ? "overflow-visible" : "overflow-hidden"
+                    )}
                   >
                      <div className="p-6 border-b border-white/10 bg-[#ff641d]/10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
                         <div className="flex items-center justify-between mb-4">
@@ -4521,7 +4546,10 @@ export default function AdventureMap() {
                         </div>
                      </div>
 
-                     <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+                     <div className={cn(
+                      "flex-1 p-6 space-y-8",
+                      isMobile ? "overflow-visible" : "overflow-y-auto no-scrollbar"
+                    )}>
                         <div className="grid grid-cols-2 gap-4">
                            <div className="bg-white/[0.03] border border-white/5 p-4 rounded-sm">
                               <span className="text-[8px] font-mono text-white/20 tracking-[0.4em] block mb-2 uppercase">DISTÂNCIA</span>
@@ -5312,7 +5340,10 @@ export default function AdventureMap() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto no-scrollbar"
+                    className={cn(
+                      "flex-1 flex flex-col p-6 space-y-6",
+                      isMobile ? "overflow-visible" : "overflow-y-auto no-scrollbar"
+                    )}
                   >
                      <div className="flex items-center gap-3 border-b pb-4 mb-2 border-white/5">
                         <Settings className="text-[#ff641d]" size={18} />
