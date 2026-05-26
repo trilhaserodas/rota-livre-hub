@@ -38,6 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [syncing, setSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
   const [syncedCount, setSyncedCount] = useState(0);
+  const [showOfflineToast, setShowOfflineToast] = useState(false);
 
   const isSyncingRef = useRef(false);
 
@@ -181,10 +182,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
+      setShowOfflineToast(false);
       checkOfflineReports();
     };
     const handleOffline = () => {
       setIsOnline(false);
+      setShowOfflineToast(true);
     };
 
     window.addEventListener('online', handleOnline);
@@ -202,6 +205,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       clearInterval(interval);
     };
   }, []);
+
+  // Timer helper to auto-dismiss offline toast after 12 seconds
+  useEffect(() => {
+    if (showOfflineToast) {
+      const timer = setTimeout(() => {
+        setShowOfflineToast(false);
+      }, 12000);
+      return () => clearTimeout(timer);
+    }
+  }, [showOfflineToast]);
 
   const handleLogin = async () => {
     try {
@@ -607,6 +620,54 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       </button>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast de Alerta de Conexão Offline */}
+      <AnimatePresence>
+        {showOfflineToast && (
+          <motion.div
+            key="offline-toast"
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed bottom-6 right-6 z-[9999] w-[90%] sm:w-full sm:max-w-sm bg-[#0A0A0A]/95 backdrop-blur-md border border-[#ff641d]/30 rounded-xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] font-mono text-left"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-[#ff641d]/10 text-[#ff641d] rounded-lg shrink-0">
+                <WifiOff size={18} className="animate-pulse" />
+              </div>
+              <div className="flex-grow space-y-1.5 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black text-[#ff641d] tracking-widest uppercase">REDE OFFLINE</span>
+                  <button 
+                    onClick={() => setShowOfflineToast(false)} 
+                    className="text-white/40 hover:text-white transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <h5 className="text-xs font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
+                  Protocolo de Contingência
+                </h5>
+                <p className="text-[9.5px] text-white/60 leading-relaxed uppercase">
+                  O sinal foi interrompido e você agora está no modo offline.
+                  <span className="text-[#2EE6A6] block mt-1.5 font-bold font-sharetech text-[10px]">
+                    ● Seus dados e rotas salvas localmente estão salvaguardados e continuam disponíveis para visualização e navegação no mapa.
+                  </span>
+                </p>
+                <div className="pt-2">
+                  <button
+                    onClick={() => setShowOfflineToast(false)}
+                    className="w-full py-2 bg-[#ff641d]/10 border border-[#ff641d]/20 text-[#ff641d] text-[9px] font-mono font-bold uppercase tracking-[0.2em] hover:bg-[#ff641d] hover:text-white transition-all rounded-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    CONFIRMAR OPERAÇÃO
+                  </button>
                 </div>
               </div>
             </div>
