@@ -45,31 +45,72 @@ async function startServer() {
     console.log(`[WeatherAPI] Serra do Rio do Rastro cache MISS. Buscando dados novos.`);
 
     try {
-      // 1. Fetch live coordinates from Open-Meteo
-      const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,visibility&timezone=auto`;
+      let current: any;
       
-      console.log(`[WeatherAPI] Fetching Serra do Rio do Rastro weather from Open-Meteo`);
-      
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      
-      const omResponse = await fetch(openMeteoUrl, { 
-        signal: controller.signal,
-        headers: { 'User-Agent': 'RotaLivre-WeatherProxy/1.0' }
-      });
-      clearTimeout(timeout);
-      
-      if (!omResponse.ok) {
-        throw new Error(`Open-Meteo falhou com status ${omResponse.status}`);
+      try {
+        // 1. Fetch live coordinates from Open-Meteo
+        const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,visibility&timezone=auto`;
+        
+        console.log(`[WeatherAPI] Fetching Serra do Rio do Rastro weather from Open-Meteo`);
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        
+        const omResponse = await fetch(openMeteoUrl, { 
+          signal: controller.signal,
+          headers: { 'User-Agent': 'RotaLivre-WeatherProxy/1.0' }
+        });
+        clearTimeout(timeout);
+        
+        if (!omResponse.ok) {
+          throw new Error(`Open-Meteo falhou com status ${omResponse.status}`);
+        }
+
+        const omData = await omResponse.json();
+        
+        if (!omData.current) {
+          throw new Error("Open-Meteo não retornou dados atuais para a Serra");
+        }
+
+        current = omData.current;
+      } catch (omError: any) {
+        console.warn(`[WeatherAPI] Open-Meteo falhou para Serra (${omError.message}). Tentando wttr.in.`);
+        
+        const wttrRes = await fetch(`https://wttr.in/${lat},${lon}?format=j1`);
+        if (!wttrRes.ok) throw new Error(`wttr.in falhou com status ${wttrRes.status}`);
+        const wttrData = await wttrRes.json();
+        const cur = wttrData.current_condition[0];
+        
+        const temp = Math.round(parseFloat(cur.temp_C) || 0);
+        const apparentTemp = Math.round(parseFloat(cur.FeelsLikeC) || temp);
+        const sWind = Math.round(parseFloat(cur.windspeedKmph) || 0);
+        const precipVal = parseFloat(cur.precipMM) || 0;
+        const visVal = parseFloat(cur.visibility) || 10;
+        
+        const wwoCode = parseInt(cur.weatherCode) || 113;
+        let wmoCode = 0;
+        if (wwoCode === 113) wmoCode = 0;
+        else if (wwoCode === 116) wmoCode = 2;
+        else if (wwoCode === 119 || wwoCode === 122) wmoCode = 3;
+        else if (wwoCode === 143 || wwoCode === 248) wmoCode = 45;
+        else if (wwoCode === 266 || wwoCode === 293 || wwoCode === 296) wmoCode = 51;
+        else if (wwoCode >= 353 && wwoCode <= 359) wmoCode = 80;
+        else if (wwoCode === 386 || wwoCode === 389) wmoCode = 95;
+        else wmoCode = 1;
+
+        current = {
+          temperature_2m: temp,
+          apparent_temperature: apparentTemp,
+          wind_speed_10m: sWind,
+          wind_gusts_10m: Math.round(sWind * 1.3),
+          precipitation: precipVal,
+          visibility: visVal * 1000,
+          weather_code: wmoCode,
+          relative_humidity_2m: parseInt(cur.humidity) || 0,
+          wind_direction_10m: parseInt(cur.winddirDegree) || 0
+        };
       }
 
-      const omData = await omResponse.json();
-      
-      if (!omData.current) {
-        throw new Error("Open-Meteo não retornou dados atuais para a Serra");
-      }
-
-      const current = omData.current;
       const wind = current.wind_speed_10m || 0;
       const windGusts = current.wind_gusts_10m || 0;
       const temp = current.temperature_2m || 0;
@@ -260,9 +301,26 @@ Responda ÚNICA E EXCLUSIVAMENTE com um objeto JSON válido, sem bloco markdown 
             console.log(`[WeatherAPI] OWM Success`);
             res.setHeader('Cache-Control', 'public, max-age=600');
             const rainVal = data.rain ? (data.rain['1h'] ?? data.rain['3h'] ?? 0) : (data.snow ? (data.snow['1h'] ?? data.snow['3h'] ?? 0) : 0);
+            
+            const wmoCode = mapOwmIdToWmoCode(data.weather?.[0]?.id ?? 800);
+            const windSpeedKmH = Math.round((data.wind?.speed || 0) * 3.6);
+            const windGustsKmH = Math.round((data.wind?.gust || data.wind?.speed || 0) * 3.6);
+
             return res.json({
               ...data,
               precipitation: rainVal,
+              unified: {
+                temp: Math.round(data.main?.temp ?? 0),
+                feelsLike: Math.round(data.main?.feels_like ?? data.main?.temp ?? 0),
+                humidity: data.main?.humidity ?? 0,
+                windSpeedKmH,
+                windGustsKmH,
+                windDirection: data.wind?.deg ?? 0,
+                weatherCode: wmoCode,
+                precipitation: rainVal,
+                precipProbability: rainVal > 0 ? 80 : 0,
+                description: data.weather?.[0]?.description ? (data.weather[0].description.charAt(0).toUpperCase() + data.weather[0].description.slice(1)) : 'Condições Variáveis'
+              },
               debug: {
                 source: 'openweathermap',
                 hasKey: true,
@@ -327,6 +385,18 @@ Responda ÚNICA E EXCLUSIVAMENTE com um objeto JSON válido, sem bloco markdown 
       res.setHeader('Cache-Control', 'public, max-age=600');
       res.json({
         ...adaptedData,
+        unified: {
+          temp: Math.round(current.temperature_2m ?? 0),
+          feelsLike: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0),
+          humidity: current.relative_humidity_2m ?? 0,
+          windSpeedKmH: Math.round(current.wind_speed_10m ?? 0),
+          windGustsKmH: Math.round(current.wind_gusts_10m ?? current.wind_speed_10m ?? 0),
+          windDirection: current.wind_direction_10m ?? 0,
+          weatherCode: current.weather_code ?? 0,
+          precipitation: current.precipitation ?? 0,
+          precipProbability: (current.precipitation ?? 0) > 0 ? 80 : 0,
+          description: getWmoDescription(current.weather_code)
+        },
         debug: {
           source: 'open-meteo',
           hasKey: !!apiKey,
@@ -337,19 +407,86 @@ Responda ÚNICA E EXCLUSIVAMENTE com um objeto JSON válido, sem bloco markdown 
       });
 
     } catch (error: any) {
-      console.error("[WeatherAPI] Final Exception:", error.message);
-      res.status(500).json({ 
-        error: "Erro na conexão com serviço meteorológico", 
-        details: error?.message,
-        source: "backend_proxy",
-        debug: {
-          source: 'error',
-          hasKey: !!apiKey,
-          latitude,
-          longitude,
-          env: process.env.NODE_ENV
-        }
-      });
+      console.warn(`[WeatherAPI] Open-Meteo falhou (${error.message}). Tentando wttr.in como canal de backup de emergência.`);
+      try {
+        const wttrRes = await fetch(`https://wttr.in/${latitude},${longitude}?format=j1`);
+        if (!wttrRes.ok) throw new Error(`wttr.in falhou com status ${wttrRes.status}`);
+        const wttrData = await wttrRes.json();
+        const cur = wttrData.current_condition[0];
+        
+        const temp = Math.round(parseFloat(cur.temp_C) || 0);
+        const apparentTemp = Math.round(parseFloat(cur.FeelsLikeC) || temp);
+        const sWind = Math.round(parseFloat(cur.windspeedKmph) || 0);
+        const precipVal = parseFloat(cur.precipMM) || 0;
+        
+        const wwoCode = parseInt(cur.weatherCode) || 113;
+        let wmoCode = 0;
+        if (wwoCode === 113) wmoCode = 0;
+        else if (wwoCode === 116) wmoCode = 2;
+        else if (wwoCode === 119 || wwoCode === 122) wmoCode = 3;
+        else if (wwoCode === 143 || wwoCode === 248) wmoCode = 45;
+        else if (wwoCode === 266 || wwoCode === 293 || wwoCode === 296) wmoCode = 51;
+        else if (wwoCode >= 353 && wwoCode <= 359) wmoCode = 80;
+        else if (wwoCode === 386 || wwoCode === 389) wmoCode = 95;
+        else wmoCode = 1;
+
+        const adaptedData = {
+          main: {
+            temp: temp,
+            feels_like: apparentTemp,
+            humidity: parseInt(cur.humidity) || 0
+          },
+          weather: [
+            {
+              description: cur.weatherDesc?.[0]?.value || getWmoDescription(wmoCode),
+              icon: getWmoIcon(wmoCode, true)
+            }
+          ],
+          wind: {
+            speed: sWind / 3.6
+          },
+          precipitation: precipVal
+        };
+
+        res.setHeader('Cache-Control', 'public, max-age=600');
+        res.json({
+          ...adaptedData,
+          unified: {
+            temp: temp,
+            feelsLike: apparentTemp,
+            humidity: parseInt(cur.humidity) || 0,
+            windSpeedKmH: sWind,
+            windGustsKmH: Math.round(sWind * 1.3),
+            windDirection: parseInt(cur.winddirDegree) || 0,
+            weatherCode: wmoCode,
+            precipitation: precipVal,
+            precipProbability: precipVal > 0 ? 80 : 0,
+            description: cur.weatherDesc?.[0]?.value || getWmoDescription(wmoCode)
+          },
+          debug: {
+            source: 'wttr-fallback',
+            hasKey: !!apiKey,
+            latitude,
+            longitude,
+            env: process.env.NODE_ENV
+          }
+        });
+
+      } catch (backupErr: any) {
+        console.error("[WeatherAPI] Final Exception (Ambas APIs falharam):", backupErr.message);
+        res.status(500).json({ 
+          error: "Falha ao obter dados climáticos de todas as fontes disponíveis", 
+          details: backupErr.message,
+          source: "backend_proxy_complete_failure",
+          debug: {
+            source: 'error',
+            hasKey: !!apiKey,
+            latitude,
+            longitude,
+            env: process.env.NODE_ENV
+          }
+        });
+      }
     }
   });
 
@@ -437,6 +574,19 @@ Responda ÚNICA E EXCLUSIVAMENTE com um objeto JSON válido, sem bloco markdown 
     if (code <= 67) return `10${suffix}`;
     if (code <= 77) return `13${suffix}`;
     return `11${suffix}`;
+  }
+
+  function mapOwmIdToWmoCode(id: number): number {
+    if (id === 800) return 0;
+    if (id > 800 && id <= 804) return id - 800; // 1, 2, 3
+    if (id >= 700 && id < 800) return 45; // Fog
+    if (id >= 300 && id < 400) return 51; // Drizzle
+    if (id >= 500 && id < 504) return 61; // Light/mod rain
+    if (id === 511) return 71; // Snow
+    if (id >= 520 && id < 600) return 80; // Shower rain
+    if (id >= 600 && id < 700) return 71; // Snow
+    if (id >= 200 && id < 300) return 95; // Thunderstorm
+    return 0;
   }
 
   // Vite middleware for development

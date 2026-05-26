@@ -124,95 +124,127 @@ export default function SerraDoRioDoRastroWidget() {
         
         fetchedData = JSON.parse(trimmed);
       } catch (backendError) {
-        console.warn("API de backend indisponível ou em host estático (como Vercel). Iniciando recuperação local direta via Open-Meteo:", backendError);
+        console.warn("API de backend indisponível ou em erro. Iniciando recuperação local direta via wttr.in ou Open-Meteo:", backendError);
         
         // Recuperação direta e cálculo equivalente em tempo real no Client-side
         const lat = -28.39;
         const lon = -49.55;
-        const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,visibility&timezone=auto`;
-        
-        const omResponse = await fetch(openMeteoUrl);
-        if (!omResponse.ok) {
-          throw new Error(`Open-Meteo API falhou com status ${omResponse.status}`);
-        }
-        
-        const omData = await omResponse.json();
-        if (!omData.current) {
-          throw new Error("Dados da Open-Meteo inválidos retornados direto na Serra");
-        }
-        
-        const current = omData.current;
-        const wind = current.wind_speed_10m || 0;
-        const windGusts = current.wind_gusts_10m || 0;
-        const temp = current.temperature_2m || 0;
-        const apparentTemp = current.apparent_temperature || temp;
-        
-        // Determinar precisão de visibilidade em km
-        let visibilityRaw = current.visibility;
-        let visibility_km = 10;
-        if (typeof visibilityRaw === 'number') {
-          visibility_km = visibilityRaw / 1000;
-        } else {
-          const code = current.weather_code || 0;
-          if (code === 45 || code === 48) {
-            visibility_km = 0.3;
-          } else if (code >= 95) {
-            visibility_km = 1.2;
-          } else if (code >= 61 && code <= 65) {
-            visibility_km = 2.5;
-          } else if (code <= 3) {
-            visibility_km = 10.0;
-          } else {
-            visibility_km = 6.0;
+        let pTemp = 0;
+        let pApparent = 0;
+        let pWind = 0;
+        let pGusts = 0;
+        let pPrecip = 0;
+        let pCode = 0;
+        let pDesc = "Condições Variáveis";
+        let pVis = 10;
+
+        try {
+          // Tenta wttr.in primeiro (extremamente confiável e com alta disponibilidade)
+          const wttrRes = await fetch(`https://wttr.in/-28.39,-49.55?format=j1`);
+          if (!wttrRes.ok) throw new Error(`wttr.in falhou com status ${wttrRes.status}`);
+          const wttrData = await wttrRes.json();
+          const cur = wttrData.current_condition[0];
+          
+          pTemp = Math.round(parseFloat(cur.temp_C) || 0);
+          pApparent = Math.round(parseFloat(cur.FeelsLikeC) || pTemp);
+          pWind = Math.round(parseFloat(cur.windspeedKmph) || 0);
+          pGusts = Math.round(pWind * 1.3);
+          pPrecip = parseFloat(cur.precipMM) || 0;
+          pVis = parseFloat(cur.visibility) || 10;
+          pDesc = cur.weatherDesc?.[0]?.value || "Instável";
+          
+          const wwoCode = parseInt(cur.weatherCode) || 113;
+          // Mapeamento simplificado de WWO para códigos WMO de clima
+          if (wwoCode === 113) pCode = 0;
+          else if (wwoCode === 116) pCode = 2;
+          else if (wwoCode === 119 || wwoCode === 122) pCode = 3;
+          else if (wwoCode === 143 || wwoCode === 248) pCode = 45;
+          else if (wwoCode === 266 || wwoCode === 293 || wwoCode === 296) pCode = 51;
+          else if (wwoCode >= 353 && wwoCode <= 359) pCode = 80;
+          else if (wwoCode === 386 || wwoCode === 389) pCode = 95;
+          else pCode = 1;
+
+        } catch (wttrErr) {
+          console.warn("Falha no canal wttr.in, testando Open-Meteo diretamente como segunda opção:", wttrErr);
+          const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,visibility&timezone=auto`;
+          
+          const omResponse = await fetch(openMeteoUrl);
+          if (!omResponse.ok) {
+            throw new Error(`Open-Meteo API falhou com status ${omResponse.status}`);
           }
+          
+          const omData = await omResponse.json();
+          if (!omData.current) {
+            throw new Error("Dados da Open-Meteo inválidos retornados direto na Serra");
+          }
+          
+          const current = omData.current;
+          pWind = current.wind_speed_10m || 0;
+          pGusts = current.wind_gusts_10m || 0;
+          pTemp = current.temperature_2m || 0;
+          pApparent = current.apparent_temperature || pTemp;
+          pPrecip = current.precipitation || 0;
+          pCode = current.weather_code || 0;
+          
+          let visibilityRaw = current.visibility;
+          if (typeof visibilityRaw === 'number') {
+            pVis = visibilityRaw / 1000;
+          } else {
+            if (pCode === 45 || pCode === 48) pVis = 0.3;
+            else if (pCode >= 95) pVis = 1.2;
+            else if (pCode >= 61 && pCode <= 65) pVis = 2.5;
+            else if (pCode <= 3) pVis = 10.0;
+            else pVis = 6.0;
+          }
+          
+          const localWmoDesc = (code: number): string => {
+            const codes: Record<number, string> = {
+              0: 'Céu Limpo', 
+              1: 'Predominantemente Limpo', 
+              2: 'Parcialmente Nublado', 
+              3: 'Nublado',
+              45: 'Nevoeiro', 
+              48: 'Nevoeiro Escarchante', 
+              51: 'Chuvisco Leve',
+              53: 'Chuvisco Moderado',
+              55: 'Chuvisco Denso',
+              61: 'Chuva Leve', 
+              63: 'Chuva Moderada', 
+              65: 'Chuva Forte',
+              71: 'Neve Leve', 
+              73: 'Neve Moderada',
+              75: 'Neve Forte',
+              80: 'Pancadas de Chuva Leves',
+              81: 'Pancadas de Chuva Moderadas',
+              82: 'Pancadas de Chuva Violentas',
+              95: 'Trovoada Leve/Moderada',
+              96: 'Trovoada com Granizo Leve',
+              99: 'Trovoada com Granizo Forte'
+            };
+            return codes[code] || 'Condições Variáveis';
+          };
+          pDesc = localWmoDesc(pCode);
         }
         
         // Classificar status operacional de segurança baseado estritamente nos limites do projeto
         let statusColor: 'SAFE' | 'ATTENTION' | 'DANGER' = 'SAFE';
-        if (visibility_km < 1 || wind > 50) {
+        if (pVis < 1 || pWind > 50) {
           statusColor = 'DANGER';
-        } else if ((visibility_km >= 1 && visibility_km <= 5) || (wind >= 30 && wind <= 50)) {
+        } else if ((pVis >= 1 && pVis <= 5) || (pWind >= 30 && pWind <= 50)) {
           statusColor = 'ATTENTION';
         } else {
           statusColor = 'SAFE';
         }
         
-        const localWmoDesc = (code: number): string => {
-          const codes: Record<number, string> = {
-            0: 'Céu Limpo', 
-            1: 'Predominantemente Limpo', 
-            2: 'Parcialmente Nublado', 
-            3: 'Nublado',
-            45: 'Nevoeiro', 
-            48: 'Nevoeiro Escarchante', 
-            51: 'Chuvisco Leve',
-            53: 'Chuvisco Moderado',
-            55: 'Chuvisco Denso',
-            61: 'Chuva Leve', 
-            63: 'Chuva Moderada', 
-            65: 'Chuva Forte',
-            71: 'Neve Leve', 
-            73: 'Neve Moderada',
-            75: 'Neve Forte',
-            80: 'Pancadas de Chuva Leves',
-            81: 'Pancadas de Chuva Moderadas',
-            82: 'Pancadas de Chuva Violentas',
-            95: 'Trovoada Leve/Moderada',
-            96: 'Trovoada com Granizo Leve',
-            99: 'Trovoada com Granizo Forte'
-          };
-          return codes[code] || 'Condições Variáveis';
-        };
-        
         const metrics = {
-          temp,
-          apparentTemp,
-          wind,
-          windGusts,
-          visibility_km,
-          weatherCode: current.weather_code || 0,
-          weatherDesc: localWmoDesc(current.weather_code || 0),
-          precipitation: current.precipitation || 0
+          temp: pTemp,
+          apparentTemp: pApparent,
+          wind: pWind,
+          windGusts: pGusts,
+          visibility_km: pVis,
+          weatherCode: pCode,
+          weatherDesc: pDesc,
+          precipitation: pPrecip
         };
         
         const alertTitle = statusColor === 'SAFE' 
@@ -229,7 +261,7 @@ export default function SerraDoRioDoRastroWidget() {
             
         fetchedData = {
           statusColor,
-          visibility_km: visibility_km.toFixed(1),
+          visibility_km: pVis.toFixed(1),
           alertTitle,
           alertMessage,
           metrics

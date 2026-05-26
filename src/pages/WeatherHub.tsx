@@ -35,9 +35,20 @@ const REGIONS = [
   { id: 'floripa', name: 'Florianópolis', country: 'Brasil', lat: -27.59, lng: -48.54, sub: 'Litoral_Sul' },
   { id: 'serra-sc', name: 'Serra Catarinense', country: 'Brasil', lat: -28.01, lng: -49.59, sub: 'Urubici_Altos' },
   { id: 'chapada', name: 'Chapada Diamantina', country: 'Brasil', lat: -12.56, lng: -41.38, sub: 'Lençóis_Sertão' },
+  { id: 'diamantina', name: 'Diamantina', country: 'Brasil', lat: -18.23, lng: -43.60, sub: 'Estrada_Real_MG' },
+  { id: 'mantiqueira', name: 'Serra da Mantiqueira', country: 'Brasil', lat: -22.42, lng: -44.82, sub: 'Cumes_Frios_MG' },
+  { id: 'salvador', name: 'Salvador', country: 'Brasil', lat: -12.97, lng: -38.50, sub: 'Pelourinho_Farol' },
+  { id: 'buenos-aires', name: 'Buenos Aires', country: 'Argentina', lat: -34.60, lng: -58.38, sub: 'Bajo_Porteño' },
+  { id: 'la-mano', name: 'La Mano', country: 'Argentina/Uruguay', lat: -34.96, lng: -54.94, sub: 'Monumento_La_Mano' },
   { id: 'patagonia', name: 'Patagonia', country: 'Argentina', lat: -49.33, lng: -72.88, sub: 'El_Chaltén_Andes' },
   { id: 'atacama', name: 'Atacama', country: 'Chile', lat: -22.91, lng: -68.20, sub: 'San_Pedro_Deserto' },
   { id: 'cusco', name: 'Cusco', country: 'Peru', lat: -13.53, lng: -71.97, sub: 'Valle_Sagrado' },
+  { id: 'machu-picchu', name: 'Machu Picchu', country: 'Peru', lat: -13.16, lng: -72.54, sub: 'Cultura_Inca' },
+  { id: 'uyuni', name: 'Salar de Uyuni', country: 'Bolívia', lat: -20.13, lng: -67.62, sub: 'Salar_de_Uyuni' },
+  { id: 'quito', name: 'Quito', country: 'Equador', lat: -0.18, lng: -78.47, sub: 'Mitad_del_Mundo' },
+  { id: 'ruinas-maias', name: 'Ruínas Maias', country: 'México', lat: 20.68, lng: -88.57, sub: 'Chichén_Itzá_Yucatán' },
+  { id: 'guiana-francesa', name: 'Guiana Francesa', country: 'Guiana Francesa', lat: 4.93, lng: -52.33, sub: 'Portal_Norte' },
+  { id: 'guatemala', name: 'Guatemala', country: 'Guatemala', lat: 14.63, lng: -90.50, sub: 'Guatemala_City' },
   { id: 'mendoza', name: 'Mendoza', country: 'Argentina', lat: -32.89, lng: -68.85, sub: 'Cordillera_Vino' },
   { id: 'ushuaia', name: 'Ushuaia', country: 'Argentina', lat: -54.80, lng: -68.30, sub: 'Fin_del_Mundo' },
   { id: 'austral', name: 'Carretera Austral', country: 'Chile', lat: -45.57, lng: -72.07, sub: 'Coyhaique_Patagonia' },
@@ -166,15 +177,16 @@ export default function WeatherHub() {
 
   const fetchLocationWeather = async (lat: number, lng: number, name: string) => {
     try {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation`);
+      const res = await fetch(`/api/weather?lat=${lat}&lon=${lng}`);
       const data = await res.json();
       
-      if (data.current) {
-        const code = data.current.weather_code;
-        const wind = Math.round(data.current.wind_speed_10m);
-        const gusts = Math.round(data.current.wind_gusts_10m);
-        const temp = Math.round(data.current.temperature_2m);
-        const precip = data.current.precipitation;
+      if (data.unified) {
+        const u = data.unified;
+        const code = u.weatherCode;
+        const wind = u.windSpeedKmH;
+        const gusts = u.windGustsKmH;
+        const temp = u.temp;
+        const precip = u.precipitation;
         
         let status: 'SAFE' | 'ATTENTION' | 'ALERT' = 'SAFE';
         if (wind > 40 || code >= 95) status = 'ALERT';
@@ -183,12 +195,41 @@ export default function WeatherHub() {
         const weather: WeatherData = {
           id: 'custom',
           temp,
-          feelsLike: Math.round(data.current.apparent_temperature),
+          feelsLike: u.feelsLike,
           wind,
           windGusts: gusts,
-          windDirection: data.current.wind_direction_10m,
-          humidity: data.current.relative_humidity_2m,
-          precip: 0, // Prob is hourly, using daily sum/prob in forecast
+          windDirection: u.windDirection,
+          humidity: u.humidity,
+          precip: u.precipProbability,
+          precipSum: precip,
+          code,
+          description: u.description || getWeatherDesc(code),
+          status,
+          bikeCondition: getBikeInterpretation(temp, wind, gusts, precip, code)
+        };
+        
+        setCurrentLocationWeather(weather);
+        fetchForecast(lat, lng);
+      } else if (data.current) {
+        const code = data.current.weather_code;
+        const wind = Math.round(data.current.wind_speed_10m || data.current.wind_speed || 0);
+        const gusts = Math.round(data.current.wind_gusts_10m || wind);
+        const temp = Math.round(data.current.temperature_2m || data.current.temp || 0);
+        const precip = data.current.precipitation || 0;
+        
+        let status: 'SAFE' | 'ATTENTION' | 'ALERT' = 'SAFE';
+        if (wind > 40 || code >= 95) status = 'ALERT';
+        else if (wind > 20 || code >= 51 || precip > 2) status = 'ATTENTION';
+
+        const weather: WeatherData = {
+          id: 'custom',
+          temp,
+          feelsLike: Math.round(data.current.apparent_temperature || temp),
+          wind,
+          windGusts: gusts,
+          windDirection: data.current.wind_direction_10m || 0,
+          humidity: data.current.relative_humidity_2m || 0,
+          precip: 0,
           precipSum: precip,
           code,
           description: getWeatherDesc(code),
@@ -323,38 +364,73 @@ export default function WeatherHub() {
       
       try {
         await Promise.all(REGIONS.map(async (region) => {
-          const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lng}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation&hourly=precipitation_probability&forecast_days=1`
-          );
-          const data = await res.json();
-          
-          if (data.current) {
-            const code = data.current.weather_code;
-            const wind = Math.round(data.current.wind_speed_10m);
-            const gusts = Math.round(data.current.wind_gusts_10m);
-            const precip = data.current.precipitation;
-            const temp = Math.round(data.current.temperature_2m);
-            const prob = data.hourly?.precipitation_probability?.[0] || 0;
+          try {
+            const res = await fetch(
+              `/api/weather?lat=${region.lat}&lon=${region.lng}`
+            );
+            if (!res.ok) {
+              throw new Error(`Endpoint returned HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            
+            if (data.unified) {
+              const u = data.unified;
+              const code = u.weatherCode;
+              const wind = u.windSpeedKmH;
+              const gusts = u.windGustsKmH;
+              const precip = u.precipitation;
+              const temp = u.temp;
+              const prob = u.precipProbability;
 
-            let status: 'SAFE' | 'ATTENTION' | 'ALERT' = 'SAFE';
-            if (wind > 40 || code >= 95 || (code >= 71 && code <= 77)) status = 'ALERT';
-            else if (wind > 20 || code >= 51 || precip > 2) status = 'ATTENTION';
+              let status: 'SAFE' | 'ATTENTION' | 'ALERT' = 'SAFE';
+              if (wind > 40 || code >= 95 || (code >= 71 && code <= 77)) status = 'ALERT';
+              else if (wind > 20 || code >= 51 || precip > 2) status = 'ATTENTION';
 
-            results[region.id] = {
-              id: region.id,
-              temp,
-              feelsLike: Math.round(data.current.apparent_temperature),
-              wind,
-              windGusts: gusts,
-              windDirection: data.current.wind_direction_10m,
-              humidity: data.current.relative_humidity_2m,
-              code,
-              precip: prob,
-              precipSum: precip,
-              description: getWeatherDesc(code),
-              status,
-              bikeCondition: getBikeInterpretation(temp, wind, gusts, precip, code)
-            };
+              results[region.id] = {
+                id: region.id,
+                temp,
+                feelsLike: u.feelsLike,
+                wind,
+                windGusts: gusts,
+                windDirection: u.windDirection,
+                humidity: u.humidity,
+                code,
+                precip: prob,
+                precipSum: precip,
+                description: u.description || getWeatherDesc(code),
+                status,
+                bikeCondition: getBikeInterpretation(temp, wind, gusts, precip, code)
+              };
+            } else if (data.current) {
+              const code = data.current.weather_code;
+              const wind = Math.round(data.current.wind_speed_10m || data.current.wind_speed || 0);
+              const gusts = Math.round(data.current.wind_gusts_10m || wind);
+              const precip = data.current.precipitation || 0;
+              const temp = Math.round(data.current.temperature_2m || data.current.temp || 0);
+              const prob = data.hourly?.precipitation_probability?.[0] || 0;
+
+              let status: 'SAFE' | 'ATTENTION' | 'ALERT' = 'SAFE';
+              if (wind > 40 || code >= 95 || (code >= 71 && code <= 77)) status = 'ALERT';
+              else if (wind > 20 || code >= 51 || precip > 2) status = 'ATTENTION';
+
+              results[region.id] = {
+                id: region.id,
+                temp,
+                feelsLike: Math.round(data.current.apparent_temperature || temp),
+                wind,
+                windGusts: gusts,
+                windDirection: data.current.wind_direction_10m || 0,
+                humidity: data.current.relative_humidity_2m || 0,
+                code,
+                precip: prob,
+                precipSum: precip,
+                description: getWeatherDesc(code),
+                status,
+                bikeCondition: getBikeInterpretation(temp, wind, gusts, precip, code)
+              };
+            }
+          } catch (regionErr) {
+            console.warn(`[WeatherClient] Erro ao obter clima para ${region.name}:`, regionErr);
           }
         }));
         setWeatherData(results);
