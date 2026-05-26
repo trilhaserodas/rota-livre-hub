@@ -87,6 +87,7 @@ export default function WeatherHub() {
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
   const [loadingForecast, setLoadingForecast] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const CurrentBikeIcon = currentLocationWeather?.bikeCondition?.icon;
 
   const getBikeInterpretation = (temp: number, wind: number, gusts: number, precip: number, code: number) => {
     if (wind > 45 || gusts > 60 || code >= 95 || code === 82) {
@@ -492,7 +493,7 @@ export default function WeatherHub() {
                   {/* Cicloturismo Interpretation Header */}
                   <div className={`hidden md:flex flex-col items-end px-6 py-3 rounded-2xl border transition-all ${currentLocationWeather.bikeCondition.color}`}>
                     <div className="flex items-center gap-3 font-mono font-black text-[11px] uppercase tracking-widest">
-                      <currentLocationWeather.bikeCondition.icon size={18} />
+                      {CurrentBikeIcon && <CurrentBikeIcon size={18} />}
                       {currentLocationWeather.bikeCondition.label}
                     </div>
                     <div className="text-[9px] font-mono opacity-60 uppercase mt-1">
@@ -504,7 +505,7 @@ export default function WeatherHub() {
                 {/* Mobile Bike Condition Badge */}
                 <div className={`md:hidden flex flex-col items-center mb-6 px-6 py-4 rounded-2xl border ${currentLocationWeather.bikeCondition.color}`}>
                     <div className="flex items-center gap-3 font-mono font-black text-[10px] uppercase tracking-widest text-center">
-                      <currentLocationWeather.bikeCondition.icon size={18} />
+                      {CurrentBikeIcon && <CurrentBikeIcon size={18} />}
                       {currentLocationWeather.bikeCondition.label}
                     </div>
                     <div className="text-[8px] font-mono opacity-60 uppercase mt-2 text-center">
@@ -633,6 +634,7 @@ export default function WeatherHub() {
                 {REGIONS.map((region, idx) => {
                   const weather = weatherData[region.id];
                   if (!weather) return null;
+                  const BikeIcon = weather.bikeCondition.icon;
 
                   return (
                     <motion.div
@@ -711,7 +713,7 @@ export default function WeatherHub() {
                         <div className="mt-auto">
                           <div className={`flex flex-col gap-2 p-4 rounded-xl border transition-all ${weather.bikeCondition.color}`}>
                             <div className="flex items-center gap-3 font-mono font-bold text-[9px] uppercase tracking-widest">
-                              <weather.bikeCondition.icon size={16} />
+                              {BikeIcon && <BikeIcon size={16} />}
                               {weather.bikeCondition.label}
                             </div>
                             <div className="text-[8px] font-mono opacity-60 uppercase leading-relaxed">
