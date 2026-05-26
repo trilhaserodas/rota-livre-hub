@@ -3874,6 +3874,71 @@ export default function AdventureMap() {
           .tactical-day-mode .bg-[#0b0c0d]/90 {
             background-color: rgba(243, 238, 228, 0.9) !important;
           }
+
+          /* --- TOP CONTROL BAR MENUS (TACTICAL DAY MODE) --- */
+          .tactical-day-mode .map-top-control-bar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]) {
+            color: #140803 !important;
+          }
+          .tactical-day-mode .map-top-control-bar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]) svg {
+            color: #140803 !important;
+            transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .tactical-day-mode .map-top-control-bar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]) span {
+            color: #140803 !important;
+            transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          
+          /* Hover State: Icon becomes WHITE (#fffdf5), Text becomes burnt orange (#ff3219) */
+          .tactical-day-mode .map-top-control-bar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]):hover svg {
+            color: #fffdf5 !important;
+          }
+          .tactical-day-mode .map-top-control-bar button:not([class*="bg-[#ff641d]"]):not([class*="bg-blue-500"]):hover span {
+            color: #ff3219 !important;
+          }
+          
+          /* Vehicle buttons support */
+          .tactical-day-mode .map-top-control-bar .flex.gap-1 button:not([class*="bg-[#ff641d]"]) {
+            color: #140803 !important;
+          }
+          .tactical-day-mode .map-top-control-bar .flex.gap-1 button:not([class*="bg-[#ff641d]"]) svg {
+            color: #140803 !important;
+            transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .tactical-day-mode .map-top-control-bar .flex.gap-1 button:not([class*="bg-[#ff641d]"]):hover svg {
+            color: #fffdf5 !important;
+          }
+          
+          /* Search icon and navigation button support inside input */
+          .tactical-day-mode .map-top-control-bar form svg {
+            color: #140803 !important;
+            transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .tactical-day-mode .map-top-control-bar form button:hover svg {
+            color: #fffdf5 !important;
+          }
+          .tactical-day-mode .map-top-control-bar form input {
+            color: #140803 !important;
+            background-color: rgba(243, 238, 228, 0.45) !important;
+            border-color: rgba(90, 80, 64, 0.25) !important;
+          }
+          .tactical-day-mode .map-top-control-bar form input::placeholder {
+            color: rgba(20, 14, 12, 0.5) !important;
+          }
+
+          /* Active states on top control bar */
+          .tactical-day-mode .map-top-control-bar button[class*="bg-[#ff641d]"],
+          .tactical-day-mode .map-top-control-bar button.bg-\\[\\#ff641d\\] {
+            background-color: #ff3219 !important;
+            border-color: #ff3219 !important;
+          }
+          .tactical-day-mode .map-top-control-bar button[class*="bg-[#ff641d]"] svg,
+          .tactical-day-mode .map-top-control-bar button.bg-\\[\\#ff641d\\] svg {
+            color: #fffdf5 !important;
+          }
+          .tactical-day-mode .map-top-control-bar button[class*="bg-[#ff641d]"] span,
+          .tactical-day-mode .map-top-control-bar button.bg-\\[\\#ff641d\\] span {
+            color: #fffdf5 !important;
+          }
         `}</style>
       <SEO title="Tactical GPS Explorer — Atlas do Aventureiro" description="Sistema de navegação tática para expedições independentes." />
       
@@ -6075,7 +6140,7 @@ export default function AdventureMap() {
           )}
         </AnimatePresence>
 
-        <div className="w-full max-w-7xl bg-[#0a0a0a]/45 backdrop-blur-md border border-[#ff7828]/18 rounded-sm p-1.5 flex flex-col lg:flex-row items-stretch lg:items-center gap-2 pointer-events-auto shadow-[0_20px_50px_rgba(0,0,0,0.4),0_0_20px_rgba(255,100,29,0.05)] transition-all ring-1 ring-white/5 ring-inset">
+        <div className="w-full max-w-7xl map-top-control-bar bg-[#0a0a0a]/45 backdrop-blur-md border border-[#ff7828]/18 rounded-sm p-1.5 flex flex-col lg:flex-row items-stretch lg:items-center gap-2 pointer-events-auto shadow-[0_20px_50px_rgba(0,0,0,0.4),0_0_20px_rgba(255,100,29,0.05)] transition-all ring-1 ring-white/5 ring-inset">
           
           {/* Section 1: Filters & Vehicles (Left on Desktop) */}
           <div className="hidden lg:flex items-center gap-2 bg-white/[0.02] rounded-xs p-1 border border-[#ff7828]/10 order-2 lg:order-1 self-stretch lg:self-auto overflow-x-auto no-scrollbar">
