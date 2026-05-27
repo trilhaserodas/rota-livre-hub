@@ -15,7 +15,7 @@ import {
   Share2, Ruler, Trash2, Radio, UserPlus, Link as LinkIcon, Wind, Thermometer, Send,
   Cloud, Sun, Moon, Settings, CloudRain, Database, Heart, Cpu, Minimize2, Maximize2,
   Mountain, Clock, Info, ShieldAlert, Wifi, Battery, Eye, Activity, Car, Truck,
-  Map as MapIcon, ChevronLeft, ChevronRight, X, Menu, MoreVertical, Printer, Download, Store
+  Map as MapIcon, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X, Menu, MoreVertical, Printer, Download, Store
 } from 'lucide-react';
 import PointPanelV2 from '@/src/components/PointPanelV2';
 import WeatherWidget from '@/src/components/WeatherWidget';
@@ -2295,6 +2295,54 @@ export default function AdventureMap() {
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
     return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const autoCollapseTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const resetAutoCollapseTimer = useCallback(() => {
+    if (autoCollapseTimer.current) {
+      clearTimeout(autoCollapseTimer.current);
+    }
+    autoCollapseTimer.current = setTimeout(() => {
+      setIsMobileExpanded(false);
+    }, 4500);
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (window.innerWidth >= 1024) return;
+    touchStartY.current = e.touches[0].clientY;
+    if (autoCollapseTimer.current) {
+      clearTimeout(autoCollapseTimer.current);
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (window.innerWidth >= 1024 || touchStartY.current === null) return;
+    const currentY = e.touches[0].clientY;
+    const diffY = touchStartY.current - currentY; // positive means swipe up
+
+    if (diffY > 15) {
+      setIsMobileExpanded(true);
+      resetAutoCollapseTimer();
+    } else if (diffY < -15) {
+      setIsMobileExpanded(false);
+    }
+  }, [resetAutoCollapseTimer]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (window.innerWidth >= 1024) return;
+    touchStartY.current = null;
+    resetAutoCollapseTimer();
+  }, [resetAutoCollapseTimer]);
+
+  useEffect(() => {
+    return () => {
+      if (autoCollapseTimer.current) {
+        clearTimeout(autoCollapseTimer.current);
+      }
+    };
   }, []);
 
   // Synchronous cache for Nominatim Geocoding (Osm)
@@ -5641,7 +5689,7 @@ export default function AdventureMap() {
       </motion.aside>
 
       {/* --- MAP MAIN VIEWPORT --- */}
-      <div className="w-full h-[85vh] lg:h-full relative flex flex-col lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last overflow-hidden lg:overflow-visible">
+      <div className="w-full h-[calc(85vh+10px)] lg:h-full relative flex flex-col lg:flex-1 bg-[#0b0c0d] border-l lg:border-l border-white/5 isolate order-first lg:order-last overflow-visible lg:overflow-visible">
           
           {/* Real-Time GPS Tracking Widget */}
           <GPSTracker 
@@ -5656,7 +5704,7 @@ export default function AdventureMap() {
             }}
           />
           <GPSTracker 
-            className="absolute bottom-28 left-4 z-[3700] lg:hidden"
+            className="absolute bottom-[138px] left-4 z-[3700] lg:hidden"
             isSharing={isSharing}
             onToggleSharing={setIsSharing}
             isSignedIn={isSignedIn}
@@ -6840,26 +6888,28 @@ export default function AdventureMap() {
         </div>
       </div>
 
-      {/* Responsive Categories Bar - REMOVED */}
-
       {/* Right Action Stack (Vertical controls) - Positioned as floating OVERLAY over the map on both Mobile (top) and Desktop (centered) */}
-      <div className={cn(
-        "flex absolute right-4 top-[94px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto flex-col gap-1 lg:gap-1.5 pointer-events-auto transition-all map-right-action-stack",
-        selectedPoint && !isPointDetailsMinimized ? "z-[3000]" : "z-[4000]"
-      )}>
-         {/* Tactical Mobile Menu Trigger */}
+      <div 
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className={cn(
+          "flex absolute right-4 top-[94px] lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto flex-col gap-1 lg:gap-1.5 pointer-events-auto transition-all map-right-action-stack",
+          selectedPoint && !isPointDetailsMinimized ? "z-[3000]" : "z-[4000]"
+        )}
+      >
+         {/* 1. Tactical Mobile Menu Trigger (Mobile only) */}
          <button 
            onClick={() => {
              sidebarRef.current?.scrollIntoView({ behavior: 'smooth' });
            }}
-           className="lg:hidden w-9 h-9 bg-black/80 border border-[#ff641d]/50 text-[#ff641d] rounded-sm transition-all shadow-xl flex items-center justify-center"
+           className="lg:hidden w-9 h-9 bg-black/80 border border-[#ff641d]/50 text-[#ff641d] rounded-sm transition-all shadow-xl flex items-center justify-center animate-pulse"
            title="MENU TÁTICO"
          >
             <Menu size={16} />
          </button>
 
-
-
+         {/* 2. MINHA LOCALIZAÇÃO (Always visible) */}
          <button 
            onClick={handleLocateUser} 
            title="MINHA LOCALIZAÇÃO"
@@ -6869,19 +6919,20 @@ export default function AdventureMap() {
             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Minha_Posição</div>
          </button>
 
+         {/* 3. TRAÇAR ROTA (Régua) (Always visible) */}
          <button 
-           onClick={() => {
-             setMapCenter([-19.9213, -43.9312]);
-             setMapZoom(12);
-             setSelectedCategory('market');
-           }}
-           title="🎯 MERCADOS MINAS GERAIS (10)"
-           className="w-9 h-9 lg:w-12 lg:h-12 bg-black/80 border border-[#a78bfa]/50 rounded-sm text-[#a78bfa] hover:bg-[#a78bfa] hover:text-black transition-all shadow-xl flex flex-col items-center justify-center group relative"
+           onClick={() => setIsTracing(!isTracing)}
+           className={cn(
+             "w-9 h-9 lg:w-12 lg:h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+             isTracing ? "bg-[#ff641d] border-[#ff641d] text-white animate-pulse" : "bg-black/60 border-white/10 text-[#ff641d] hover:border-[#ff641d]/40 hover:text-white"
+           )}
+           title="TRAÇAR ROTA"
          >
-            <Store size={15} />
-            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Minas_Gerais_Markets</div>
+           <Ruler size={14} />
+           <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Traçar_Rota</div>
          </button>
 
+         {/* 4. BÚSSOLA DE EXPEDIÇÃO (Always visible) */}
          <button 
            onClick={() => setIsCompassOpen(!isCompassOpen)}
            className={cn(
@@ -6890,129 +6941,93 @@ export default function AdventureMap() {
            )}
            title="BÚSSOLA DE EXPEDIÇÃO"
            id="toggle-compass-stack-btn"
-         >
-            <CompassIcon size={16} className={cn(isCompassOpen && "animate-spin-slow")} />
-            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Bússola_GPS</div>
-         </button>
-
-         <button 
-           onClick={() => setMapRotation(prev => prev - 15)}
-           className="w-9 h-9 lg:w-12 lg:h-12 bg-black/80 border border-white/10 rounded-sm text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/40 transition-all flex items-center justify-center group relative"
-           title="ROTACIONAR MAPA ANTI-HORÁRIO (-15°)"
-         >
-            <RotateCcw size={16} />
-            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Girar_Anti-Horário</div>
-         </button>
-
-         {mapRotation !== 0 && (
-           <button 
-             onClick={() => setMapRotation(0)}
-             className="w-9 h-9 lg:w-12 lg:h-12 bg-[#ff641d]/10 border border-[#ff641d]/50 rounded-sm text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all flex flex-col items-center justify-center group relative text-[8px] font-mono font-bold"
-             title="RESTAURAR ORIENTAÇÃO NORTE (0°)"
-           >
-              <span className="leading-none text-[8.5px] font-black">{Math.round(mapRotation % 360 + 360) % 360}°</span>
-              <span className="text-[6.5px] uppercase font-bold text-[#ff641d]/70">NOR</span>
-              <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Norte_Verdadeiro</div>
-           </button>
-         )}
-
-         <button 
-           onClick={() => setMapRotation(prev => prev + 15)}
-           className="w-9 h-9 lg:w-12 lg:h-12 bg-black/80 border border-white/10 rounded-sm text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/40 transition-all flex items-center justify-center group relative"
-           title="ROTACIONAR MAPA HORÁRIO (+15°)"
-         >
-            <RotateCw size={16} />
-            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Girar_Horário</div>
-         </button>
-         
-         <button 
-           onClick={() => setIsTracing(!isTracing)}
-           className={cn(
-             "w-9 h-9 lg:w-12 lg:h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
-             isTracing ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-black/60 border-white/10 text-white/20 hover:border-[#ff641d]/40"
-           )}
-           title="TRAÇAR ROTA"
-         >
-           <Ruler size={14} />
-           <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Traçar_Rota</div>
-         </button>
-
-         <button 
-           onClick={() => setShowHeatmap(!showHeatmap)}
-           className={cn(
-             "w-9 h-9 lg:w-12 lg:h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
-             showHeatmap ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-black/60 border-white/10 text-white/20 hover:border-[#ff641d]/40"
-           )}
-           title="MODO TÉRMICO (CALOR)"
-         >
-           <Activity size={14} />
-           <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Modo_Térmico</div>
-         </button>
-
-          <button 
-            onClick={() => setIsSharing(!isSharing)} 
-            title="TRACKING GPS LIVE"
-            className={cn(
-              "w-9 h-9 lg:w-12 lg:h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center group relative", 
-              isSharing ? "bg-blue-500 border-blue-500 animate-pulse text-white" : "bg-black/80 border-white/10 text-white/20 hover:border-blue-500/40"
-            )}
           >
-             <Radio size={16} />
-             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Live_Tracking</div>
+             <CompassIcon size={16} className={cn(isCompassOpen && "animate-spin-slow")} />
+             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Bússola_GPS</div>
           </button>
 
-          {/* COMPARTILHAMENTO MINIMALISTA */}
-          <div className="relative group/share">
-            <button 
-              onClick={() => {
-                setShowShareMenu(!showShareMenu);
-                // Auto-close after 8 seconds of idle time
-                setTimeout(() => setShowShareMenu(false), 8000);
-              }} 
-              title="COMPARTILHAR ROTA OU LOCAL"
-              className={cn(
-                "w-9 h-9 lg:w-12 lg:h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center relative", 
-                showShareMenu 
-                  ? "bg-[#ff641d] border-[#ff641d] text-white" 
-                  : (routePoints.length > 0 || !!selectedPreDefinedRoute)
-                    ? "bg-black/80 border-[#ff641d]/50 text-[#ff641d] hover:bg-[#ff641d] hover:text-white"
-                    : "bg-black/80 border-white/10 text-[#ff641d]/80 hover:text-white hover:border-white/30"
-              )}
-            >
-               <Share2 size={14} className={cn((routePoints.length > 0 || !!selectedPreDefinedRoute) && "animate-pulse")} />
-               <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Compartilhar_Rota</div>
-            </button>
+          {/* 5. TACTICAL EXPANDER FOR ADDITIONAL ACTIONS (Mobile only to expand hidden menus) */}
+          {isMobile && (
+             <button 
+               onClick={() => {
+                 setIsMobileExpanded(!isMobileExpanded);
+                 if (!isMobileExpanded) resetAutoCollapseTimer();
+               }}
+               className={cn(
+                 "w-9 h-8 bg-black/95 border border-[#ff641d]/30 text-white/50 hover:bg-[#ff641d]/20 hover:text-[#ff641d] rounded-sm transition-all shadow-xl flex flex-col items-center justify-center relative group active:scale-95 ml-0",
+                 !isMobileExpanded && "animate-bounce"
+               )}
+               title={isMobileExpanded ? "RECOLHER" : "VER MAIS" }
+             >
+               {isMobileExpanded ? <ChevronUp size={12} className="text-[#ff641d]" /> : <ChevronDown size={12} className="text-[#ff641d]" />}
+               <span className="text-[5px] font-mono leading-none scale-90 select-none uppercase tracking-tighter">{isMobileExpanded ? "Recolh" : "Menus"}</span>
+             </button>
+          )}
 
-            {/* Balão/Dropdown de Compartilhamento Minimalista */}
-            <AnimatePresence>
-              {showShareMenu && (
-                <motion.div 
-                  initial={{ opacity: 0, x: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: 10, scale: 0.95 }}
-                  className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-60 bg-[#0b0c0d]/95 backdrop-blur-xl border border-[#ff641d]/30 rounded-sm overflow-hidden z-[5000] shadow-[0_10px_30px_rgba(0,0,0,0.9)] p-3 space-y-2 pointer-events-auto"
-                >
-                  <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                    <span className="text-[8px] font-mono text-[#ff641d] font-black tracking-widest uppercase">
-                      {selectedPreDefinedRoute ? "ROTA TÁTICA ATIVA" : routePoints.length > 0 ? "TRAJETO CUSTOMIZADO" : "COMPARTILHAR LOCAL"}
-                    </span>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowShareMenu(false);
-                      }}
-                      className="text-white/40 hover:text-white transition-colors"
-                    >
-                      <X size={10} />
-                    </button>
-                  </div>
+          {/* Extra secondary menus: hidden on mobile until expanded, always rendered on desktop */}
+          <AnimatePresence>
+            {(!isMobile || isMobileExpanded) && (
+              <motion.div
+                key="extra-actions-stack"
+                initial={isMobile ? { opacity: 0, height: 0, scale: 0.95, y: -10 } : false}
+                animate={isMobile ? { opacity: 1, height: "auto", scale: 1, y: 0 } : {}}
+                exit={isMobile ? { opacity: 0, height: 0, scale: 0.95, y: -10 } : {}}
+                transition={{ type: "spring", stiffness: 350, damping: 26 }}
+                className="flex flex-col gap-1 lg:gap-1.5 overflow-visible origin-top"
+              >
 
-                  <div className="text-[7px] font-mono text-white/50 uppercase leading-none truncate max-w-full">
-                    {selectedPreDefinedRoute ? `NOME: ${selectedPreDefinedRoute.name}` : routePoints.length > 0 ? `${routePoints.length} COORD_NODES` : `LAT: ${mapCenter[0].toFixed(4)} LON: ${mapCenter[1].toFixed(4)}`}
-                  </div>
+         {/* 5. COMPARTILHAR ROTA OU LOCAL (Always visible) */}
+         <div className="relative group/share">
+           <button 
+             onClick={() => {
+               setShowShareMenu(!showShareMenu);
+               // Auto-close after 8 seconds of idle time
+               setTimeout(() => setShowShareMenu(false), 8000);
+             }} 
+             title="COMPARTILHAR ROTA OU LOCAL"
+             className={cn(
+               "w-9 h-9 lg:w-12 lg:h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center relative", 
+               showShareMenu 
+                 ? "bg-[#ff641d] border-[#ff641d] text-white" 
+                 : (routePoints.length > 0 || !!selectedPreDefinedRoute)
+                   ? "bg-black/80 border-[#ff641d]/50 text-[#ff641d] hover:bg-[#ff641d] hover:text-white"
+                   : "bg-black/80 border-white/10 text-[#ff641d]/80 hover:text-white hover:border-white/30"
+             )}
+           >
+              <Share2 size={14} className={cn((routePoints.length > 0 || !!selectedPreDefinedRoute) && "animate-pulse")} />
+              <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Compartilhar_Rota</div>
+           </button>
 
-                  {/* Copy Link Section */}
-                  <div className="space-y-1">
+           {/* Balão/Dropdown de Compartilhamento Minimalista */}
+           <AnimatePresence>
+             {showShareMenu && (
+               <motion.div 
+                 initial={{ opacity: 0, x: 10, scale: 0.95 }}
+                 animate={{ opacity: 1, x: 0, scale: 1 }}
+                 exit={{ opacity: 0, x: 10, scale: 0.95 }}
+                 className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-60 bg-[#0b0c0d]/95 backdrop-blur-xl border border-[#ff641d]/30 rounded-sm overflow-hidden z-[5000] shadow-[0_10px_30px_rgba(0,0,0,0.9)] p-3 space-y-2 pointer-events-auto"
+               >
+                 <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                   <span className="text-[8px] font-mono text-[#ff641d] font-black tracking-widest uppercase">
+                     {selectedPreDefinedRoute ? "ROTA TÁTICA ATIVA" : routePoints.length > 0 ? "TRAJETO CUSTOMIZADO" : "COMPARTILHAR LOCAL"}
+                   </span>
+                   <button 
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setShowShareMenu(false);
+                     }}
+                     className="text-white/40 hover:text-white transition-colors"
+                   >
+                     <X size={10} />
+                   </button>
+                 </div>
+
+                 <div className="text-[7px] font-mono text-white/50 uppercase leading-none truncate max-w-full">
+                   {selectedPreDefinedRoute ? `NOME: ${selectedPreDefinedRoute.name}` : routePoints.length > 0 ? `${routePoints.length} COORD_NODES` : `LAT: ${mapCenter[0].toFixed(4)} LON: ${mapCenter[1].toFixed(4)}`}
+                 </div>
+
+                 {/* Copy Link Section */}
+                 <div className="space-y-1">
                     <button 
                       onClick={async () => {
                         try {
@@ -7070,6 +7085,74 @@ export default function AdventureMap() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* --- DESKTOP ONLY REGULAR ACTIONS (Hides on mobile to ensure clean fit and avoid overlapping bottom menu panels) --- */}
+          <button 
+            onClick={() => {
+              setMapCenter([-19.9213, -43.9312]);
+              setMapZoom(12);
+              setSelectedCategory('market');
+            }}
+            title="🎯 MERCADOS MINAS GERAIS (10)"
+            className="hidden lg:flex w-12 h-12 bg-black/80 border border-[#a78bfa]/50 rounded-sm text-[#a78bfa] hover:bg-[#a78bfa] hover:text-black transition-all shadow-xl flex-col items-center justify-center group relative"
+          >
+             <Store size={15} />
+             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Minas_Gerais_Markets</div>
+          </button>
+
+          <button 
+            onClick={() => setMapRotation(prev => prev - 15)}
+            className="hidden lg:flex w-12 h-12 bg-black/80 border border-white/10 rounded-sm text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/40 transition-all flex items-center justify-center group relative"
+            title="ROTACIONAR MAPA ANTI-HORÁRIO (-15°)"
+          >
+             <RotateCcw size={16} />
+             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Girar_Anti-Horário</div>
+          </button>
+
+          {mapRotation !== 0 && (
+            <button 
+              onClick={() => setMapRotation(0)}
+              className="hidden lg:flex w-12 h-12 bg-[#ff641d]/10 border border-[#ff641d]/50 rounded-sm text-[#ff641d] hover:bg-[#ff641d] hover:text-white transition-all flex-col items-center justify-center group relative text-[8px] font-mono font-bold"
+              title="RESTAURAR ORIENTAÇÃO NORTE (0°)"
+            >
+               <span className="leading-none text-[8.5px] font-black">{Math.round(mapRotation % 360 + 360) % 360}°</span>
+               <span className="text-[6.5px] uppercase font-bold text-[#ff641d]/70">NOR</span>
+               <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Norte_Verdadeiro</div>
+            </button>
+          )}
+
+          <button 
+            onClick={() => setMapRotation(prev => prev + 15)}
+            className="hidden lg:flex w-12 h-12 bg-black/80 border border-white/10 rounded-sm text-white/50 hover:text-[#ff641d] hover:border-[#ff641d]/40 transition-all flex items-center justify-center group relative"
+            title="ROTACIONAR MAPA HORÁRIO (+15°)"
+          >
+             <RotateCw size={16} />
+             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Girar_Horário</div>
+          </button>
+
+          <button 
+            onClick={() => setShowHeatmap(!showHeatmap)}
+            className={cn(
+              "hidden lg:flex w-12 h-12 rounded-sm border backdrop-blur-md transition-all flex items-center justify-center group relative",
+              showHeatmap ? "bg-[#ff641d] border-[#ff641d] text-white" : "bg-black/60 border-white/10 text-white/20 hover:border-[#ff641d]/40"
+            )}
+            title="MODO TÉRMICO (CALOR)"
+          >
+            <Activity size={14} />
+            <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Modo_Térmico</div>
+          </button>
+
+          <button 
+            onClick={() => setIsSharing(!isSharing)} 
+            title="TRACKING GPS LIVE"
+            className={cn(
+               "hidden lg:flex w-12 h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center group relative", 
+               isSharing ? "bg-blue-500 border-blue-500 animate-pulse text-white" : "bg-black/80 border-white/10 text-white/20 hover:border-blue-500/40"
+            )}
+          >
+             <Radio size={16} />
+             <div className="absolute right-full mr-3 px-2 py-1 bg-black text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 border border-white/10 pointer-events-none uppercase">Live_Tracking</div>
+          </button>
 
           {/* DOCUMENT EXPORT & PRINT (PDF BACKUP) */}
           <div className="relative group/export">
@@ -7177,6 +7260,9 @@ export default function AdventureMap() {
             <button onClick={() => setMapZoom(z => Math.min(z + 1, 18))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 lg:border-0"><Plus size={14} /></button>
             <button onClick={() => setMapZoom(z => Math.max(z - 1, 3))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors"><Minus size={14} /></button>
          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
       </div>
 
       {/* Bottom Route / Elevation HUD */}
@@ -7190,12 +7276,12 @@ export default function AdventureMap() {
               exit={{ opacity: 0, y: 50, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className={cn(
-                "relative lg:absolute bottom-auto lg:bottom-5 right-auto w-full lg:max-w-[638px] z-[2100] pointer-events-auto px-0 lg:px-4 transition-all duration-300",
+                "relative lg:absolute bottom-auto lg:bottom-5 right-auto w-[calc(100%-2rem)] mx-4 lg:mx-0 my-4 lg:my-4 lg:max-w-[638px] z-[2100] pointer-events-auto px-0 lg:px-4 transition-all duration-300",
                 isSidebarMinimized ? "lg:left-[72px]" : "lg:left-[440px]"
               )}
             >
                <div className={cn(
-                  "w-full transition-all duration-300 overflow-hidden lg:rounded-xs",
+                  "w-full transition-all duration-300 overflow-hidden rounded-xl lg:rounded-xs",
                   isTacticalDayActive 
                     ? "bg-[#ECE6DA]/78 backdrop-blur-[10px] border border-[#5A5046]/18 shadow-[0_15px_40px_rgba(90,80,70,0.15)]" 
                     : "bg-black/80 backdrop-blur-md border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.9)]"
