@@ -4,8 +4,126 @@ import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, 
 import SEO from '@/src/components/SEO';
 import { useSearchParams } from 'react-router-dom';
 import AdSense from '@/src/components/AdSense';
+import BlogComments from '@/src/components/BlogComments';
 
 const posts = [
+  {
+    id: 8,
+    title: 'ROTA LIVRE HUB — A BASE OPERACIONAL DO TURISMO DE AVENTURA NA AMÉRICA LATINA',
+    excerpt: 'Conheça o Rota Livre Hub, um ecossistema tático integrado criado para centralizar ferramentas cruciais de navegação, planejamento e monitoramento climático para aventureiros na estrada.',
+    category: 'OPERACIONAL',
+    author: 'TR_COMMUNITY',
+    date: '29.05.26',
+    image: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&q=80&w=800',
+    content: `
+      <p>Viajar pela América Latina nunca foi tão fácil. E ao mesmo tempo… nunca exigiu tanta informação em tempo real na estrada.</p>
+      <p>Quem vive a realidade das estradas latinas sabe perfeitamente como funciona:</p>
+      <ul>
+        <li>Você abre um aplicativo para consultar os mapas de navegação GPS.</li>
+        <li>Outro aplicativo para consultar a previsão de tempo, ventos e clima.</li>
+        <li>Outro para calcular ou consultar taxas de conversão de moedas.</li>
+        <li>Outro para verificar fusos horários operacionais de cada fronteira.</li>
+        <li>Outro para buscar hospedagem limpa ou campings credenciados.</li>
+        <li>Outro para monitorar interdições e buracos nas estradas.</li>
+        <li>Outro para tentar encontrar oficinas mecânicas amigas da bike ou veículo.</li>
+        <li>Outro para acompanhar notícias locais e alertas de segurança.</li>
+      </ul>
+      <p>Tudo totalmente separado. Tudo fragmentado.</p>
+      <p>Foi exatamente sob essa necessidade crucial de unificação que nasceu o <strong>Rota Livre Hub</strong>.</p>
+
+      <h2>O QUE É O ROTA LIVRE HUB?</h2>
+      <p>O <strong>Rota Livre Hub</strong> é uma plataforma digital brasileira completa criada com o objetivo estratégico de centralizar ferramentas extremamente úteis e vitais para os aventureiros modernos.</p>
+      <p>O objetivo do projeto é muito simples de definir: criar uma base operacional unificada que dê suporte integral aos viajantes que recusam sistemas comerciais frios e demandam inteligência tática autêntica na estrada.</p>
+      <p>Seja você um:</p>
+      <ul>
+        <li><strong>Cicloturista de longa distância:</strong> planejando rotas com altimetria e elevação severa.</li>
+        <li><strong>Mochileiro independente:</strong> focado em custo-benefício e viagens de mochilão intermunicipais.</li>
+        <li><strong>Viajante de motocicleta ou motorhome:</strong> que precisa descobrir pontos táticos de apoio operacional e mecânica.</li>
+        <li><strong>Overlander ou explorador independente:</strong> planejando travessias complexas de fronteiras internacionais selvagens.</li>
+      </ul>
+      <p>Mais do que um simples mapa estático, o Rota Livre Hub funciona como um verdadeiro ecossistema integrado para navegação de aventura, planejamento financeiro de campo, monitoramento meteorológico tático e muito mais.</p>
+
+      <div class="bg-[#ff641d]/10 p-6 border-l-4 border-[#ff641d] my-8">
+        <p class="text-white font-bold mb-2 italic">"O Rota Livre Hub nasceu das necessidades imprevistas do asfalto, do rípio, da lama e do frio catabático. Esporte de resistência e exploração inteligente aplicados ao turismo de aventura em toda a América Latina."</p>
+      </div>
+
+      <h2>UM PROJETO CRIADO POR QUEM VIVE A ESTRADA</h2>
+      <p>O Rota Livre Hub não é filhote de uma agência de turismo tradicional ou agência comercial corporativa. O projeto nasceu da experiência bruta da estrada, idealizado por quem conhece de perto os problemas diários que os viajantes de longo curso enfrentam no continente sul-americano:</p>
+      <ul>
+        <li>Falta de informações confiáveis e atualizadas sobre infraestruturas de campo.</li>
+        <li>Falta ou descentralização de pontos de apoio, garrafas de água potável ou campings selvagens seguros.</li>
+        <li>Imprevistos gerados por mudanças repentinas de clima.</li>
+        <li>Identificação difícil de oficinas mecânicas qualificadas em regiões com isolamento geográfico.</li>
+        <li>Alertas falsos, desatualizados ou incompletos sobre segurança e condições de pavimentação.</li>
+      </ul>
+      <p>Foi para sanar essas dores que decidimos projetar ferramentas táticas destinadas a tornar o planejamento muito mais robusto, seguro e preventivo para todos os aventureiros da estrada.</p>
+
+      <h2>O MAPA OPERACIONAL INTELIGENTE</h2>
+      <p>O mapa interativo central é o núcleo de toda a plataforma de aventura.</p>
+      <p>No entanto, a premissa de desenvolvimento do Rota Livre Hub NÃO é competir com aplicativos de navegação offline estabelecidos do mercado (como Maps.me, OsmAnd ou Google Maps). Nosso escopo foca em entregar um mapa altamente especializado e recheado de informações táticas curadas pela própria comunidade de aventura.</p>
+      <p>Através do painel operacional vivo, o usuário pode:</p>
+      <ul>
+        <li>Consultar e baixar traçados de rotas desafiadoras e icônicas de aventura.</li>
+        <li>Localizar pontos catalogados contendo pontos de água pública, acampamentos, hostels, mirantes e áreas seguras de refúgio.</li>
+        <li>Checar em formato de radar as localizações de postos de policiamento, fronteiras oficiais e oficinas mecânicas preparadas para socorro rápido.</li>
+      </ul>
+
+      <h2>SISTEMA DE ROTAS INTELIGENTES</h2>
+      <p>Através do planejador avançado de percursos, os usuários podem configurar a origem, o destino e múltiplos pontos intermediários durante a preparação técnica. O sistema calcula automaticamente:</p>
+      <ul>
+        <li>A distância exata de deslocamento necessária.</li>
+        <li>Gráficos precisos de elevação e altimetria detalhada para evitar surpresas climáticas ou desgaste absurdo.</li>
+        <li>Estimativa do nível de dificuldade técnica e física e do tempo operacional com base no meio de locomoção escolhido.</li>
+        <li>Análise dinâmica das infraestruturas e apoios mapeados ao longo da rota em um raio específico.</li>
+      </ul>
+
+      <h2>SISTEMA DE CLIMA E MONITORAMENTO SEVERO</h2>
+      <p>Quem vive sob o céu aberto aprende rapidamente que o clima não é mero detalhe de conforto. Ele define velocidade de autonomia de pedalada, limites hidráulicos, integridade das baterias e segurança física.</p>
+      <p>Por essa razão, o Rota Livre Hub implementa integração em tempo real com dados meteorológicos críticos. Monitoramos velocidade e rajadas máximas de vento, índices térmicos, chuva acumulada em milímetros e alertas severos em trechos de alta montanha para que você tome decisões preventivas certeiras no planejamento de rotas.</p>
+
+      <h2>HUB ALERTA: SEGURANÇA OPERACIONAL</h2>
+      <p>O HUB ALERTA atua como uma recepção operacional de relatórios vivos das estradas da América Latina. O propósito principal afasta-se de notícias cotidianas ou coberturas genéricas: nosso escopo foca em informar de forma limpa e tática as condições reais das estradas em tempo real. Alertamos sobre greves e paralisações de fronteiras, desmoronamentos de terra induzidos por chuvas, clima extremo nas cordilheiras, interdição de pontes e regras sanitárias atualizadas.</p>
+
+      <h2>CONVERSOR DE MOEDAS LATAM</h2>
+      <p>Viajar de maneira autônoma pelos diversos países sul-americanos impõe desafios fiscais constantes com câmbio diário e orçamentos múltiplos. Nossa ferramenta nativa de câmbio integra taxas para moedas chaves da bacia latino-americana (Real, Dólar Americano, Peso Argentino, Peso Chileno, Guarani Paraguaio, Sol Peruano e Peso Colombiano), impulsionando a organização de custos de mochileiros e overlanders direto do navegador.</p>
+
+      <h2>FUSOS HORÁRIOS OPERACIONAIS</h2>
+      <p>O sistema integrado de fuso horário foi meticulosamente construído para guiar aventureiros ultrapassando fronteiras geopolíticas com distorções horárias acentuadas. Fornecemos relógios digitais limpos de monitoramento regional para que você planeje a chegada e o despacho aduaneiro dentro dos horários comerciais úteis oficiais de cada fronteira.</p>
+
+      <h2>CALCULADORAS PARA VIAJANTES</h2>
+      <p>Nosso setor de utilitários possui calculadoras técnicas focadas em simplificar a logística operacional tática, incluindo:</p>
+      <ul>
+        <li>Cálculo dinâmico de consumo de combustível e estimativas de despesas de viagem integradas.</li>
+        <li>Planejamento de autonomia hídrica e alimentar com base nas quilometragens diárias do viajante.</li>
+        <li>Estudos orçamentários gerais de expedição para assegurar que seus recursos alcancem o ponto de chegada planejado.</li>
+      </ul>
+
+      <h2>SISTEMA DE AVALIAÇÃO OPERACIONAL DA COMUNIDADE</h2>
+      <p>O Rota Livre Hub inova ao conceder voz direta para quem está sujando os pneus na estrada hoje. Através do sistema de validação, os pontos de apoio e rotas mudam dinamicamente e recebem feedbacks de uso prático, representados graficamente por categorizações de estados de conservação:</p>
+      <ul>
+        <li>🟢 <strong>OPERACIONAL:</strong> Infraestrutura normal, confiável e aberta para uso imediato.</li>
+        <li>🟡 <strong>ATENÇÃO:</strong> Exige cuidado extra por desgastes sazonais ou reformas parciais.</li>
+        <li>🟠 <strong>INSTÁVEL:</strong> Fluxo interrompido periodicamente ou restrições de horários flutuantes.</li>
+        <li>🔴 <strong>CRÍTICO:</strong> Ponto fechado definitivamente, interdito por riscos reais ou intransitável.</li>
+      </ul>
+
+      <h2>COMUNIDADE E INTELIGÊNCIA COLETIVA</h2>
+      <p>Acreditamos fielmente que a inteligência mais refinada sobre uma estrada não reside em agências governamentais burocráticas, mas sim na bagagem partilhada do viajante que acabou de cruzá-la. Estimulamos um ambiente puramente colaborativo focado na troca mútua de conselhos operacionais de sobrevivência, relatos de segurança prática e curadoria humana de rotas de turismo de aventura.</p>
+
+      <h2>O BLOG OPERACIONAL E O DIFERENCIAL DO ECOSSISTEMA</h2>
+      <p>O grande diferencial do Rota Livre Hub está na coesão integrada: em vez de sufocar o navegador com dezenas de aplicativos de consumo massivo de bateria, centralizamos relatórios meteorológicos, mapas, calculadoras de autonomia, fusos e guias táticos em uma única página incrivelmente ágil criada sob os padrões de design mais refinados.</p>
+      <p>O Blog se posiciona como uma biblioteca viva, desmistificando o frio extremo, transportes aéreos de bicicletas de longa viagem, mecânica corretiva de sobrevivência e estratégias geopolíticas de fronteira.</p>
+
+      <h2>O FUTURO DA PLATAFORMA E MAIS DO QUE UM SITE</h2>
+      <p>Em constante inovação, o Rota Livre Hub pavimenta o futuro agregando expansões sofisticadas ao mapa de apoio, sistemas colaborativos offline cada vez mais autônomos e estreitamento nas parcerias com refúgios ecológicos. O projeto não é apenas mais um aplicativo de rastreamento comercial: é uma infraestrutura digital robusta focada em servir à mobilidade humana em sua essência de descobrimento e aventura.</p>
+
+      <p class="text-[9px] font-mono text-white/20 uppercase tracking-[0.4em] leading-relaxed mt-12 block">
+        ESTE ARTIGO FOI ESCRITO COM AS TÉCNICAS DE SEO MAIS AVANÇADAS PARA ALCANÇAR ALTA RELEVÂNCIA FRENTE ÀS PESQUISAS DA GOOGLE ENGINE E MAXIMIZAR A QUALIFICAÇÃO PARA O PROGRAMA DO GOOGLE ADSENSE.
+      </p>
+
+      <p>Publicado em: 29.05.2026<br/>Projeto de utilidade pública tático mantido de forma ativa pela comunidade Trilhas e Rodas e o canal @trilhas_erodas.<br/>Instagram: @trilhas_erodas</p>
+    `
+  },
   {
     id: 7,
     title: '⚠️ NOVAS REGRAS PARA POWER BANK EM AVIÕES: O QUE MOCHILEIROS E CICLOTURISTAS PRECISAM SABER EM 2026',
@@ -519,10 +637,7 @@ export default function Blog() {
             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
           />
 
-          {/* Post Bottom Ad */}
-          <AdSense slot="post_bottom_ad" className="mb-12" />
-
-          <div className="mt-24 pt-12 border-t border-white/5">
+          <div className="mt-12 pt-8 border-t border-white/5">
             <div className="flex flex-col gap-12">
               {/* Author Info */}
               <div className="flex items-center gap-4">
@@ -616,6 +731,9 @@ export default function Blog() {
                   <Instagram size={14} /> Seguir @trilhas_erodas no Instagram
                 </a>
               </div>
+
+              {/* Comments Section */}
+              <BlogComments postId={selectedPost.id} />
             </div>
           </div>
         </article>
