@@ -29,6 +29,277 @@ async function startServer() {
     });
   });
 
+  // Intel Contingency Radar Live RSS Parser and Cache
+  interface AlertItem {
+    id: string;
+    title: string;
+    link: string;
+    date: string;
+    timestamp: number;
+    resumo: string;
+    fonte: string;
+    category: "BLOQUEIO" | "FRONTEIRA" | "CLIMA" | "CRÍTICO" | "GERAL";
+    priority: "CRITICAL" | "ATTENTION" | "MODERATE" | "LOW";
+    country: "Brasil" | "Argentina" | "Chile" | "Uruguai" | "América Latina";
+  }
+
+  let localRssCache: { data: AlertItem[]; timestamp: number } | null = null;
+  const LOCAL_RSS_TTL = 3 * 60 * 1000; // 3 minutos
+
+  app.get("/api/alerts", async (req, res) => {
+    const now = Date.now();
+    if (localRssCache && (now - localRssCache.timestamp < LOCAL_RSS_TTL)) {
+      console.log(`[ExpressRadar] Serving alerts from cache.`);
+      return res.json(localRssCache.data);
+    }
+
+    console.log(`[ExpressRadar] Fetching new RSS data.`);
+
+    function decodeHTMLEntities(text: string): string {
+      if (!text) return "";
+      return text
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&apos;/g, "'")
+        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+        .replace(/<[^>]*>/g, "")
+        .trim();
+    }
+
+    function formatRelativeTime(pubDateStr: string): { relative: string; timestamp: number } {
+      try {
+        const pubDate = new Date(pubDateStr);
+        const timestamp = pubDate.getTime();
+        if (isNaN(timestamp)) {
+          return { relative: pubDateStr || "Recentemente", timestamp: Date.now() };
+        }
+        const diffMs = Date.now() - timestamp;
+        const diffMins = Math.floor(diffMs / (60 * 1000));
+        const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+        const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+        if (diffMins < 60) {
+          return { relative: diffMins <= 5 ? "Agora mesmo" : `Há ${diffMins} minutos`, timestamp };
+        } else if (diffHours < 24) {
+          return { relative: `Há ${diffHours} ${diffHours === 1 ? "hora" : "horas"}`, timestamp };
+        } else if (diffDays === 1) {
+          return { relative: "Ontem", timestamp };
+        } else {
+          return { relative: `Há ${diffDays} dias`, timestamp };
+        }
+      } catch (e) {
+        return { relative: "Recentemente", timestamp: Date.now() };
+      }
+    }
+
+    function classifyAlert(title: string, resume: string): { 
+      category: AlertItem["category"]; 
+      priority: AlertItem["priority"];
+      country: AlertItem["country"];
+    } {
+      const combined = `${title} ${resume}`.toLowerCase();
+      let category: AlertItem["category"] = "GERAL";
+      let priority: AlertItem["priority"] = "LOW";
+      let country: AlertItem["country"] = "América Latina";
+
+      if (
+        combined.includes("bloqueio") || 
+        combined.includes("bloqueado") || 
+        combined.includes("bloqueada") || 
+        combined.includes("interdição") || 
+        combined.includes("interditado") ||
+        combined.includes("ruta cerrada") ||
+        combined.includes("bloqueo") ||
+        combined.includes("paso cerrado") ||
+        combined.includes("fechada") ||
+        combined.includes("cortada") ||
+        combined.includes("cerrada")
+      ) {
+        category = "BLOQUEIO";
+        priority = "CRITICAL";
+      } else if (
+        combined.includes("fronteira") || 
+        combined.includes("aduana") || 
+        combined.includes("migraciones") || 
+        combined.includes("passo de jama") || 
+        combined.includes("paso de jama") || 
+        combined.includes("fronterizo") ||
+        combined.includes("cristo redentor")
+      ) {
+        category = "FRONTEIRA";
+        priority = "ATTENTION";
+      } else if (
+        combined.includes("clima") || 
+        combined.includes("tempestade") || 
+        combined.includes("ventania") || 
+        combined.includes("neve") || 
+        combined.includes("nevada") || 
+        combined.includes("tormenta") || 
+        combined.includes("viento") || 
+        combined.includes("chuva") || 
+        combined.includes("granizo") || 
+        combined.includes("frio") || 
+        combined.includes("geada") || 
+        combined.includes("gelo") || 
+        combined.includes("congelamento") || 
+        combined.includes("hielo") ||
+        combined.includes("deslizamento") ||
+        combined.includes("deslizamiento") ||
+        combined.includes("derrubada")
+      ) {
+        category = "CLIMA";
+        priority = combined.includes("extremo") || combined.includes("severo") || combined.includes("alerta") ? "CRITICAL" : "ATTENTION";
+      } else if (
+        combined.includes("alerta") || 
+        combined.includes("perigo") || 
+        combined.includes("urgente") || 
+        combined.includes("crítico") || 
+        combined.includes("trânsito parado") ||
+        combined.includes("peligro")
+      ) {
+        category = "CRÍTICO";
+        priority = "CRITICAL";
+      } else {
+        category = "GERAL";
+        priority = "MODERATE";
+      }
+
+      if (combined.includes("argentina") || combined.includes("mendoza") || combined.includes("jama") || combined.includes("los libertadores")) {
+        country = "Argentina";
+      } else if (combined.includes("chile") || combined.includes("santiago") || combined.includes("atacama") || combined.includes("patagonia")) {
+        country = "Chile";
+      } else if (combined.includes("uruguai") || combined.includes("uruguay") || combined.includes("montevideo")) {
+        country = "Uruguai";
+      } else if (
+        combined.includes("brasil") || 
+        combined.includes("br-") || 
+        combined.includes("rs-") || 
+        combined.includes("sc-") || 
+        combined.includes("pr-") || 
+        combined.includes("sp-") || 
+        combined.includes("rio de janeiro") || 
+        combined.includes("rodovia") || 
+        combined.includes("autopista")
+      ) {
+        country = "Brasil";
+      }
+
+      return { category, priority, country };
+    }
+
+    try {
+      const queries = [
+        "bloqueio rodovia OR deslizamento estrada OR fronteira fechada OR " + encodeURIComponent('"clima extremo"') + " OR " + encodeURIComponent('"alerta viagem"'),
+        "bloqueo ruta OR deslizamiento carretera OR frontera cerrada OR " + encodeURIComponent('"clima extremo"') + " OR " + encodeURIComponent('"alerta viaje"')
+      ];
+      const urls = [
+        `https://news.google.com/rss/search?q=${queries[0]}&hl=pt-BR&gl=BR&ceid=BR:pt-419`,
+        `https://news.google.com/rss/search?q=${queries[1]}&hl=es-419&gl=AR&ceid=AR:es-419`
+      ];
+
+      const fetchPromises = urls.map(async (url) => {
+        try {
+          const res = await fetch(url, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              "Accept": "application/xml, text/xml, */*"
+            }
+          });
+          if (!res.ok) return [];
+          const xmlText = await res.text();
+          const pAlerts: AlertItem[] = [];
+          const itemMatches = xmlText.match(/<item>[\s\S]*?<\/item>/g) || [];
+
+          for (const itemXml of itemMatches) {
+            const titleMatch = itemXml.match(/<title>([\s\S]*?)<\/title>/);
+            const linkMatch = itemXml.match(/<link>([\s\S]*?)<\/link>/);
+            const pubDateMatch = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+            const descriptionMatch = itemXml.match(/<description>([\s\S]*?)<\/description>/);
+            const sourceMatch = itemXml.match(/<source[^>]*>([\s\S]*?)<\/source>/);
+
+            const rawTitle = titleMatch ? decodeHTMLEntities(titleMatch[1]) : "";
+            let title = rawTitle;
+            let fonte = sourceMatch ? decodeHTMLEntities(sourceMatch[1]) : "";
+
+            const hyphenIndex = rawTitle.lastIndexOf(" - ");
+            if (hyphenIndex !== -1) {
+              title = rawTitle.substring(0, hyphenIndex).trim();
+              if (!fonte) {
+                fonte = rawTitle.substring(hyphenIndex + 3).trim();
+              }
+            }
+            if (!fonte) fonte = "Google News";
+
+            const descriptionHtml = descriptionMatch ? descriptionMatch[1] : "";
+            const rawResume = decodeHTMLEntities(descriptionHtml);
+            let resumo = rawResume.length > 220 ? rawResume.substring(0, 217) + "..." : rawResume;
+            if (!resumo || resumo === title) {
+              resumo = `Análise e reportagem em tempo real sobre a ocorrência operativa. Consulte a fonte oficial para dados complementares de tráfego.`;
+            }
+
+            const link = linkMatch ? linkMatch[1].trim() : "";
+            const rawDate = pubDateMatch ? pubDateMatch[1] : "";
+            const { relative, timestamp } = formatRelativeTime(rawDate);
+            const { category, priority, country } = classifyAlert(title, resumo);
+
+            let simpleHash = 0;
+            const idSeed = link || title;
+            for (let i = 0; i < idSeed.length; i++) {
+              simpleHash = (simpleHash << 5) - simpleHash + idSeed.charCodeAt(i);
+              simpleHash |= 0;
+            }
+            const id = `RADAR-${Math.abs(simpleHash).toString(36).toUpperCase()}`;
+
+            pAlerts.push({
+              id,
+              title,
+              link,
+              date: relative,
+              timestamp,
+              resumo,
+              fonte,
+              category,
+              priority,
+              country
+            });
+          }
+          return pAlerts;
+        } catch (err) {
+          return [];
+        }
+      });
+
+      const results = await Promise.all(fetchPromises);
+      const rawAlerts = results.flat();
+
+      const seenTitles = new Set<string>();
+      const uniqueAlerts: AlertItem[] = [];
+
+      rawAlerts.sort((a, b) => b.timestamp - a.timestamp);
+
+      for (const alert of rawAlerts) {
+        const normalizedTitle = alert.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (!seenTitles.has(normalizedTitle)) {
+          seenTitles.add(normalizedTitle);
+          uniqueAlerts.push(alert);
+        }
+      }
+
+      const finalAlerts = uniqueAlerts.slice(0, 16);
+      localRssCache = {
+        data: finalAlerts,
+        timestamp: now
+      };
+
+      return res.json(finalAlerts);
+    } catch (err: any) {
+      return res.status(500).json({ error: "Erro ao carregar monitor RSS", details: err?.message });
+    }
+  });
+
   // Dedicated weather engine for Serra do Rio do Rastro SC
   app.get("/api/weather/serra-rio-do-rastro", async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;

@@ -38,6 +38,7 @@ import SEO from '@/src/components/SEO';
 import ReportModal from '@/src/components/ReportModal';
 import CommunityReports from '@/src/components/CommunityReports';
 import AdSense from '@/src/components/AdSense';
+import RadarContingencia from '@/src/components/RadarContingencia';
 
 // Componente de Clima em Tempo Real
 function WeatherMonitor() {
@@ -891,6 +892,13 @@ export default function AlertHub() {
 
           {/* Tactical Alert Activation Section */}
           {activeCategory !== 'SEGURANÇA' && <TacticalAlertActivation />}
+
+          {/* Intel Contingency Radar Live Ops */}
+          {activeCategory !== 'SEGURANÇA' && (
+            <div className="mt-12">
+              <RadarContingencia />
+            </div>
+          )}
 
           {/* Community Tactical Feed */}
           <div className="mt-12 pt-12 border-t border-white/5">
