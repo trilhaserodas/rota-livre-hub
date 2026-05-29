@@ -175,10 +175,63 @@ export default function WeatherHub() {
     }
   };
 
+  const getWeatherData = async (lat: number, lon: number): Promise<any> => {
+    try {
+      const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const text = await res.text();
+      const trimmed = text.trim();
+      if (trimmed.startsWith('<!doctype') || trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
+        throw new Error("HTML response instead of JSON (static deployment fallback)");
+      }
+      return JSON.parse(trimmed);
+    } catch (err) {
+      console.warn(`[WeatherClient] API backend failed (or Vercel static deployment). Using direct client-side fallback via Open-Meteo as safety net:`, err);
+      try {
+        const omUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&timezone=auto`;
+        const omResponse = await fetch(omUrl);
+        if (!omResponse.ok) throw new Error(`Open-Meteo direct fetch failed with status ${omResponse.status}`);
+        const omData = await omResponse.json();
+        
+        if (!omData.current) {
+          throw new Error("Open-Meteo direct call returned no current weather data");
+        }
+        
+        const current = omData.current;
+        const wmoCode = current.weather_code ?? 0;
+        
+        const localDesc = 
+          wmoCode === 0 ? "Céu Limpo" :
+          wmoCode <= 3 ? "Nublado" :
+          (wmoCode >= 51 && wmoCode <= 67) ? "Chuva / Garoa" :
+          (wmoCode >= 71 && wmoCode <= 77) ? "Neve" :
+          (wmoCode >= 80 && wmoCode <= 82) ? "Pancadas" :
+          wmoCode >= 95 ? "Tempestade" : "Instável";
+
+        return {
+          unified: {
+            temp: Math.round(current.temperature_2m ?? 0),
+            feelsLike: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0),
+            humidity: current.relative_humidity_2m ?? 0,
+            windSpeedKmH: Math.round(current.wind_speed_10m ?? 0),
+            windGustsKmH: Math.round(current.wind_gusts_10m ?? current.wind_speed_10m ?? 0),
+            windDirection: current.wind_direction_10m ?? 0,
+            weatherCode: wmoCode,
+            precipitation: current.precipitation ?? 0,
+            precipProbability: (current.precipitation ?? 0) > 0 ? 80 : 0,
+            description: localDesc
+          }
+        };
+      } catch (directErr) {
+        console.error("[WeatherClient] Direct Open-Meteo fetch failed:", directErr);
+        throw directErr;
+      }
+    }
+  };
+
   const fetchLocationWeather = async (lat: number, lng: number, name: string) => {
     try {
-      const res = await fetch(`/api/weather?lat=${lat}&lon=${lng}`);
-      const data = await res.json();
+      const data = await getWeatherData(lat, lng);
       
       if (data.unified) {
         const u = data.unified;
@@ -365,13 +418,7 @@ export default function WeatherHub() {
       try {
         await Promise.all(REGIONS.map(async (region) => {
           try {
-            const res = await fetch(
-              `/api/weather?lat=${region.lat}&lon=${region.lng}`
-            );
-            if (!res.ok) {
-              throw new Error(`Endpoint returned HTTP ${res.status}`);
-            }
-            const data = await res.json();
+            const data = await getWeatherData(region.lat, region.lng);
             
             if (data.unified) {
               const u = data.unified;
@@ -434,6 +481,13 @@ export default function WeatherHub() {
           }
         }));
         setWeatherData(results);
+        
+        // Auto-load default weather location (Ushuaia) if none is selected yet
+        const ushuaia = REGIONS.find(r => r.id === 'ushuaia');
+        if (ushuaia) {
+          setSearchResult({ name: ushuaia.name, country: ushuaia.country });
+          fetchLocationWeather(ushuaia.lat, ushuaia.lng, ushuaia.name);
+        }
       } catch (err) {
         console.error("Failed to fetch fleet weather:", err);
       } finally {
