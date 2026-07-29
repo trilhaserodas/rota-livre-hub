@@ -22,11 +22,13 @@ import Partners from './pages/Partners';
 import AirTravel from './pages/AirTravel';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import AutoTagAdManager from './components/AutoTagAdManager';
 
 export default function App() {
   return (
     <HelmetProvider>
       <Router>
+        <AutoTagAdManager />
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />

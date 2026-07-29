@@ -620,7 +620,7 @@ export default function Blog() {
             <span className="flex items-center gap-2"><User size={12} /> {selectedPost.author}</span>
           </div>
 
-          <div className="aspect-video w-full rounded-2xl overflow-hidden mb-12 border border-white/5">
+          <div className="aspect-video w-full rounded-2xl overflow-hidden mb-8 border border-white/5">
             <img 
               src={selectedPost.image} 
               alt={selectedPost.title}
@@ -629,6 +629,9 @@ export default function Blog() {
             />
           </div>
 
+          {/* Anúncio discreto abaixo do título/imagem da postagem */}
+          <AdSense slot="blog_article_below_header" className="my-8 min-h-[90px]" />
+
           <div 
             className="text-white/60 leading-relaxed space-y-6 text-base italic-content"
             style={{ 
@@ -636,6 +639,9 @@ export default function Blog() {
             }}
             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
           />
+
+          {/* Anúncio discreto ao final da postagem */}
+          <AdSense slot="blog_article_footer" className="my-10 min-h-[90px]" />
 
           <div className="mt-12 pt-8 border-t border-white/5">
             <div className="flex flex-col gap-12">
