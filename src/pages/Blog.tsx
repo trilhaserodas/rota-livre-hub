@@ -4,7 +4,7 @@ import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, 
 import SEO from '@/src/components/SEO';
 import { useSearchParams, useParams, Link } from 'react-router-dom';
 import BlogComments from '@/src/components/BlogComments';
-import usaBikeBorderCover from '../assets/images/usa_bike_border_cover.jpg';
+import { usaBikeBorderCoverImage } from '../assets/images/usaBikeBorderCoverData';
 
 const posts = [
   {
@@ -16,7 +16,7 @@ const posts = [
     author: 'Equipe Rota Livre HUB',
     date: '31.07.26',
     readTime: '10 minutos',
-    image: usaBikeBorderCover,
+    image: usaBikeBorderCoverImage,
     tags: ['Estados Unidos', 'Visto Americano', 'Cicloturismo', 'Mochilão', 'Documentação', 'Viagem Internacional', 'Fronteira', 'Bikepacking', 'América Latina', 'Expedição'],
     seoTitle: 'Como entrar nos Estados Unidos de bicicleta: guia completo para brasileiros',
     metaDescription: 'Descubra como brasileiros podem entrar legalmente nos Estados Unidos de bicicleta. Entenda o visto B1/B2, documentos necessários, entrevista, imigração e dicas importantes para cicloviajantes.',

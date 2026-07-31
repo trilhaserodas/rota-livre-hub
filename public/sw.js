@@ -81,7 +81,8 @@ self.addEventListener('fetch', (event) => {
           // Fetch, clone, and cache on-the-fly
           return fetch(request).then((networkResponse) => {
             if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
-              cache.put(request, networkResponse.clone());
+              const responseToCache = networkResponse.clone();
+              cache.put(request, responseToCache);
             }
             return networkResponse;
           }).catch(() => {
@@ -108,7 +109,8 @@ self.addEventListener('fetch', (event) => {
       caches.open(DATA_CACHE_NAME).then((cache) => {
         return fetch(request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone());
+            const responseToCache = networkResponse.clone();
+            cache.put(request, responseToCache);
           }
           return networkResponse;
         }).catch(() => {
@@ -146,7 +148,8 @@ self.addEventListener('fetch', (event) => {
           const fetchPromise = fetch(request).then((networkResponse) => {
             // Include status === 0 to capture opaque responses from cross-origin image CDNs
             if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
-              cache.put(request, networkResponse.clone());
+              const responseToCache = networkResponse.clone();
+              cache.put(request, responseToCache);
             }
             return networkResponse;
           }).catch((err) => {
@@ -201,8 +204,9 @@ self.addEventListener('fetch', (event) => {
       // Stale-While-Revalidate: deliver instantaneously, refresh silently in the background
       const fetchPromise = fetch(request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, networkResponse.clone());
+            cache.put(request, responseToCache);
           });
         }
         return networkResponse;
