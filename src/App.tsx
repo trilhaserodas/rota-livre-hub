@@ -43,6 +43,7 @@ export default function App() {
             <Route path="/alert-hub/clima" element={<WeatherHub />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<Blog />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/parceiros" element={<Partners />} />
             <Route path="/privacidade" element={<Privacy />} />

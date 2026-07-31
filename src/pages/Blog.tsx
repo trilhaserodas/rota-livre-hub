@@ -1,11 +1,160 @@
 import { useState, useEffect, Fragment } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check, Send } from 'lucide-react';
+import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check, Send, Bookmark, BookmarkCheck, Clock, Home, ChevronRight, Twitter } from 'lucide-react';
 import SEO from '@/src/components/SEO';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams, Link } from 'react-router-dom';
 import BlogComments from '@/src/components/BlogComments';
 
 const posts = [
+  {
+    id: 9,
+    slug: 'entrar-nos-estados-unidos-de-bicicleta-legalmente',
+    title: 'Dá para entrar nos Estados Unidos de bicicleta, legalmente? O que todo mochileiro brasileiro precisa saber',
+    excerpt: 'Sonha em chegar aos Estados Unidos pedalando? Descubra quais documentos são necessários, qual visto solicitar, como funciona a entrada pela fronteira terrestre e o que aumenta suas chances de passar pela imigração sem problemas.',
+    category: 'DOCUMENTAÇÃO',
+    author: 'Equipe Rota Livre HUB',
+    date: '31.07.26',
+    readTime: '10 minutos',
+    image: '/images/usa_bike_border_cover.jpg',
+    tags: ['Estados Unidos', 'Visto Americano', 'Cicloturismo', 'Mochilão', 'Documentação', 'Viagem Internacional', 'Fronteira', 'Bikepacking', 'América Latina', 'Expedição'],
+    seoTitle: 'Como entrar nos Estados Unidos de bicicleta: guia completo para brasileiros',
+    metaDescription: 'Descubra como brasileiros podem entrar legalmente nos Estados Unidos de bicicleta. Entenda o visto B1/B2, documentos necessários, entrevista, imigração e dicas importantes para cicloviajantes.',
+    keywords: 'Entrar nos Estados Unidos de bicicleta',
+    canonicalUrl: 'https://rotalivrehub.com/blog/entrar-nos-estados-unidos-de-bicicleta-legalmente',
+    content: `
+      <p>Se você já rodou parte da América Latina de bicicleta e sonha em fechar a rota nos Estados Unidos, provavelmente já ouviu de tudo: que "não tem visto que resolva", que "só rico consegue", que "vai ser barrado na certa". Nada disso é bem verdade — mas também não é bem mentira. A realidade é mais simples e mais burocrática do que parece: <strong>é possível, sim, entrar nos EUA por terra, de bicicleta, e completamente dentro da lei. O problema nunca foi o meio de transporte. É a papelada.</strong></p>
+
+      <p>Este guia reúne o que qualquer cicloviajante ou mochileiro de baixo orçamento precisa entender antes de tentar essa aventura — sem "jeitinho", sem atalho e sem risco de ficar barrado na fronteira ou, pior, com o visto negado por anos.</p>
+
+      <h2 id="nao-existe-jeitinho-para-cruzar-sem-visto">Não existe "jeitinho" para cruzar sem visto</h2>
+      <p>Para brasileiros, a entrada nos Estados Unidos — seja de avião, ônibus ou bicicleta — exige visto válido antes de chegar à fronteira. Não dá para tirar o visto no próprio posto fronteiriço nem improvisar. Se você chegar a uma fronteira terrestre (vindo do México, por exemplo) sem o documento correto, simplesmente não vai poder entrar, por mais organizada que seja sua viagem.</p>
+      <p>A boa notícia é que a bicicleta em si não é um problema para a imigração americana. Uma fronteira terrestre oficial recebe qualquer viajante com visto válido, seja de carro, ônibus, a pé ou pedalando. O que muda é a forma como você vai <strong>explicar</strong> sua viagem.</p>
+
+      <h2 id="o-visto-certo-b1-b2-turismo">O visto certo: B1/B2 (turismo)</h2>
+      <p>Para uma estadia curta — algo como uma semana, para fechar a etapa da expedição e voltar — o visto adequado é o <strong>B2</strong>, de turismo. Na prática, o consulado brasileiro costuma emitir o <strong>B1/B2</strong>, que cobre turismo e certas atividades de negócios.</p>
+
+      <p>O processo segue, em linhas gerais, quatro etapas:</p>
+      <ol class="list-decimal pl-6 space-y-2 my-4">
+        <li><strong>Preencher o formulário DS-160</strong> — o cadastro online com seus dados, histórico de viagens, trabalho, renda e motivo da viagem.</li>
+        <li><strong>Pagar a taxa consular.</strong></li>
+        <li><strong>Agendar o atendimento</strong> — biometria e entrevista.</li>
+        <li><strong>Passar pela entrevista</strong> — o momento decisivo, em que você precisa convencer o oficial consular de que sua viagem é temporária e que você pretende voltar ao Brasil.</li>
+      </ol>
+
+      <div class="bg-[#ff641d]/10 p-6 border-l-4 border-[#ff641d] my-8 rounded-r-xl">
+        <p class="text-white font-medium my-0">
+          ⚠️ <strong>Atualização importante para 2026:</strong> as regras ficaram mais rígidas nos últimos meses. Desde 2025, practically todo mundo que solicita o visto pela primeira vez precisa passar por entrevista presencial — inclusive grupos que antes eram dispensados. A renovação sem entrevista também mudou: o prazo caiu de 48 para 12 meses após o vencimento do visto anterior. Vale sempre confirmar as regras vigentes no site oficial do consulado antes de iniciar o processo, porque elas têm mudado com frequência.
+        </p>
+      </div>
+
+      <h2 id="mas-eu-nao-sou-rico-vivo-de-pix-e-monetizacao-do-youtube-isso-me-elimina">"Mas eu não sou rico, vivo de PIX e monetização do YouTube. Isso me elimina?"</h2>
+      <p>Essa é, provavelmente, a maior dúvida (e o maior medo) de quem viaja com pouco dinheiro documentando a jornada nas redes. E a resposta é: <strong>não elimina, mas exige mais organização.</strong></p>
+
+      <p>A imigração americana não avalia se você é rico. Ela tenta responder a quatro perguntas:</p>
+      <ul class="list-disc pl-6 space-y-2 my-4">
+        <li>Você consegue se manter durante a estadia?</li>
+        <li>Você realmente pretende fazer turismo?</li>
+        <li>Vai sair dos EUA dentro do prazo autorizado?</li>
+        <li>Sua história é consistente do início ao fim?</li>
+      </ul>
+
+      <p>Renda baseada em doações via PIX e monetização de YouTube não é proibida — mas "eu vivo de PIX" sozinho soa vago demais para um oficial consular. O que fortalece o caso é conseguir mostrar:</p>
+      <ul class="list-disc pl-6 space-y-2 my-4">
+        <li>histórico de monetização do canal ao longo do tempo;</li>
+        <li>extratos bancários com entradas regulares (mesmo que modestas);</li>
+        <li>reserva financeira específica para a viagem;</li>
+        <li>um roteiro definido, com datas e lugares.</li>
+      </ul>
+
+      <p>Um detalhe que costuma pesar mais do que o saldo da conta é o <strong>vínculo com o Brasil</strong>. Se seu canal é voltado para um público majoritariamente brasileiro, sua renda vem do Brasil e seu projeto é claramente uma expedição com início, meio e fim (não uma tentativa de "morar viajando"), isso ajuda a construir uma narrativa coerente — muito mais do que qualquer valor em conta bancária.</p>
+
+      <h2 id="cuidado-com-a-forma-de-explicar-sua-viagem">Cuidado com a forma de explicar sua viagem</h2>
+      <p>Aqui está o ponto mais delicado de todo o processo: <strong>a verdade e a forma de contar a verdade não são a mesma coisa.</strong></p>
+
+      <p>Dizer "não tenho intenção de ficar em nenhum lugar fixo" é verdade para um cicloviajante — mas pode soar, aos ouvidos de um oficial de imigração, como "essa pessoa não tem raízes, talvez não volte mesmo". A mesma ideia, dita de outro jeito, funciona muito melhor:</p>
+
+      <blockquote class="border-l-4 border-[#ff641d] pl-6 italic text-white/90 bg-white/[0.02] py-4 pr-4 my-6 rounded-r-xl">
+        "Sou cicloviajante e produzo conteúdo sobre viagens de longa distância. A entrada nos Estados Unidos é uma etapa da minha expedição pela América Latina. Pretendo ficar cerca de uma semana, visitar algumas cidades, registrar essa etapa do projeto e seguir meu roteiro de retorno."
+      </blockquote>
+
+      <p>Alguns ajustes de linguagem que fazem diferença:</p>
+
+      <div class="overflow-x-auto my-8 border border-white/10 rounded-2xl">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-white/10 border-b border-white/10 text-[#ff641d] uppercase font-mono text-xs tracking-wider">
+              <th class="p-4 font-bold border-r border-white/10">Evite dizer</th>
+              <th class="p-4 font-bold">Diga assim</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-white/80">
+            <tr class="hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 border-r border-white/10 text-red-400/90 font-mono text-xs">"Vou ver até onde consigo chegar"</td>
+              <td class="p-4 text-emerald-400/90 font-mono text-xs">"Pretendo ficar cerca de 7 dias e depois seguir meu roteiro de retorno"</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 border-r border-white/10 text-red-400/90 font-mono text-xs">"Não tenho lugar fixo pra ficar"</td>
+              <td class="p-4 text-emerald-400/90 font-mono text-xs">"Sou cicloviajante, minha atividade e minha renda estão vinculadas ao Brasil"</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 border-r border-white/10 text-red-400/90 font-mono text-xs">"Quero testar se consigo entrar"</td>
+              <td class="p-4 text-emerald-400/90 font-mono text-xs">"Quero concluir uma etapa da expedição entrando legalmente e documentando o processo"</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 border-r border-white/10 text-red-400/90 font-mono text-xs">"Vou ficando um tempo e vejo no que dá"</td>
+              <td class="p-4 text-emerald-400/90 font-mono text-xs">"Tenho um plano de saída definido: retorno por [rota/data]"</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>O ponto que mais gera desconfiança não é a bicicleta nem a renda modesta — é <strong>não conseguir explicar como e quando você vai sair dos Estados Unidos</strong>. Ter um plano de retorno concreto (voltar de avião, voltar de ônibus até outro país, fazer um trecho curto nos EUA e retornar ao México) é mais importante do que ter muito dinheiro na conta.</p>
+
+      <h2 id="checklist-do-que-levar">Checklist do que levar</h2>
+      <p><strong>Para a entrevista no consulado:</strong></p>
+      <ul class="list-disc pl-6 space-y-2 my-4">
+        <li>passaporte válido (e passaportes antigos, se tiver)</li>
+        <li>confirmação do DS-160</li>
+        <li>comprovante de agendamento</li>
+        <li>comprovantes de renda e extratos bancários</li>
+        <li>declaração de imposto de renda, se aplicável</li>
+        <li>comprovação de MEI/freelas/monetização do canal</li>
+        <li>roteiro resumido da viagem</li>
+        <li>provas de vínculo com o Brasil</li>
+        <li>plano de saída dos EUA</li>
+      </ul>
+
+      <p><strong>Para a fronteira, no dia da entrada de bicicleta:</strong></p>
+      <ul class="list-disc pl-6 space-y-2 my-4">
+        <li>passaporte com visto válido</li>
+        <li>endereço de onde vai ficar nos EUA</li>
+        <li>roteiro básico</li>
+        <li>prova de recursos financeiros</li>
+        <li>plano de saída dos EUA</li>
+        <li>contatos de emergência</li>
+        <li>seguro viagem, se tiver</li>
+      </ul>
+
+      <p>Uma dica extra para quem vai documentar a viagem em vídeo: monte um "dossiê" curto, em português e inglês, com resumo do projeto, mapa da rota, histórico de cicloviagens anteriores, previsão de permanência e plano de saída. Você provavelmente nunca vai precisar entregá-lo — mas, se o agente pedir mais detalhes, ter tudo organizado facilita muito a conversa.</p>
+
+      <h2 id="e-se-eu-for-barrado-isso-e-normal">E se eu for barrado? Isso é normal?</h2>
+      <p>Vale ser honesto: a decisão final de entrada é sempre do agente de imigração na fronteira, mesmo com visto aprovado. O visto não é garantia de entrada — é um pré-requisito. E sim, o rigor da fiscalização aumentou nos últimos anos, especialmente para quem pode ser percebido como tendo intenção de permanecer ou trabalhar sem autorização.</p>
+      <p>Isso não significa que o cicloturismo seja um projeto arriscado por natureza. Significa que <strong>coerência</strong> — entre seu histórico de viagens, seu roteiro, sua renda e seu plano de saída — pesa mais do que qualquer outro fator isolado.</p>
+
+      <h2 id="resumindo">Resumindo</h2>
+      <ul class="list-disc pl-6 space-y-2 my-4">
+        <li>Não existe entrada sem visto para brasileiros, nem por terra, nem de bicicleta.</li>
+        <li>O visto certo para uma estadia curta de turismo é o B1/B2.</li>
+        <li>Renda de PIX e YouTube não desqualifica, mas exige documentação e clareza.</li>
+        <li>A forma de explicar a viagem é tão importante quanto os documentos.</li>
+        <li>Ter um plano de saída definido é o fator mais decisivo de toda a avaliação.</li>
+      </ul>
+
+      <p class="text-xs italic text-white/50 border-t border-white/10 pt-4 mt-8">
+        *Este conteúdo tem caráter informativo e não substitui orientação jurídica especializada em imigração. As regras de visto para os EUA têm mudado com frequência em 2026 — confirme sempre as exigências atuais no site oficial do consulado americano antes de iniciar o processo.*
+      </p>
+    `
+  },
   {
     id: 8,
     title: 'ROTA LIVRE HUB — A BASE OPERACIONAL DO TURISMO DE AVENTURA NA AMÉRICA LATINA',
@@ -567,18 +716,66 @@ const posts = [
 ];
 
 export default function Blog() {
+  const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedPost, setSelectedPost] = useState<typeof posts[0] | null>(null);
+  const [readingProgress, setReadingProgress] = useState(0);
+  const [favorites, setFavorites] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('rota_livre_blog_favorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
+    const currentSlug = slug || searchParams.get('slug');
     const postId = searchParams.get('id');
+
+    if (currentSlug) {
+      const post = posts.find(p => p.slug === currentSlug);
+      if (post) {
+        setSelectedPost(post);
+        return;
+      }
+    }
+
     if (postId) {
       const post = posts.find(p => p.id === parseInt(postId));
       if (post) {
         setSelectedPost(post);
+        return;
       }
     }
-  }, [searchParams]);
+
+    setSelectedPost(null);
+  }, [slug, searchParams]);
+
+  useEffect(() => {
+    if (!selectedPost) return;
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        const progress = (window.scrollY / totalHeight) * 100;
+        setReadingProgress(Math.min(100, Math.max(0, progress)));
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [selectedPost]);
+
+  const toggleFavorite = (id: number) => {
+    setFavorites(prev => {
+      const updated = prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id];
+      try {
+        localStorage.setItem('rota_livre_blog_favorites', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('Unable to save favorites', e);
+      }
+      return updated;
+    });
+  };
 
   const handleBack = () => {
     setSelectedPost(null);
@@ -587,61 +784,179 @@ export default function Blog() {
 
   const handleSelectPost = (post: typeof posts[0]) => {
     setSelectedPost(post);
-    setSearchParams({ id: post.id.toString() });
+    if (post.slug) {
+      setSearchParams({ slug: post.slug });
+    } else {
+      setSearchParams({ id: post.id.toString() });
+    }
     window.scrollTo(0, 0);
   };
 
   if (selectedPost) {
+    const isFavorited = favorites.includes(selectedPost.id);
+
     return (
       <div className="max-w-4xl mx-auto px-6 pb-24 relative z-10 antialiased">
+        {/* Reading Progress Bar */}
+        <div className="fixed top-0 left-0 w-full h-1 bg-white/10 z-50 pointer-events-none">
+          <div 
+            className="h-full bg-[#ff641d] transition-all duration-150"
+            style={{ width: `${readingProgress}%` }}
+          />
+        </div>
+
         <SEO 
-          title={`${selectedPost.title} - Rota Livre Hub`} 
-          description={selectedPost.excerpt}
+          title={selectedPost.seoTitle || `${selectedPost.title} - Rota Livre Hub`} 
+          description={selectedPost.metaDescription || selectedPost.excerpt}
+          ogType="article"
+          ogImage={selectedPost.image.startsWith('http') ? selectedPost.image : `https://rotalivrehub.com${selectedPost.image}`}
+          canonical={selectedPost.canonicalUrl}
         />
+
+        {/* Schema.org Article Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: selectedPost.seoTitle || selectedPost.title,
+            description: selectedPost.metaDescription || selectedPost.excerpt,
+            image: [selectedPost.image.startsWith('http') ? selectedPost.image : `https://rotalivrehub.com${selectedPost.image}`],
+            datePublished: '2026-07-31',
+            author: {
+              '@type': 'Organization',
+              name: selectedPost.author || 'Equipe Rota Livre HUB',
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Rota Livre HUB',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://i.ibb.co/NnNRsj5N/Facion-site-rota-livre-hub.png',
+              },
+            },
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': selectedPost.canonicalUrl || window.location.href,
+            },
+            keywords: selectedPost.keywords || selectedPost.tags?.join(', '),
+          })}
+        </script>
+
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-[10px] font-mono text-white/40 uppercase tracking-widest my-8 flex-wrap">
+          <Link to="/" className="hover:text-[#ff641d] transition-colors flex items-center gap-1">
+            <Home size={12} /> HOME
+          </Link>
+          <ChevronRight size={12} />
+          <button onClick={handleBack} className="hover:text-[#ff641d] transition-colors">
+            BLOG
+          </button>
+          <ChevronRight size={12} />
+          <span className="text-[#ff641d]">{selectedPost.category}</span>
+        </nav>
         
-        <button 
-          onClick={handleBack}
-          className="flex items-center gap-2 text-[10px] font-mono text-[#ff641d] mb-12 hover:gap-4 transition-all uppercase tracking-widest"
-        >
-          <ChevronLeft size={16} /> Voltar para o Arquivo
-        </button>
+        <div className="flex items-center justify-between mb-8">
+          <button 
+            onClick={handleBack}
+            className="flex items-center gap-2 text-[10px] font-mono text-[#ff641d] hover:gap-4 transition-all uppercase tracking-widest"
+          >
+            <ChevronLeft size={16} /> Voltar para o Arquivo
+          </button>
+
+          {/* Save to Favorites button */}
+          <button 
+            onClick={() => toggleFavorite(selectedPost.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-mono uppercase tracking-widest border transition-all ${
+              isFavorited 
+                ? 'bg-[#ff641d]/20 text-[#ff641d] border-[#ff641d]/50' 
+                : 'bg-white/5 text-white/60 border-white/10 hover:border-white/20 hover:text-white'
+            }`}
+          >
+            {isFavorited ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+            {isFavorited ? 'Salvo nos Favoritos' : 'Salvar nos Favoritos'}
+          </button>
+        </div>
 
         <article className="prose prose-invert prose-orange max-w-none">
-          <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-6 uppercase">
-            {selectedPost.category} // {selectedPost.id.toString().padStart(4, '0')}
+          <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
+            <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] uppercase">
+              {selectedPost.category} // {selectedPost.id.toString().padStart(4, '0')}
+            </div>
+            {selectedPost.readTime && (
+              <div className="flex items-center gap-2 text-[10px] font-mono text-white/40 uppercase tracking-wider">
+                <Clock size={12} /> {selectedPost.readTime} de leitura
+              </div>
+            )}
           </div>
+
           <h1 className="text-3xl sm:text-5xl font-display font-black uppercase tracking-tighter mb-8 text-[#F8FAFC]">
             {selectedPost.title}
           </h1>
 
-          <div className="flex items-center gap-6 text-[10px] font-mono text-white/20 uppercase tracking-[0.2em] mb-12 border-b border-white/5 pb-8">
+          <div className="flex items-center gap-6 text-[10px] font-mono text-white/40 uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-8">
             <span className="flex items-center gap-2"><Calendar size={12} /> {selectedPost.date}</span>
             <span className="flex items-center gap-2"><User size={12} /> {selectedPost.author}</span>
           </div>
 
-          <div className="aspect-video w-full rounded-2xl overflow-hidden mb-8 border border-white/5">
+          <div className="aspect-square sm:aspect-video w-full rounded-2xl overflow-hidden mb-8 border border-white/10 bg-black/40">
             <img 
               src={selectedPost.image} 
               alt={selectedPost.title}
               className="w-full h-full object-cover"
+              loading="lazy"
               referrerPolicy="no-referrer"
             />
           </div>
 
+          {/* Automatic Table of Contents for post #9 */}
+          {selectedPost.id === 9 && (
+            <div className="my-8 p-6 rounded-2xl bg-white/[0.02] border border-white/10 font-mono">
+              <div className="flex items-center gap-2 text-xs text-[#ff641d] font-bold uppercase tracking-widest mb-4">
+                <span>ÍNDICE DE TÓPICOS DO GUIA</span>
+              </div>
+              <ul className="space-y-2 text-xs text-white/70">
+                <li><a href="#nao-existe-jeitinho-para-cruzar-sem-visto" className="hover:text-[#ff641d] transition-colors flex items-center gap-2"><span>1.</span> Não existe "jeitinho" para cruzar sem visto</a></li>
+                <li><a href="#o-visto-certo-b1-b2-turismo" className="hover:text-[#ff641d] transition-colors flex items-center gap-2"><span>2.</span> O visto certo: B1/B2 (turismo)</a></li>
+                <li><a href="#mas-eu-nao-sou-rico-vivo-de-pix-e-monetizacao-do-youtube-isso-me-elimina" className="hover:text-[#ff641d] transition-colors flex items-center gap-2"><span>3.</span> "Mas eu não sou rico, vivo de PIX e monetização..."</a></li>
+                <li><a href="#cuidado-com-a-forma-de-explicar-sua-viagem" className="hover:text-[#ff641d] transition-colors flex items-center gap-2"><span>4.</span> Cuidado com a forma de explicar sua viagem</a></li>
+                <li><a href="#checklist-do-que-levar" className="hover:text-[#ff641d] transition-colors flex items-center gap-2"><span>5.</span> Checklist do que levar</a></li>
+                <li><a href="#e-se-eu-for-barrado-isso-e-normal" className="hover:text-[#ff641d] transition-colors flex items-center gap-2"><span>6.</span> E se eu for barrado? Isso é normal?</a></li>
+                <li><a href="#resumindo" className="hover:text-[#ff641d] transition-colors flex items-center gap-2"><span>7.</span> Resumindo</a></li>
+              </ul>
+            </div>
+          )}
+
           <div 
-            className="text-white/60 leading-relaxed space-y-6 text-base italic-content"
+            className="text-white/80 leading-relaxed space-y-6 text-base italic-content"
             style={{ 
               fontFamily: 'system-ui, -apple-system, sans-serif'
             }}
             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
           />
 
+          {/* Article Tags */}
+          {selectedPost.tags && selectedPost.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 my-8 pt-6 border-t border-white/5">
+              {selectedPost.tags.map((tag) => (
+                <span key={tag} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-mono text-white/60">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Discreet CTA */}
+          <div className="my-12 p-8 rounded-3xl bg-gradient-to-r from-[#ff641d]/15 via-[#ff641d]/5 to-transparent border border-[#ff641d]/20 text-center">
+            <h3 className="text-lg font-display font-bold text-white mb-2 uppercase tracking-wide">Está planejando sua próxima expedição?</h3>
+            <p className="text-xs text-white/70 max-w-xl mx-auto font-mono">Explore mais guias, mapas, ferramentas e dicas no Rota Livre HUB.</p>
+          </div>
+
           <div className="mt-12 pt-8 border-t border-white/5">
             <div className="flex flex-col gap-12">
               {/* Author Info */}
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-[#ff641d] flex items-center justify-center font-display font-black text-white shadow-[0_0_20px_rgba(255,100,29,0.3)]">
-                  TR
+                  RL
                 </div>
                 <div>
                   <div className="text-xs font-mono text-white uppercase tracking-widest">{selectedPost.author}</div>
@@ -684,6 +999,18 @@ export default function Blog() {
 
                     <button 
                       onClick={() => {
+                        const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(selectedPost.title)}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white/5 text-white hover:bg-white/10 transition-all border border-white/10 group"
+                      title="Compartilhar no X"
+                    >
+                      <Twitter size={18} className="group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest">X</span>
+                    </button>
+
+                    <button 
+                      onClick={() => {
                         const url = `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`${selectedPost.title} - Rota Livre Hub`)}`;
                         window.open(url, '_blank');
                       }}
@@ -715,6 +1042,74 @@ export default function Blog() {
                       <Copy size={18} className="group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-mono font-bold uppercase tracking-widest">Copiar Link</span>
                     </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Related Articles ("Você também pode gostar") */}
+              <div className="mt-12 pt-12 border-t border-white/10">
+                <div className="text-[10px] font-mono tracking-[0.4em] text-[#ff641d] mb-3 uppercase">RECOMENDAÇÕES // RELACIONADOS</div>
+                <h3 className="text-2xl font-display font-black uppercase text-white mb-8">Você também pode gostar</h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* 1. Como tirar o passaporte brasileiro */}
+                  <div className="dashboard-card p-6 bg-white/[0.02] border-white/5 hover:border-[#ff641d]/40 transition-all rounded-2xl flex flex-col justify-between group cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                    <div>
+                      <span className="text-[8px] font-mono px-2 py-1 bg-[#ff641d]/20 text-[#ff641d] uppercase font-bold rounded">DOCUMENTAÇÃO</span>
+                      <h4 className="text-sm font-bold text-white mt-3 group-hover:text-[#ff641d] transition-colors">Como tirar o passaporte brasileiro: passo a passo atualizado</h4>
+                      <p className="text-[11px] text-white/40 mt-2 font-mono">Agendamento, taxas, documentos necessários e prazos para emitir o documento de viagem.</p>
+                    </div>
+                    <div className="mt-4 flex items-center text-[9px] font-mono text-[#ff641d] font-bold gap-2">
+                      LER GUIA <ArrowRight size={12} />
+                    </div>
+                  </div>
+
+                  {/* 2. Como viajar de bicicleta pela América Latina */}
+                  <div className="dashboard-card p-6 bg-white/[0.02] border-white/5 hover:border-[#ff641d]/40 transition-all rounded-2xl flex flex-col justify-between group cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                    <div>
+                      <span className="text-[8px] font-mono px-2 py-1 bg-[#ff641d]/20 text-[#ff641d] uppercase font-bold rounded">CICLOTURISMO</span>
+                      <h4 className="text-sm font-bold text-white mt-3 group-hover:text-[#ff641d] transition-colors">Como viajar de bicicleta pela América Latina</h4>
+                      <p className="text-[11px] text-white/40 mt-2 font-mono">Rotas icônicas, segurança nas estradas latinas e planejamento de quilometragem diária.</p>
+                    </div>
+                    <div className="mt-4 flex items-center text-[9px] font-mono text-[#ff641d] font-bold gap-2">
+                      LER GUIA <ArrowRight size={12} />
+                    </div>
+                  </div>
+
+                  {/* 3. Seguro viagem para cicloturismo */}
+                  <div className="dashboard-card p-6 bg-white/[0.02] border-white/5 hover:border-[#ff641d]/40 transition-all rounded-2xl flex flex-col justify-between group cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                    <div>
+                      <span className="text-[8px] font-mono px-2 py-1 bg-[#ff641d]/20 text-[#ff641d] uppercase font-bold rounded">SEGURANÇA</span>
+                      <h4 className="text-sm font-bold text-white mt-3 group-hover:text-[#ff641d] transition-colors">Seguro viagem para cicloturismo e expedições</h4>
+                      <p className="text-[11px] text-white/40 mt-2 font-mono">Como escolher apólices que cobrem esportes de aventura, resgate e extravio de bike.</p>
+                    </div>
+                    <div className="mt-4 flex items-center text-[9px] font-mono text-[#ff641d] font-bold gap-2">
+                      LER GUIA <ArrowRight size={12} />
+                    </div>
+                  </div>
+
+                  {/* 4. Quanto custa pedalar até o Alasca */}
+                  <div className="dashboard-card p-6 bg-white/[0.02] border-white/5 hover:border-[#ff641d]/40 transition-all rounded-2xl flex flex-col justify-between group cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                    <div>
+                      <span className="text-[8px] font-mono px-2 py-1 bg-[#ff641d]/20 text-[#ff641d] uppercase font-bold rounded">ORÇAMENTO</span>
+                      <h4 className="text-sm font-bold text-white mt-3 group-hover:text-[#ff641d] transition-colors">Quanto custa pedalar até o Alasca? Estimativa de custos</h4>
+                      <p className="text-[11px] text-white/40 mt-2 font-mono">Planilha de gastos diários, alimentação, hospedagem e manutenção em travessias continentais.</p>
+                    </div>
+                    <div className="mt-4 flex items-center text-[9px] font-mono text-[#ff641d] font-bold gap-2">
+                      LER GUIA <ArrowRight size={12} />
+                    </div>
+                  </div>
+
+                  {/* 5. Checklist completo para expedições internacionais */}
+                  <div className="dashboard-card p-6 bg-white/[0.02] border-white/5 hover:border-[#ff641d]/40 transition-all rounded-2xl flex flex-col justify-between group cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                    <div>
+                      <span className="text-[8px] font-mono px-2 py-1 bg-[#ff641d]/20 text-[#ff641d] uppercase font-bold rounded">CHECKLIST</span>
+                      <h4 className="text-sm font-bold text-white mt-3 group-hover:text-[#ff641d] transition-colors">Checklist completo para expedições internacionais</h4>
+                      <p className="text-[11px] text-white/40 mt-2 font-mono">Equipamentos, ferramentas de mecânica, kit médico e emergências para cicloviagens.</p>
+                    </div>
+                    <div className="mt-4 flex items-center text-[9px] font-mono text-[#ff641d] font-bold gap-2">
+                      LER GUIA <ArrowRight size={12} />
+                    </div>
                   </div>
                 </div>
               </div>
