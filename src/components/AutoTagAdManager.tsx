@@ -39,36 +39,30 @@ export default function AutoTagAdManager() {
 
       const runScript = () => {
         try {
+          const executeAutoTag = () => {
+            if (window.aclib && typeof window.aclib.runAutoTag === 'function') {
+              window.aclib.runAutoTag({
+                zoneId: 'fpr5uwtma',
+              });
+              console.log('[AutoTagAdManager] aclib.runAutoTag executado com sucesso.');
+            }
+          };
+
           if (window.aclib && typeof window.aclib.runAutoTag === 'function') {
-            window.aclib.runAutoTag({
-              zoneId: 'fpr5uwtma',
-            });
-            console.log('[AutoTagAdManager] aclib.runAutoTag inicializado com sucesso.');
+            executeAutoTag();
           } else {
-            // Se o aclib não estiver no objeto global, injeta o script aclib.js de forma assíncrona
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = 'https://aclib.com/aclib.js';
-            script.async = true;
-            script.onload = () => {
-              try {
-                if (window.aclib && typeof window.aclib.runAutoTag === 'function') {
-                  window.aclib.runAutoTag({
-                    zoneId: 'fpr5uwtma',
-                  });
-                  console.log('[AutoTagAdManager] aclib.runAutoTag executado após download do script.');
-                }
-              } catch (err) {
-                console.warn('[AutoTagAdManager] Falha ao executar runAutoTag:', err);
-              }
-            };
-            script.onerror = (e) => {
-              console.warn('[AutoTagAdManager] O script de anúncios foi bloqueado ou falhou no carregamento.', e);
-            };
-            document.head.appendChild(script);
+            let script = document.getElementById('aclib') as HTMLScriptElement | null;
+            if (!script) {
+              script = document.createElement('script');
+              script.id = 'aclib';
+              script.type = 'text/javascript';
+              script.src = 'https://acscdn.com/script/aclib.js';
+              document.head.appendChild(script);
+            }
+            script.addEventListener('load', executeAutoTag, { once: true });
           }
         } catch (error) {
-          console.warn('[AutoTagAdManager] Erro ao inicializar aclib:', error);
+          console.warn('[AutoTagAdManager] Erro ao executar aclib:', error);
         }
       };
 
