@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, User, Search, ArrowRight, Share2, X, ChevronLeft, Instagram, MessageCircle, Copy, Check, Send } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 import { useSearchParams } from 'react-router-dom';
-import AdSense from '@/src/components/AdSense';
 import BlogComments from '@/src/components/BlogComments';
 
 const posts = [
@@ -629,9 +628,6 @@ export default function Blog() {
             />
           </div>
 
-          {/* Anúncio discreto abaixo do título/imagem da postagem */}
-          <AdSense slot="blog_article_below_header" className="my-8 min-h-[90px]" />
-
           <div 
             className="text-white/60 leading-relaxed space-y-6 text-base italic-content"
             style={{ 
@@ -639,9 +635,6 @@ export default function Blog() {
             }}
             dangerouslySetInnerHTML={{ __html: selectedPost.content }}
           />
-
-          {/* Anúncio discreto ao final da postagem */}
-          <AdSense slot="blog_article_footer" className="my-10 min-h-[90px]" />
 
           <div className="mt-12 pt-8 border-t border-white/5">
             <div className="flex flex-col gap-12">
@@ -834,14 +827,6 @@ export default function Blog() {
               </div>
             </motion.article>
           ];
-
-          if ((index + 1) % 3 === 0) {
-            items.push(
-              <div key={`ad-grid-${index}`} className="md:col-span-3">
-                <AdSense slot="grid_wide_ad" className="min-h-[120px]" />
-              </div>
-            );
-          }
 
           return items;
         })}

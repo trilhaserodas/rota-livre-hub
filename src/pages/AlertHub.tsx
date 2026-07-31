@@ -37,7 +37,6 @@ import { auth } from '@/src/lib/firebase';
 import SEO from '@/src/components/SEO';
 import ReportModal from '@/src/components/ReportModal';
 import CommunityReports from '@/src/components/CommunityReports';
-import AdSense from '@/src/components/AdSense';
 import RadarContingencia from '@/src/components/RadarContingencia';
 
 // Componente de Clima em Tempo Real
@@ -864,18 +863,6 @@ export default function AlertHub() {
                     </motion.div>
                   ];
   
-                  if (index === 1) {
-                    items.push(
-                      <motion.div 
-                        key="alert-list-ad"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                      >
-                        <AdSense slot="alert_list_inline_ad" className="min-h-[100px] border-none bg-transparent" />
-                      </motion.div>
-                    );
-                  }
-  
                   return items;
                 })}
               </AnimatePresence>
@@ -1005,8 +992,6 @@ export default function AlertHub() {
                 </div>
              </div>
           </div>
-
-          <AdSense slot="sidebar_ad" />
 
           {/* Contribution Prompt */}
           <div className="p-8 rounded-3xl bg-gradient-to-br from-[#ff641d]/20 to-transparent border border-[#ff641d]/10 relative overflow-hidden group">
