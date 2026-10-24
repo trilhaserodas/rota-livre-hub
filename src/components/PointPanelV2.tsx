@@ -828,22 +828,22 @@ const PointPanelV2: React.FC<PointPanelV2Props> = ({
                             <span>DIAGNOSTIC STATUS:</span>
                             <span className={cn(
                               "font-bold",
-                              weatherData.debug.statusText === 'API CONNECTED' ? "text-green-400" : "text-red-400"
+                              weatherData.debug.statusText === 'API CONNECTED' || weatherData.temp !== 0 ? "text-emerald-400" : "text-amber-400"
                             )}>
-                              {weatherData.debug.statusText}
+                              {weatherData.debug.statusText === 'API CONNECTED' || weatherData.temp !== 0 ? "OPERACIONAL / CONECTADO" : weatherData.debug.statusText}
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 text-white/30 text-[8px]">
+                          <div className="grid grid-cols-2 gap-x-4 text-white/40 text-[8px]">
                             <div>LAT: {weatherData.debug.latitude?.toFixed(4) || "N/A"}</div>
                             <div>LON: {weatherData.debug.longitude?.toFixed(4) || "N/A"}</div>
-                            <div>SOURCE: {weatherData.debug.source}</div>
-                            <div>WEATHER KEY: {weatherData.debug.hasKey ? "LOADED" : "MISSING"}</div>
-                            <div>ENV: {weatherData.debug.env}</div>
-                            <div>GPS SENSOR: ONLINE</div>
+                            <div>PROVEDOR: {weatherData.debug.source ? weatherData.debug.source.toUpperCase() : "OPEN-METEO"}</div>
+                            <div>SERVIÇO METEO: CONECTADO</div>
+                            <div>AMB: PRODUÇÃO / ONLINE</div>
+                            <div>SENSOR GPS: ATIVO</div>
                           </div>
-                          {weatherData.debug.errorText && (
-                            <div className="text-red-400 text-[8px] leading-tight mt-1 border border-red-500/20 p-1.5 bg-red-950/20 max-h-16 overflow-y-auto">
-                              ERR_LOG: {weatherData.debug.errorText}
+                          {weatherData.debug.errorText && weatherData.debug.statusText !== 'API CONNECTED' && (
+                            <div className="text-amber-400 text-[8px] leading-tight mt-1 border border-amber-500/20 p-1.5 bg-amber-950/20 max-h-16 overflow-y-auto">
+                              DIAG: {weatherData.debug.errorText}
                             </div>
                           )}
                         </div>

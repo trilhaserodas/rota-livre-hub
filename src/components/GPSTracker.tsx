@@ -43,9 +43,10 @@ const GPSTracker: React.FC<GPSTrackerProps> = ({
   }, []);
 
   const handleError = useCallback((error: GeolocationPositionError) => {
-    let errorMessage = "LOCALIZAÇÃO NÃO AUTORIZADA";
-    if (error.code === error.TIMEOUT) errorMessage = "TEMPO EXCEDIDO";
-    if (error.code === error.POSITION_UNAVAILABLE) errorMessage = "SINAL INDISPONÍVEL";
+    let errorMessage = "LOCALIZAÇÃO EM ESPERA";
+    if (error.code === error.PERMISSION_DENIED) errorMessage = "LOCALIZAÇÃO NÃO AUTORIZADA";
+    else if (error.code === error.TIMEOUT) errorMessage = "SINAL GPS EM BUSCA";
+    else if (error.code === error.POSITION_UNAVAILABLE) errorMessage = "GPS OFFLINE / SEM SINAL";
     
     setStatus(prev => ({
       ...prev,
@@ -56,15 +57,27 @@ const GPSTracker: React.FC<GPSTrackerProps> = ({
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setStatus(prev => ({ ...prev, error: "GPS NÃO SUPORTADO" }));
+      setStatus(prev => ({ ...prev, error: "GPS NÃO SUPORTADO", isActive: false }));
       return;
     }
 
-    const watchId = navigator.geolocation.watchPosition(updatePosition, handleError, {
-      enableHighAccuracy: true,
-      maximumAge: 10000,
-      timeout: 5000,
-    });
+    // Try high accuracy with graceful fallback
+    const watchId = navigator.geolocation.watchPosition(
+      updatePosition, 
+      (err) => {
+        // Retry with standard accuracy
+        navigator.geolocation.getCurrentPosition(
+          updatePosition,
+          handleError,
+          { enableHighAccuracy: false, maximumAge: 30000, timeout: 15000 }
+        );
+      }, 
+      {
+        enableHighAccuracy: true,
+        maximumAge: 15000,
+        timeout: 12000,
+      }
+    );
 
     return () => navigator.geolocation.clearWatch(watchId);
   }, [updatePosition, handleError]);
@@ -86,11 +99,11 @@ const GPSTracker: React.FC<GPSTrackerProps> = ({
            <div className="flex items-center gap-1.5">
               <div className={cn(
                 "w-1.5 h-1.5 rounded-full",
-                status.isActive ? "bg-[#ff641d] animate-pulse" : "bg-red-500"
+                status.isActive ? "bg-emerald-500 animate-pulse" : (status.error ? "bg-amber-500" : "bg-cyan-500 animate-pulse")
               )} />
               <div className="flex flex-col">
                 <span className="text-[8px] font-mono font-black text-white uppercase tracking-[0.2em]">
-                  {status.isActive ? "📍 GPS ACTIVE" : "⚠️ NO SIGNAL"}
+                  {status.isActive ? "📍 GPS CONECTADO" : (status.error ? "🛰️ GPS EM ESPERA" : "🛰️ BUSCANDO SINAL")}
                 </span>
                 {isSharing && (
                   <span className="text-[6px] font-mono text-[#00d4ff] uppercase tracking-widest animate-pulse">LIVE_SHARING</span>

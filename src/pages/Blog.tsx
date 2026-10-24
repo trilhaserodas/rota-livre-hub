@@ -16,7 +16,7 @@ const posts = [
     author: 'Equipe Rota Livre HUB',
     date: '31.07.26',
     readTime: '10 minutos',
-    image: usaBikeBorderCoverImage,
+    image: '/images/usa_bike_border_cover_optimized.jpg',
     tags: ['Estados Unidos', 'Visto Americano', 'Cicloturismo', 'Mochilão', 'Documentação', 'Viagem Internacional', 'Fronteira', 'Bikepacking', 'América Latina', 'Expedição'],
     seoTitle: 'Como entrar nos Estados Unidos de bicicleta: guia completo para brasileiros',
     metaDescription: 'Descubra como brasileiros podem entrar legalmente nos Estados Unidos de bicicleta. Entenda o visto B1/B2, documentos necessários, entrevista, imigração e dicas importantes para cicloviajantes.',
@@ -810,7 +810,7 @@ export default function Blog() {
           title={selectedPost.seoTitle || `${selectedPost.title} - Rota Livre Hub`} 
           description={selectedPost.metaDescription || selectedPost.excerpt}
           ogType="article"
-          ogImage={String(selectedPost.image).startsWith('http') ? String(selectedPost.image) : `https://rotalivrehub.com${selectedPost.image}`}
+          ogImage={String(selectedPost.image).startsWith('data:') ? 'https://rotalivrehub.com/images/usa_bike_border_cover_optimized.jpg' : (String(selectedPost.image).startsWith('http') ? String(selectedPost.image) : `https://rotalivrehub.com${selectedPost.image}`)}
           canonical={selectedPost.canonicalUrl}
         />
 
@@ -821,7 +821,7 @@ export default function Blog() {
             '@type': 'BlogPosting',
             headline: selectedPost.seoTitle || selectedPost.title,
             description: selectedPost.metaDescription || selectedPost.excerpt,
-            image: [String(selectedPost.image).startsWith('http') ? String(selectedPost.image) : `https://rotalivrehub.com${selectedPost.image}`],
+            image: [String(selectedPost.image).startsWith('data:') ? 'https://rotalivrehub.com/images/usa_bike_border_cover_optimized.jpg' : (String(selectedPost.image).startsWith('http') ? String(selectedPost.image) : `https://rotalivrehub.com${selectedPost.image}`)],
             datePublished: '2026-07-31',
             author: {
               '@type': 'Organization',
@@ -906,6 +906,11 @@ export default function Blog() {
               className="w-full h-full object-cover"
               loading="lazy"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                if (selectedPost.id === 9) {
+                  (e.currentTarget as HTMLImageElement).src = usaBikeBorderCoverImage;
+                }
+              }}
             />
           </div>
 
@@ -1183,6 +1188,11 @@ export default function Blog() {
                       alt={post.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[0.8] group-hover:grayscale-0"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        if (post.id === 9) {
+                          (e.currentTarget as HTMLImageElement).src = usaBikeBorderCoverImage;
+                        }
+                      }}
                     />
                     <div className="absolute top-4 left-4">
                       <span className="px-3 py-1 bg-[#ff641d] text-[8px] font-mono font-bold uppercase tracking-widest text-white">

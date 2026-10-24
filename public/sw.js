@@ -46,15 +46,20 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Only handle standard GET requests
+  // Only handle standard HTTP/HTTPS GET requests
   if (request.method !== 'GET') return;
+  if (!url.protocol.startsWith('http')) return;
 
-  // Ignore bundler specific assets, hot reload signals, development servers, or Firestore sockets
+  // Ignore analytics, telemetry, ad services, bundlers, and Firestore sockets
   if (
+    url.hostname.includes('analytics.google.com') ||
+    url.hostname.includes('googletagmanager.com') ||
+    url.hostname.includes('google-analytics.com') ||
     url.pathname.includes('/@vite/') || 
     url.pathname.includes('/node_modules/') || 
     url.href.includes('__vite_ping') ||
-    url.hostname.includes('firestore.googleapis.com')
+    url.hostname.includes('firestore.googleapis.com') ||
+    url.hostname.includes('identitytoolkit.googleapis.com')
   ) {
     return;
   }
@@ -62,28 +67,30 @@ self.addEventListener('fetch', (event) => {
   // Define Category 1: Map Tile Servers
   const isMapTile = 
     url.hostname.includes('basemaps.cartocdn.com') || 
+    url.hostname.includes('tile.openstreetmap.org') ||
+    url.hostname.includes('tile.opentopomap.org') ||
+    url.hostname.includes('server.arcgisonline.com') ||
     url.hostname.includes('google.com') && url.pathname.includes('/vt/lyrs=') ||
     url.href.includes('/vt/lyrs=') ||
     url.hostname.includes('mt0.google.com') ||
     url.hostname.includes('mt1.google.com') ||
     url.hostname.includes('mt2.google.com') ||
-    url.hostname.includes('mt3.google.com') ||
-    url.hostname.includes('tile.openstreetmap.org');
+    url.hostname.includes('mt3.google.com');
 
   if (isMapTile) {
     event.respondWith(
       caches.open(MAP_CACHE_NAME).then((cache) => {
         return cache.match(request).then((cachedResponse) => {
           if (cachedResponse) {
-            // Instantly serve from local cache on the road
             return cachedResponse;
           }
-          // Fetch, clone, and cache on-the-fly
           return fetch(request).then((networkResponse) => {
-            if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
-              const responseToCache = networkResponse.clone();
-              cache.put(request, responseToCache);
-            }
+            try {
+              if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0) && !networkResponse.bodyUsed) {
+                const responseToCache = networkResponse.clone();
+                cache.put(request, responseToCache).catch(() => {});
+              }
+            } catch (e) {}
             return networkResponse;
           }).catch(() => {
             return new Response('', { status: 404, statusText: 'Offline Map Tile' });
@@ -101,6 +108,7 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('overpass-api.de') ||
     url.hostname.includes('api.open-meteo.com') ||
     url.pathname.includes('/api/weather') ||
+    url.pathname.includes('/api/geocode') ||
     url.pathname.includes('/api/google-geocode');
 
   if (isDynamicAPI) {
@@ -108,10 +116,12 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(DATA_CACHE_NAME).then((cache) => {
         return fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            cache.put(request, responseToCache);
-          }
+          try {
+            if (networkResponse && networkResponse.status === 200 && !networkResponse.bodyUsed) {
+              const responseToCache = networkResponse.clone();
+              cache.put(request, responseToCache).catch(() => {});
+            }
+          } catch (e) {}
           return networkResponse;
         }).catch(() => {
           // Serve stale but extremely useful cached coordinates/forecast data
@@ -143,17 +153,17 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(BLOG_CACHE_NAME).then((cache) => {
         return cache.match(request).then((cachedResponse) => {
-          // High-Performance & Aggressive Stale-While-Revalidate:
-          // Immediately serve cached version if we have it, but initiate a background update
           const fetchPromise = fetch(request).then((networkResponse) => {
-            // Include status === 0 to capture opaque responses from cross-origin image CDNs
-            if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
-              const responseToCache = networkResponse.clone();
-              cache.put(request, responseToCache);
-            }
+            try {
+              if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0) && !networkResponse.bodyUsed) {
+                const responseToCache = networkResponse.clone();
+                cache.put(request, responseToCache).catch(() => {});
+              }
+            } catch (err) {}
             return networkResponse;
           }).catch((err) => {
-            console.warn('Aggressive SW Fetch failed for blog/expedition asset. Serving cached copy:', err);
+            console.warn('SW Fetch fallback for blog/expedition asset:', err);
+            return cachedResponse;
           });
 
           return cachedResponse || fetchPromise;
@@ -174,9 +184,11 @@ self.addEventListener('fetch', (event) => {
         return cache.match(request).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
           return fetch(request).then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              cache.put(request, networkResponse.clone());
-            }
+            try {
+              if (networkResponse && networkResponse.status === 200 && !networkResponse.bodyUsed) {
+                cache.put(request, networkResponse.clone()).catch(() => {});
+              }
+            } catch (err) {}
             return networkResponse;
           });
         });
@@ -203,15 +215,18 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cachedResponse) => {
       // Stale-While-Revalidate: deliver instantaneously, refresh silently in the background
       const fetchPromise = fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-        }
+        try {
+          if (networkResponse && networkResponse.status === 200 && !networkResponse.bodyUsed) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache).catch(() => {});
+            }).catch(() => {});
+          }
+        } catch (err) {}
         return networkResponse;
       }).catch(() => {
         // Fallback silently if completely offline
+        return cachedResponse;
       });
 
       return cachedResponse || fetchPromise;
