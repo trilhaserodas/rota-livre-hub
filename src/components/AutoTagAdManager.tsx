@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 declare global {
   interface Window {
@@ -10,18 +11,30 @@ declare global {
   }
 }
 
+const isRestrictedRoute = (pathname: string): boolean => {
+  const path = pathname.toLowerCase();
+  return (
+    path.startsWith('/admin') ||
+    path.includes('/login') ||
+    path.includes('/auth') ||
+    path.includes('signin')
+  );
+};
+
 /**
  * AutoTagAdManager
  * Gerenciador global e não-intrusivo para carregamento inteligente do script aclib AutoTag.
- * 
- * Regras implementadas:
- * - Não executa no carregamento imediato da página.
- * - Aguarda interação real do usuário (rolagem, clique, toque, navegação ou permanência ativa de 5s).
- * - Carrega de forma totalmente assíncrona (non-blocking).
- * - Garante execução única (evita duplicações).
+ * Isolado: não executa em /admin ou telas de autenticação/login.
  */
 export default function AutoTagAdManager() {
+  const location = useLocation();
+
   useEffect(() => {
+    // Isolamento de segurança: não carregar nem executar anúncios no Admin ou telas de login
+    if (isRestrictedRoute(location.pathname)) {
+      return;
+    }
+
     // Evita reinicializações múltiplas se já foi carregado
     if (window.__aclibAutoTagInitialized) {
       return;
@@ -30,6 +43,8 @@ export default function AutoTagAdManager() {
     let isTriggered = false;
 
     const initAclib = () => {
+      // Re-verificar rota atual antes do disparo
+      if (isRestrictedRoute(window.location.pathname)) return;
       if (isTriggered || window.__aclibAutoTagInitialized) return;
       isTriggered = true;
       window.__aclibAutoTagInitialized = true;
@@ -39,12 +54,14 @@ export default function AutoTagAdManager() {
 
       const runScript = () => {
         try {
+          if (isRestrictedRoute(window.location.pathname)) return;
+
           const executeAutoTag = () => {
+            if (isRestrictedRoute(window.location.pathname)) return;
             if (window.aclib && typeof window.aclib.runAutoTag === 'function') {
               window.aclib.runAutoTag({
                 zoneId: 'fpr5uwtma',
               });
-              console.log('[AutoTagAdManager] aclib.runAutoTag executado com sucesso.');
             }
           };
 
@@ -96,7 +113,7 @@ export default function AutoTagAdManager() {
     return () => {
       cleanupListeners();
     };
-  }, []);
+  }, [location.pathname]);
 
   return null;
 }

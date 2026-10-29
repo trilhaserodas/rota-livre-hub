@@ -41,6 +41,20 @@
         "savedAt": { "type": "string", "format": "date-time", "description": "Timestamp" }
       },
       "required": ["userId", "routeId", "routeName", "savedAt"]
+    },
+    "contact": {
+      "title": "Contact / Partnership Message",
+      "description": "A private contact or partnership message sent by a user to the admin.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the sender" },
+        "name": { "type": "string", "maxLength": 100, "description": "Name of sender" },
+        "contact": { "type": "string", "maxLength": 200, "description": "Email, phone or handler" },
+        "message": { "type": "string", "maxLength": 4000, "description": "Message text" },
+        "type": { "type": "string", "enum": ["PARTNERSHIP_APPLY", "CONTACT_PARTNERSHIP"], "description": "Type of contact" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "name", "contact", "message", "type", "createdAt"]
     }
   },
   "firestore": {
@@ -55,6 +69,10 @@
     "savedRoutes": {
       "schema": "savedRoute",
       "description": "Collection of user-saved routes"
+    },
+    "contacts": {
+      "schema": "contact",
+      "description": "Private messages for admin review"
     }
   }
 }

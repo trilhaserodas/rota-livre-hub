@@ -71,11 +71,27 @@ service cloud.firestore {
         isValidReport(incoming()) && 
         incoming().status == 'PENDING'; // Force pending for public
       
-      allow update: if 
-        isAdmin() && 
-        isValidReport(incoming()); // Only admin can approve (change status)
-
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['PENDING','APPROVED'];
       allow delete: if isAdmin();
+    }
+
+    // Contacts collection (Private: only admin reads/deletes)
+    match /contacts/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['type','name','contact','message','userId','createdAt'])
+        && request.resource.data.type in ['PARTNERSHIP_APPLY','CONTACT_PARTNERSHIP']
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
+        && request.resource.data.contact is string
+        && request.resource.data.contact.size() > 0 && request.resource.data.contact.size() <= 200
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 4000
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow read, delete: if isAdmin();
+      allow update: if false;
     }
 
     // Tracking Sessions
