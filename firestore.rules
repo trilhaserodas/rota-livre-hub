@@ -30,12 +30,15 @@ service cloud.firestore {
     }
 
     function isValidTracking(data) {
-      return data.keys().hasAll(['userId', 'lat', 'lng', 'updatedAt', 'active']) &&
-             data.userId is string &&
-             data.lat is number &&
-             data.lng is number &&
-             data.active is bool &&
-             (data.updatedAt == request.time || data.updatedAt is timestamp);
+      return data.keys().hasAll(['userId','lat','lng','updatedAt','active'])
+        && data.keys().hasOnly(['userId','userName','lat','lng','updatedAt','active','expireAt'])
+        && data.userId is string
+        && data.lat is number && data.lat >= -90 && data.lat <= 90
+        && data.lng is number && data.lng >= -180 && data.lng <= 180
+        && data.active is bool
+        && data.updatedAt == request.time
+        && (!('userName' in data) || (data.userName is string && data.userName.size() <= 40))
+        && (!('expireAt' in data) || (data.expireAt is timestamp && data.expireAt <= request.time + duration.value(3, 'h')));
     }
 
     function isValidReport(data) {
@@ -96,18 +99,13 @@ service cloud.firestore {
 
     // Tracking Sessions
     match /trackingSessions/{sessionId} {
-      allow get: if true; 
-      allow list: if isSignedIn(); // Allow all explorers to see each other
-      
-      allow create: if isSignedIn() && 
-                      isValidTracking(incoming()) && 
-                      incoming().userId == request.auth.uid;
-      
-      allow update: if isSignedIn() && 
-                    existing().userId == request.auth.uid && 
-                    isValidTracking(incoming()) &&
-                    incoming().userId == existing().userId;
-                    
+      allow get, list: if isSignedIn()
+        && (resource.data.active == true || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && sessionId == request.auth.uid
+        && isValidTracking(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid
+        && isValidTracking(incoming()) && incoming().userId == existing().userId
+        && (incoming().active == false || request.time > existing().updatedAt + duration.value(10, 's'));
       allow delete: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
     }
 

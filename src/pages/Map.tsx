@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { 
   MapContainer, TileLayer, Marker, Popup, useMap, 
   ZoomControl as LeafletZoomControl, Polyline, useMapEvents, Tooltip as MapTooltip 
@@ -26,7 +26,7 @@ import MiniCompass from '@/src/components/MiniCompass';
 import { cn } from '@/src/lib/utils';
 import { LocationPoint } from '@/src/types';
 import { db, auth } from '@/src/lib/firebase';
-import { doc, setDoc, onSnapshot, serverTimestamp, getDoc, updateDoc, deleteDoc, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, serverTimestamp, getDoc, updateDoc, deleteDoc, collection, query, where, limit, Timestamp } from 'firebase/firestore';
 import { useSearchParams } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
@@ -1914,7 +1914,17 @@ function userLocationIcon() {
   });
 }
 
+function escapeHtml(text: string): string {
+  return String(text || '')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function otherUserIcon(color: string = '#00d4ff', name: string = 'Explorador') {
+  const safeName = escapeHtml(name);
   return L.divIcon({
     className: 'other-user-icon',
     html: `
@@ -1923,7 +1933,7 @@ function otherUserIcon(color: string = '#00d4ff', name: string = 'Explorador') {
         <div style="background-color: ${color}" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 opacity-20 rounded-full animate-ping"></div>
         <div class="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[3000]">
            <div class="bg-black/90 border border-white/10 px-2 py-1 rounded-sm whitespace-nowrap">
-              <span class="text-[8px] font-mono text-white font-black uppercase tracking-widest">${name}</span>
+              <span class="text-[8px] font-mono text-white font-black uppercase tracking-widest">${safeName}</span>
            </div>
         </div>
       </div>
@@ -1932,6 +1942,83 @@ function otherUserIcon(color: string = '#00d4ff', name: string = 'Explorador') {
     iconAnchor: [16, 16],
   });
 }
+
+interface OtherUserMarkerProps {
+  session: {
+    id: string;
+    userName: string;
+    lat: number;
+    lng: number;
+    updatedAt?: any;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Componente de Marcador de Outro Usuário Otimizado com Memoization.
+ * Evita reconstruir ícones Leaflet e re-renderizar marcadores a cada frame ou tick do mapa.
+ */
+const OtherUserMarker = memo(
+  function OtherUserMarker({ session }: OtherUserMarkerProps) {
+    // Memoiza o ícone Leaflet DivIcon para não reinstanciar objeto DOM a menos que o nome mude
+    const icon = useMemo(() => {
+      return otherUserIcon('#00d4ff', session.userName);
+    }, [session.userName]);
+
+    // Formatação memoizada da data/hora do sinal
+    const formattedTime = useMemo(() => {
+      if (session.updatedAt?.toDate) {
+        return session.updatedAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+      return 'RECENTE';
+    }, [session.updatedAt]);
+
+    const position: [number, number] = useMemo(() => {
+      return [session.lat, session.lng];
+    }, [session.lat, session.lng]);
+
+    return (
+      <Marker position={position} icon={icon}>
+        <Popup className="tactical-popup">
+          <div className="p-3 bg-[#0b0c0d] border border-white/5 min-w-[200px]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+              <span className="text-[10px] font-mono font-black text-cyan-400 uppercase tracking-widest">
+                EXPLORADOR_ATIVO
+              </span>
+            </div>
+            <div className="text-sm font-mono font-black text-white uppercase mb-1">
+              {session.userName}
+            </div>
+            <div className="text-[8px] font-mono text-white/40 uppercase tracking-tighter mb-3">
+              SINAL_RECUPERADO: {formattedTime}
+            </div>
+            <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
+              <div>
+                <div className="text-[6px] font-mono text-white/20 uppercase">LAT_COORD</div>
+                <div className="text-[9px] font-mono text-white/60">{session.lat.toFixed(4)}</div>
+              </div>
+              <div>
+                <div className="text-[6px] font-mono text-white/20 uppercase">LNG_COORD</div>
+                <div className="text-[9px] font-mono text-white/60">{session.lng.toFixed(4)}</div>
+              </div>
+            </div>
+          </div>
+        </Popup>
+      </Marker>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Comparador estrito de memoization: só re-renderiza se os dados deste usuário específico mudarem
+    return (
+      prevProps.session.id === nextProps.session.id &&
+      prevProps.session.lat === nextProps.session.lat &&
+      prevProps.session.lng === nextProps.session.lng &&
+      prevProps.session.userName === nextProps.session.userName &&
+      prevProps.session.updatedAt === nextProps.session.updatedAt
+    );
+  }
+);
 
 // --- Map Controllers ---
 
@@ -2557,10 +2644,62 @@ export default function AdventureMap() {
     };
   }, []);
 
-  // GPS Sharing State
+  // Distance calculation helper (Haversine formula) in meters
+  const getDistanceMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // GPS Sharing State (SEMPRE começa desligado / false ao abrir o app)
   const [isSharing, setIsSharing] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
   const [trackingId, setTrackingId] = useState<string | null>(null);
   const [otherSessions, setOtherSessions] = useState<any[]>([]);
+  const lastRecordedTimeRef = useRef<number>(0);
+  const lastRecordedCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  // Marcadores de outros usuários com Memoization para evitar re-renderizações a cada tick do mapa
+  const memoizedOtherUserMarkers = useMemo(() => {
+    return otherSessions.map((session) => (
+      <OtherUserMarker key={session.id} session={session} />
+    ));
+  }, [otherSessions]);
+
+  // Opt-in explícito com verificação de consentimento prévio
+  const handleToggleSharing = useCallback((enable?: boolean) => {
+    const targetState = enable !== undefined ? enable : !isSharing;
+    if (!targetState) {
+      setIsSharing(false);
+      return;
+    }
+
+    const hasConsented = typeof window !== 'undefined' && localStorage.getItem('rlh_share_consent_v1') === 'true';
+    if (hasConsented) {
+      setIsSharing(true);
+    } else {
+      setShowConsentModal(true);
+    }
+  }, [isSharing]);
+
+  const handleAcceptConsent = () => {
+    try {
+      localStorage.setItem('rlh_share_consent_v1', 'true');
+    } catch (_) {}
+    setShowConsentModal(false);
+    setIsSharing(true);
+  };
+
+  const handleCancelConsent = () => {
+    setShowConsentModal(false);
+  };
 
   const getShareUrl = useCallback(() => {
     if (selectedPreDefinedRoute) {
@@ -2828,7 +2967,7 @@ export default function AdventureMap() {
   useEffect(() => {
     if (isExpeditionMode) {
       handleLocateUser();
-      setIsSharing(true);
+      // Removido setIsSharing(true) - ativar modo expedição NÃO pode ligar o compartilhamento
     }
   }, [isExpeditionMode, handleLocateUser]);
 
@@ -2844,27 +2983,51 @@ export default function AdventureMap() {
       if (!auth.currentUser || !isSharing) return;
       
       const id = auth.currentUser.uid;
+      // Arredondar latitude e longitude para 2 casas decimais (~1 km) ANTES de gravar
+      const approxLat = Math.round(latitude * 100) / 100;
+      const approxLng = Math.round(longitude * 100) / 100;
+
+      // Nome: usar só o PRIMEIRO NOME de displayName (primeira palavra, max 40 chars). Proibido e-mail ou parte de e-mail.
+      const rawName = auth.currentUser.displayName?.trim() || '';
+      const firstName = rawName.split(/\s+/)[0] || 'Explorador';
+      const cleanUserName = firstName.slice(0, 40) || 'Explorador';
+
+      // expireAt: Timestamp de agora + 2 horas
+      const expireAt = Timestamp.fromDate(new Date(Date.now() + 2 * 60 * 60 * 1000));
+
       try {
         await setDoc(doc(db, 'trackingSessions', id), {
           userId: id,
-          userName: auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'Explorer',
-          lat: latitude,
-          lng: longitude,
+          userName: cleanUserName,
+          lat: approxLat,
+          lng: approxLng,
           updatedAt: serverTimestamp(),
-          active: true
+          active: true,
+          expireAt: expireAt
         }, { merge: true });
         setTrackingId(id);
+        lastRecordedTimeRef.current = Date.now();
+        lastRecordedCoordsRef.current = { lat: latitude, lng: longitude };
       } catch (err) {
         console.error("Tracking update failed:", err);
       }
     };
 
-    // Always watch position to show user on map
+    // Posição de alta precisão contínua para o mapa do próprio usuário
     watchId = navigator.geolocation.watchPosition((pos) => {
       const { latitude, longitude } = pos.coords;
       updateLocalLocation(latitude, longitude);
-      if (isSharing) {
-        updateFirestoreTracking(latitude, longitude);
+
+      if (isSharing && auth.currentUser) {
+        const now = Date.now();
+        const timeSinceLast = now - lastRecordedTimeRef.current;
+        const lastCoords = lastRecordedCoordsRef.current;
+        const movedMeters = lastCoords ? getDistanceMeters(lastCoords.lat, lastCoords.lng, latitude, longitude) : Infinity;
+
+        // Gravar no máximo 1 vez a cada 30 segundos e somente se moveu mais de 100 metros
+        if (timeSinceLast >= 30000 && movedMeters >= 100) {
+          updateFirestoreTracking(latitude, longitude);
+        }
       }
     }, (err) => {
       console.error("Geolocation error:", err);
@@ -2874,8 +3037,17 @@ export default function AdventureMap() {
       timeout: 5000
     });
 
-    // Handle deactivation in Firestore
-    if (!isSharing && trackingId) {
+    // Se o usuário já tiver localização ao ligar o compartilhamento, grava a primeira vez
+    if (isSharing && auth.currentUser && userLocation) {
+      const now = Date.now();
+      const timeSinceLast = now - lastRecordedTimeRef.current;
+      if (timeSinceLast >= 30000 || !lastRecordedCoordsRef.current) {
+        updateFirestoreTracking(userLocation[0], userLocation[1]);
+      }
+    }
+
+    // Ao desligar o compartilhamento: updateDoc com active:false e updatedAt:serverTimestamp()
+    if (!isSharing && trackingId && auth.currentUser) {
       updateDoc(doc(db, 'trackingSessions', trackingId), {
         active: false,
         updatedAt: serverTimestamp()
@@ -2887,16 +3059,56 @@ export default function AdventureMap() {
     };
   }, [isSharing, trackingId, auth.currentUser]);
 
+  // Ao fechar/sair da página (evento pagehide/beforeunload) com compartilhamento ligado: tentar updateDoc active:false (melhor esforço)
+  useEffect(() => {
+    const handlePageHide = () => {
+      if (isSharing && auth.currentUser) {
+        try {
+          const id = auth.currentUser.uid;
+          updateDoc(doc(db, 'trackingSessions', id), {
+            active: false,
+            updatedAt: serverTimestamp()
+          }).catch(() => {});
+        } catch (_) {}
+      }
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handlePageHide);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handlePageHide);
+    };
+  }, [isSharing]);
+
   // Listen to other active explorers
   useEffect(() => {
-    if (!isSignedIn) return;
+    if (!isSignedIn) {
+      setOtherSessions([]);
+      return;
+    }
 
-    const q = query(collection(db, 'trackingSessions'), where('active', '==', true));
+    // Query com where('active', '==', true) e limit(100)
+    const q = query(
+      collection(db, 'trackingSessions'), 
+      where('active', '==', true),
+      limit(100)
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
       const sessions = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter((s: any) => s.userId !== auth.currentUser?.uid && s.lat && s.lng);
+        .map(doc => ({ id: doc.id, ...doc.data() } as any))
+        .filter((s: any) => {
+          if (s.userId === auth.currentUser?.uid) return false;
+          if (!s.lat || !s.lng) return false;
+          // Ignorar as sessões cujo updatedAt tenha mais de 30 minutos
+          const updatedMillis = s.updatedAt?.toMillis ? s.updatedAt.toMillis() : (s.updatedAt?.seconds ? s.updatedAt.seconds * 1000 : 0);
+          if (updatedMillis && updatedMillis < thirtyMinutesAgo) return false;
+          return true;
+        });
       setOtherSessions(sessions);
+    }, (err) => {
+      console.warn("Tracking sessions snapshot warning:", err);
     });
 
     return () => unsubscribe();
@@ -4856,7 +5068,7 @@ export default function AdventureMap() {
                                  <span className="text-[9px] font-mono font-black text-blue-400 tracking-[0.3em] uppercase">REDE_DE_EXPLORADORES</span>
                               </div>
                               <button 
-                                onClick={() => setIsSharing(!isSharing)}
+                                onClick={() => handleToggleSharing()}
                                 className={cn(
                                   "px-3 py-1 text-[8px] font-mono border rounded-xs transition-all uppercase font-black",
                                   isSharing ? "bg-blue-500 border-blue-400 text-white" : "bg-white/5 border-white/10 text-white/40"
@@ -5844,7 +6056,7 @@ export default function AdventureMap() {
           <GPSTracker 
             className="absolute bottom-6 right-6 z-[3500] hidden lg:block"
             isSharing={isSharing}
-            onToggleSharing={setIsSharing}
+            onToggleSharing={handleToggleSharing}
             isSignedIn={isSignedIn}
             onCenterMe={(lat, lng) => {
               setMapCenter([lat, lng]);
@@ -5855,7 +6067,7 @@ export default function AdventureMap() {
           <GPSTracker 
             className="absolute bottom-[138px] left-4 z-[3700] lg:hidden"
             isSharing={isSharing}
-            onToggleSharing={setIsSharing}
+            onToggleSharing={handleToggleSharing}
             isSignedIn={isSignedIn}
             onCenterMe={(lat, lng) => {
               setMapCenter([lat, lng]);
@@ -6071,34 +6283,8 @@ export default function AdventureMap() {
                 </Marker>
               )}
 
-              {otherSessions.map(session => (
-                <Marker 
-                  key={session.id} 
-                  position={[session.lat, session.lng]} 
-                  icon={otherUserIcon('#00d4ff', session.userName)}
-                >
-                  <Popup className="tactical-popup">
-                    <div className="p-3 bg-[#0b0c0d] border border-white/5 min-w-[200px]">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-                        <span className="text-[10px] font-mono font-black text-cyan-400 uppercase tracking-widest">EXPLORADOR_ATIVO</span>
-                      </div>
-                      <div className="text-sm font-mono font-black text-white uppercase mb-1">{session.userName}</div>
-                      <div className="text-[8px] font-mono text-white/40 uppercase tracking-tighter mb-3">SINAL_RECUPERADO: {session.updatedAt?.toDate ? session.updatedAt.toDate().toLocaleTimeString() : 'RECENTE'}</div>
-                      <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
-                         <div>
-                            <div className="text-[6px] font-mono text-white/20 uppercase">LAT_COORD</div>
-                            <div className="text-[9px] font-mono text-white/60">{session.lat.toFixed(4)}</div>
-                         </div>
-                         <div>
-                            <div className="text-[6px] font-mono text-white/20 uppercase">LNG_COORD</div>
-                            <div className="text-[9px] font-mono text-white/60">{session.lng.toFixed(4)}</div>
-                         </div>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+              {/* Marcadores de outros usuários com Memoization (evita re-renderizações a cada tick do mapa) */}
+              {memoizedOtherUserMarkers}
 
               {filteredPoints.map(p => {
                 const cat = categories.find(c => c.id === p.category) || categories[0];
@@ -6228,7 +6414,7 @@ export default function AdventureMap() {
 
                    {/* TRACKING LIVE / MONITORAMENTO */}
                    <button 
-                     onClick={() => setIsSharing(!isSharing)} 
+                     onClick={() => handleToggleSharing()} 
                      className={cn(
                        "h-8 px-3 border rounded-xs transition-all flex items-center gap-1.5 shrink-0 text-[8px] font-mono font-black uppercase tracking-widest", 
                        isSharing ? "bg-blue-500 border-blue-400 animate-pulse text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]" : "bg-white/[0.02] border-white/5 text-white/20 hover:border-blue-500/25"
@@ -7316,7 +7502,7 @@ export default function AdventureMap() {
           </button>
 
           <button 
-            onClick={() => setIsSharing(!isSharing)} 
+            onClick={() => handleToggleSharing()} 
             title="TRACKING GPS LIVE"
             className={cn(
                "hidden lg:flex w-12 h-12 border rounded-sm transition-all shadow-xl flex items-center justify-center group relative", 
@@ -7928,6 +8114,55 @@ export default function AdventureMap() {
               )}
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Consentimento de Compartilhamento de Localização (Opt-in explícito) */}
+      <AnimatePresence>
+        {showConsentModal && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="w-full max-w-md bg-[#131517] border border-blue-500/40 rounded-xl p-6 shadow-2xl relative text-left"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                  <Radio size={20} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-display font-black text-white uppercase tracking-wider">
+                    Compartilhamento de Localização
+                  </h3>
+                  <p className="text-[9px] font-mono text-blue-400/80 uppercase tracking-widest">
+                    Rede de Exploradores em Tempo Real
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-white/80 leading-relaxed font-sans mb-6">
+                Compartilhar minha localização aproximada com outros exploradores logados. A posição é arredondada (~1 km), some depois de 30 min sem atualizar e você pode desligar a qualquer momento.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleAcceptConsent}
+                  className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-black uppercase tracking-wider rounded-lg transition-colors text-center"
+                >
+                  Aceitar e compartilhar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelConsent}
+                  className="py-3 px-4 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white font-mono text-xs uppercase tracking-wider rounded-lg border border-white/10 transition-colors text-center"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

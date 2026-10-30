@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Shield, Eye, Lock, FileText, ExternalLink, Info } from 'lucide-react';
+import { Shield, Eye, Lock, FileText, ExternalLink, Info, MapPin } from 'lucide-react';
 import SEO from '@/src/components/SEO';
 
 export default function Privacy() {
@@ -99,18 +99,37 @@ export default function Privacy() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="dashboard-card p-8 border-white/[0.03]">
-              <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#F8FAFC] mb-4">SEGURANÇA_ATIVA</h3>
-              <p className="text-[10px] text-white/30 leading-relaxed uppercase tracking-widest">
-                Buscamos utilizar práticas modernas de segurança para proteger os dados e a navegação. Entretanto, nenhum sistema online é 100% livre de riscos.
-              </p>
+          <div className="dashboard-card p-10 border-white/[0.03]">
+            <div className="flex items-center gap-4 mb-8">
+              <MapPin size={20} className="text-[#ff641d]" />
+              <h2 className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-[#ff641d]">03. LOCALIZAÇÃO_EM_TEMPO_REAL</h2>
             </div>
-            <div className="dashboard-card p-8 border-white/[0.03]">
-              <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#F8FAFC] mb-4">LINKS_EXTERNOS</h3>
-              <p className="text-[10px] text-white/30 leading-relaxed uppercase tracking-widest">
-                Não nos responsabilizamos pelas políticas ou conteúdos de plataformas externas linkadas em nossos diários ou ferramentas.
+            <div className="space-y-4 text-sm text-white/60 leading-relaxed font-sans">
+              <p>
+                O compartilhamento de localização em tempo real no mapa é estritamente <strong className="text-white">opcional</strong> e só tem início após o seu consentimento explícito.
               </p>
+              <ul className="space-y-2 text-xs font-mono text-white/50">
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[#ff641d] rounded-full shrink-0" />
+                  <span><strong className="text-white">Posição aproximada:</strong> as coordenadas gravadas são arredondadas (~1 km) para preservar sua privacidade física.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[#ff641d] rounded-full shrink-0" />
+                  <span><strong className="text-white">Acesso restrito:</strong> apenas usuários autenticados conseguem visualizar outros exploradores ativos na rede.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[#ff641d] rounded-full shrink-0" />
+                  <span><strong className="text-white">Expiração rápida:</strong> sinais sem atualização por mais de 30 minutos desaparecem da visualização dos demais viajantes.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[#ff641d] rounded-full shrink-0" />
+                  <span><strong className="text-white">Controle total:</strong> você pode desativar o compartilhamento a qualquer instante com um clique.</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-[#ff641d] rounded-full shrink-0" />
+                  <span><strong className="text-white">Exclusão programada:</strong> os registros temporários de tracking expiram e são apagados automaticamente após algumas horas.</span>
+                </li>
+              </ul>
             </div>
           </div>
         </section>
