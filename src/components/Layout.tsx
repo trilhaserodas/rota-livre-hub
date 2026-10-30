@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle, Wifi, WifiOff, RotateCw, UploadCloud, Trash2, Store } from 'lucide-react';
+import { Compass, Coins, Clock, Map as MapIcon, Calculator, BookOpen, Menu, X, ArrowRight, Bell, LogIn, LogOut, Shield, Wind, Mail, Send, Loader2, CheckCircle, Wifi, WifiOff, RotateCw, UploadCloud, Trash2, Store, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { auth, db } from '@/src/lib/firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const ADMIN_EMAIL = "trilhaserodas@gmail.com";
@@ -30,6 +30,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [partnershipMsg, setPartnershipMsg] = useState("");
   const [sendLoading, setSendLoading] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
+  const [authError, setAuthError] = useState<{ code: string; message: string } | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const location = useLocation();
 
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -216,13 +218,54 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [showOfflineToast]);
 
-  const handleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error("Erro no login:", err);
-    }
+  // Tratar retorno de autenticação por redirecionamento (signInWithRedirect)
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setAuthError(null);
+        }
+      })
+      .catch((err: any) => {
+        console.error("Erro no retorno de redirecionamento Google:", err);
+        setAuthError({
+          code: err?.code || 'auth/redirect-error',
+          message: err?.message || 'Falha ao autenticar por redirecionamento.'
+        });
+      });
+  }, []);
+
+  const handleLogin = () => {
+    setAuthError(null);
+    setIsLoggingIn(true);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Chamada direta e síncrona dentro do onClick sem await nem código assíncrono prévio
+    signInWithPopup(auth, provider)
+      .then(() => {
+        setIsLoggingIn(false);
+        setAuthError(null);
+      })
+      .catch((error: any) => {
+        setIsLoggingIn(false);
+        console.error("Erro no login Google:", error);
+
+        // Se o popup for bloqueado pelo navegador, usa o fluxo alternativo signInWithRedirect
+        if (error?.code === 'auth/popup-blocked') {
+          signInWithRedirect(auth, provider).catch((redirectErr: any) => {
+            setAuthError({
+              code: redirectErr?.code || 'auth/popup-blocked',
+              message: redirectErr?.message || 'Popup bloqueado e falha ao iniciar redirecionamento.'
+            });
+          });
+        } else {
+          setAuthError({
+            code: error?.code || 'auth/unknown',
+            message: error?.message || 'Erro desconhecido ao logar com Google.'
+          });
+        }
+      });
   };
 
   const handleLogout = async () => {
@@ -235,6 +278,42 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0b0c0d] font-sans selection:bg-[#ff641d]/30">
+      {/* Diagnóstico Visível de Erro de Login Google em Vermelho */}
+      {authError && (
+        <div 
+          role="alert"
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-lg bg-red-950/95 border-2 border-red-500 rounded-xl p-4 shadow-2xl backdrop-blur-md text-red-100 animate-in fade-in slide-in-from-top-4 duration-200"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <AlertTriangle size={20} className="text-red-400 mt-0.5 flex-shrink-0" />
+              <div className="space-y-1">
+                <p className="text-xs font-mono font-bold uppercase tracking-wider text-red-300">
+                  Falha no Login Google (Diagnóstico)
+                </p>
+                <div className="p-2.5 rounded bg-black/60 border border-red-500/40 font-mono text-xs text-red-200 space-y-1">
+                  <div>
+                    <span className="text-red-400 font-bold">error.code: </span>
+                    <span className="text-white font-bold">{authError.code}</span>
+                  </div>
+                  <div>
+                    <span className="text-red-400 font-bold">error.message: </span>
+                    <span className="text-red-200 break-words">{authError.message}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setAuthError(null)}
+              className="text-red-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors flex-shrink-0"
+              aria-label="Fechar mensagem de erro"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav
         className={cn(
@@ -298,10 +377,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ) : (
               <button 
                 onClick={handleLogin}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-[#ff641d] text-white transition-all rounded-lg border border-white/10 group"
+                disabled={isLoggingIn}
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-[#ff641d] text-white transition-all rounded-lg border border-white/10 group disabled:opacity-50"
               >
-                <LogIn size={12} className="group-hover:translate-x-0.5 transition-transform" />
-                ACESSO
+                {isLoggingIn ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin text-[#ff641d] group-hover:text-white" />
+                    <span>CONECTANDO...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                    ACESSO
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -419,13 +508,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
                 <div className="pt-8 border-t border-white/5 flex flex-col gap-8 pb-12">
                   {!user ? (
-                    <button 
-                      onClick={handleLogin}
-                      className="w-full flex items-center justify-center gap-4 px-8 py-5 bg-[#ff641d] text-white font-display font-black uppercase tracking-tighter rounded-xl text-lg shadow-lg shadow-[#ff641d]/20"
-                    >
-                      <LogIn size={20} />
-                      ENTRAR_COM_GOOGLE
-                    </button>
+                    <div className="space-y-3">
+                      <button 
+                        onClick={handleLogin}
+                        disabled={isLoggingIn}
+                        className="w-full flex items-center justify-center gap-4 px-8 py-5 bg-[#ff641d] hover:bg-[#e05516] text-white font-display font-black uppercase tracking-tighter rounded-xl text-lg shadow-lg shadow-[#ff641d]/20 transition-all disabled:opacity-50"
+                      >
+                        {isLoggingIn ? (
+                          <>
+                            <Loader2 size={20} className="animate-spin" />
+                            CONECTANDO...
+                          </>
+                        ) : (
+                          <>
+                            <LogIn size={20} />
+                            ENTRAR_COM_GOOGLE
+                          </>
+                        )}
+                      </button>
+                      {authError && (
+                        <div className="p-3 bg-red-950/90 border-2 border-red-500/80 rounded-xl text-xs font-mono text-red-200 space-y-1">
+                          <div className="flex items-center gap-1.5 text-red-400 font-bold mb-1">
+                            <AlertTriangle size={14} />
+                            <span>Erro no Login Google:</span>
+                          </div>
+                          <div><span className="text-red-400 font-bold">error.code: </span><span className="text-white font-bold">{authError.code}</span></div>
+                          <div><span className="text-red-400 font-bold">error.message: </span><span className="text-red-200 break-words">{authError.message}</span></div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">

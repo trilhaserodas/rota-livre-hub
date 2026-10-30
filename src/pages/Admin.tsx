@@ -13,7 +13,7 @@ import {
   DocumentData 
 } from 'firebase/firestore';
 import { db, auth } from '@/src/lib/firebase';
-import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signOut, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, User as FirebaseUser } from 'firebase/auth';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShieldCheck, 
@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Loader2,
   LogOut,
+  LogIn,
   MessageSquare,
   FileText,
   AlertTriangle,
@@ -104,6 +105,11 @@ export default function Admin() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Estados de diagnóstico de autenticação
+  const [authError, setAuthError] = useState<{ code: string; message: string } | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [unauthorizedUser, setUnauthorizedUser] = useState<string | null>(null);
+
   const navigate = useNavigate();
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -130,11 +136,28 @@ export default function Admin() {
     };
   }, []);
 
-  // 2. Verificação de Acesso:
-  // Só mostrar se estiver logado com Google, email_verified === true e e-mail igual a ADMIN_EMAIL.
-  // Caso contrário, redirecionar para a home.
+  // 2. Tratar retorno de redirecionamento (signInWithRedirect)
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setAuthError(null);
+        }
+      })
+      .catch((err: any) => {
+        console.error("Erro no retorno de redirecionamento no Admin:", err);
+        setAuthError({
+          code: err?.code || 'auth/redirect-error',
+          message: err?.message || 'Falha ao processar retorno da autenticação por redirecionamento.'
+        });
+      });
+  }, []);
+
+  // 3. Verificação de Acesso:
+  // Enquanto o login estiver em andamento: NÃO redirecionar, NÃO recarregar a página e NÃO trocar de rota.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setAuthLoading(false);
       if (user) {
         const isGoogle = user.providerData?.some(p => p.providerId === 'google.com');
         const isVerified = Boolean(user.emailVerified);
@@ -142,21 +165,55 @@ export default function Admin() {
 
         if (isGoogle && isVerified && isAdminEmail) {
           setCurrentUser(user);
+          setUnauthorizedUser(null);
         } else {
           setCurrentUser(null);
-          navigate('/');
+          setUnauthorizedUser(user.email || 'Conta não autorizada');
         }
       } else {
         setCurrentUser(null);
-        navigate('/');
+        setUnauthorizedUser(null);
       }
-      setAuthLoading(false);
     });
 
     return () => unsubscribe();
-  }, [navigate]);
+  }, []);
 
-  // 3. Logout automático após 30 minutos sem atividade
+  // 4. Login administrativo direto com Google
+  const handleAdminLogin = () => {
+    setAuthError(null);
+    setIsLoggingIn(true);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Chamada direta e síncrona dentro do onClick sem await nem código assíncrono prévio
+    signInWithPopup(auth, provider)
+      .then(() => {
+        setIsLoggingIn(false);
+        setAuthError(null);
+      })
+      .catch((error: any) => {
+        setIsLoggingIn(false);
+        console.error("Erro no login Google em Admin:", error);
+
+        // Se o popup for bloqueado pelo navegador, usa o fluxo alternativo signInWithRedirect
+        if (error?.code === 'auth/popup-blocked') {
+          signInWithRedirect(auth, provider).catch((redirectErr: any) => {
+            setAuthError({
+              code: redirectErr?.code || 'auth/popup-blocked',
+              message: redirectErr?.message || 'Popup bloqueado e falha ao iniciar redirecionamento.'
+            });
+          });
+        } else {
+          setAuthError({
+            code: error?.code || 'auth/unknown',
+            message: error?.message || 'Erro desconhecido ao logar com Google.'
+          });
+        }
+      });
+  };
+
+  // 5. Logout
   const handleLogout = useCallback(async () => {
     try {
       await signOut(auth);
@@ -407,14 +464,102 @@ export default function Admin() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0b0c0d] flex items-center justify-center">
-        <Loader2 className="text-[#ff641d] animate-spin" size={32} />
+      <div className="min-h-screen bg-[#0b0c0d] flex items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="text-[#ff641d] animate-spin" size={36} />
+          <p className="text-xs font-mono text-white/40 uppercase tracking-widest">
+            Verificando credenciais táticas...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!currentUser) {
-    return null; // O hook já redireciona para '/'
+    return (
+      <div className="min-h-screen bg-[#0b0c0d] flex items-center justify-center p-6 font-sans">
+        <div className="w-full max-w-md bg-[#131517] border border-white/10 rounded-2xl p-8 shadow-2xl relative">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-[#ff641d]/10 border border-[#ff641d]/20 flex items-center justify-center text-[#ff641d]">
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl font-display font-black text-white uppercase tracking-tighter">
+                Painel Administrativo
+              </h1>
+              <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest">
+                Acesso Restrito ao Administrador
+              </p>
+            </div>
+          </div>
+
+          {unauthorizedUser && (
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="text-xs space-y-1">
+                  <p className="font-bold">Conta sem permissão:</p>
+                  <p className="font-mono break-all text-white/90">{unauthorizedUser}</p>
+                  <p className="text-[11px] text-amber-300/80 mt-1">
+                    Este painel é exclusivo para o e-mail: <strong className="text-white">{ADMIN_EMAIL}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Diagnóstico de Erro em Vermelho */}
+          {authError && (
+            <div 
+              role="alert"
+              className="mb-6 p-4 rounded-xl bg-red-950/95 border-2 border-red-500 text-red-200 space-y-2 animate-in fade-in"
+            >
+              <div className="flex items-center gap-2 text-red-400 font-mono font-bold text-xs uppercase tracking-wider">
+                <AlertTriangle size={16} />
+                <span>Falha no Login Google (Diagnóstico)</span>
+              </div>
+              <div className="p-2.5 rounded bg-black/60 border border-red-500/40 font-mono text-xs space-y-1">
+                <div>
+                  <span className="text-red-400 font-bold">error.code: </span>
+                  <span className="text-white font-bold">{authError.code}</span>
+                </div>
+                <div>
+                  <span className="text-red-400 font-bold">error.message: </span>
+                  <span className="text-red-200 break-words">{authError.message}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <button
+              onClick={handleAdminLogin}
+              disabled={isLoggingIn}
+              className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-[#ff641d] hover:bg-[#e05516] text-white font-display font-black uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#ff641d]/20 disabled:opacity-50"
+            >
+              {isLoggingIn ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>CONECTANDO...</span>
+                </>
+              ) : (
+                <>
+                  <LogIn size={18} />
+                  <span>ENTRAR COM GOOGLE</span>
+                </>
+              )}
+            </button>
+
+            <Link
+              to="/"
+              className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white font-mono text-xs uppercase tracking-widest rounded-xl border border-white/5 transition-all text-center"
+            >
+              <ArrowLeft size={14} /> Voltar para o Início
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
