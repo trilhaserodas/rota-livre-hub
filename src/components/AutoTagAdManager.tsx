@@ -30,8 +30,30 @@ export default function AutoTagAdManager() {
   const location = useLocation();
 
   useEffect(() => {
-    // Isolamento de segurança: não carregar nem executar anúncios no Admin ou telas de login
+    // Isolamento de segurança: o anúncio NUNCA pode ficar ativo dentro do /admin ou telas restritas
     if (isRestrictedRoute(location.pathname)) {
+      const hasAclibScript = Boolean(document.getElementById('aclib'));
+      const isAclibInitialized = Boolean(window.__aclibAutoTagInitialized);
+
+      // Se o usuário navegar de uma rota normal para restrita com aclib já carregado/inicializado,
+      // força recarregamento completo para o script morrer junto com a página
+      if (hasAclibScript || isAclibInitialized) {
+        window.location.replace(location.pathname);
+        return;
+      }
+
+      // Se o primeiro carregamento já for numa rota restrita, não carrega nada e remove qualquer <script id="aclib"> e window.aclib
+      const existingScript = document.getElementById('aclib');
+      if (existingScript && existingScript.parentNode) {
+        existingScript.parentNode.removeChild(existingScript);
+      }
+      if ('aclib' in window) {
+        try {
+          delete (window as any).aclib;
+        } catch {
+          (window as any).aclib = undefined;
+        }
+      }
       return;
     }
 

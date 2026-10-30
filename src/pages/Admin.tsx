@@ -497,12 +497,8 @@ export default function Admin() {
             <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200">
               <div className="flex items-start gap-2.5">
                 <AlertTriangle size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="text-xs space-y-1">
-                  <p className="font-bold">Conta sem permissão:</p>
-                  <p className="font-mono break-all text-white/90">{unauthorizedUser}</p>
-                  <p className="text-[11px] text-amber-300/80 mt-1">
-                    Este painel é exclusivo para o e-mail: <strong className="text-white">{ADMIN_EMAIL}</strong>
-                  </p>
+                <div className="text-xs">
+                  <p className="font-bold">Esta conta não tem permissão para acessar este painel.</p>
                 </div>
               </div>
             </div>
