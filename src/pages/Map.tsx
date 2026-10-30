@@ -2020,12 +2020,51 @@ const OtherUserMarker = memo(
   }
 );
 
-// --- Map Controllers ---
+// --- Map Controllers & Filters ---
+
+/**
+ * Filtro suave e contínuo nos tiles de base escuros via CSS Variables (--rlh-b, --rlh-c).
+ * Atualizado no evento 'zoom' contínuo do Leaflet com t = clamp((zoom - 5) / (14 - 5), 0, 1):
+ *   brightness = 1.15 + 0.35 * t (1.15 até 1.50)
+ *   contrast   = 1.05 + 0.25 * t (1.05 até 1.30)
+ */
+function TacticalDarkZoomFilter() {
+  const map = useMap();
+
+  useEffect(() => {
+    const updateFilterVars = () => {
+      const container = map.getContainer();
+      if (!container) return;
+
+      const currentZoom = map.getZoom();
+      const rawT = (currentZoom - 5) / (14 - 5);
+      const t = Math.max(0, Math.min(1, rawT));
+
+      const brightness = 1.15 + 0.35 * t;
+      const contrast = 1.05 + 0.25 * t;
+
+      container.style.setProperty('--rlh-b', brightness.toFixed(3));
+      container.style.setProperty('--rlh-c', contrast.toFixed(3));
+    };
+
+    map.on('zoom', updateFilterVars);
+    map.on('zoomend', updateFilterVars);
+    updateFilterVars();
+
+    return () => {
+      map.off('zoom', updateFilterVars);
+      map.off('zoomend', updateFilterVars);
+    };
+  }, [map]);
+
+  return null;
+}
 
 function MapController({ center, zoom, bounds, isSidebarMinimized }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression, isSidebarMinimized?: boolean }) {
   const map = useMap();
   const prevCenterRef = useRef<[number, number] | undefined>(center);
   const prevBoundsRef = useRef<L.LatLngBoundsExpression | undefined>(bounds);
+  const prevZoomRef = useRef<number | undefined>(zoom);
 
   useEffect(() => {
     // Force map to recalculate its container size - critical for mobile/responsive fixes
@@ -2036,19 +2075,21 @@ function MapController({ center, zoom, bounds, isSidebarMinimized }: { center?: 
       const centerChanged = 
         center && 
         (!prevCenterRef.current || 
-         prevCenterRef.current[0] !== center[0] || 
-         prevCenterRef.current[1] !== center[1]);
+         Math.abs(prevCenterRef.current[0] - center[0]) > 0.0001 || 
+         Math.abs(prevCenterRef.current[1] - center[1]) > 0.0001);
 
       if (bounds && boundsChanged) {
         prevBoundsRef.current = bounds;
         prevCenterRef.current = center;
+        prevZoomRef.current = map.getZoom();
         map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
       } else if (center && centerChanged && !isNaN(center[0]) && !isNaN(center[1])) {
         prevCenterRef.current = center;
+        prevZoomRef.current = zoom || map.getZoom();
         map.flyTo(center, zoom || map.getZoom(), { duration: 1.5 });
-      } else if (zoom !== undefined && zoom !== map.getZoom()) {
-        // If center didn't change, but zoom changed (e.g. from screen zoom buttons + / -),
-        // zoom to the map's current visible viewport center instead of dragging the map back to stale coordinates!
+      } else if (zoom !== undefined && Math.abs(zoom - map.getZoom()) > 0.08 && zoom !== prevZoomRef.current) {
+        // Zoom alterado intencionalmente sem disparar loop de setView
+        prevZoomRef.current = zoom;
         map.flyTo(map.getCenter(), zoom, { duration: 0.5 });
       }
     } catch (err) {
@@ -3963,8 +4004,7 @@ export default function AdventureMap() {
   return (
     <div className={cn(
       "h-auto lg:h-[calc(100vh-96px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden isolate relative no-scrollbar scroll-smooth transition-colors duration-300",
-      isTacticalDayActive ? "bg-[#ECE6DA] tactical-day-mode" : "bg-[#0b0c0d]",
-      `map-zoom-${mapZoom}`
+      isTacticalDayActive ? "bg-[#ECE6DA] tactical-day-mode" : "bg-[#0b0c0d]"
     )}>
       {/* Dynamic SVG Filters for Map Tiles in Tactical Modes */}
       <svg width="0" height="0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} className="pointer-events-none">
@@ -3986,59 +4026,12 @@ export default function AdventureMap() {
       </svg>
       <style>{`
           /* --- DARK MODE SPECIAL ZOOM HIGHLIGHTS FOR ROADS (BR, RUTAS & DEMARCATIONS) --- */
-          /* Low-zoom: keep original dark theme clean and calm */
           .map-tactical-dark-base-layer .leaflet-tile {
-            transition: filter 0.25s ease-out;
-            filter: none !important;
+            filter: brightness(var(--rlh-b, 1.2)) contrast(var(--rlh-c, 1.1)) !important;
+            transition: none !important;
           }
-          
-          /* As user zooms in, dynamically isolate and highlight roads, BRs, RUTAs, and local routes */
-          .map-zoom-6 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: brightness(1.8) contrast(1.6) saturate(0.8) !important;
-          }
-          .map-zoom-7 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: brightness(2.2) contrast(2.0) saturate(0.8) !important;
-          }
-          .map-zoom-8 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: brightness(2.6) contrast(2.3) saturate(0.8) !important;
-          }
-          .map-zoom-9 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: brightness(3.0) contrast(2.7) saturate(0.8) !important;
-          }
-          .map-zoom-10 .map-tactical-dark-base-layer .leaflet-tile,
-          .map-zoom-11 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: brightness(3.3) contrast(3.1) saturate(0.8) !important;
-          }
-          .map-zoom-12 .map-tactical-dark-base-layer .leaflet-tile,
-          .map-zoom-13 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: brightness(3.7) contrast(3.5) saturate(0.8) !important;
-          }
-          .map-zoom-14 .map-tactical-dark-base-layer .leaflet-tile,
-          .map-zoom-15 .map-tactical-dark-base-layer .leaflet-tile,
-          .map-zoom-16 .map-tactical-dark-base-layer .leaflet-tile,
-          .map-zoom-17 .map-tactical-dark-base-layer .leaflet-tile,
-          .map-zoom-18 .map-tactical-dark-base-layer .leaflet-tile {
-            filter: brightness(4.3) contrast(4.0) saturate(0.8) !important;
-          }
-
-          /* Ensure labels are perfectly matching the crispness of the road network at high zoom */
           .map-tactical-dark-labels-layer .leaflet-tile {
-            transition: filter 0.25s ease-out;
-          }
-          .map-zoom-10 .map-tactical-dark-labels-layer .leaflet-tile,
-          .map-zoom-11 .map-tactical-dark-labels-layer .leaflet-tile {
-            filter: brightness(1.1) contrast(1.1) !important;
-          }
-          .map-zoom-12 .map-tactical-dark-labels-layer .leaflet-tile,
-          .map-zoom-13 .map-tactical-dark-labels-layer .leaflet-tile {
-            filter: brightness(1.15) contrast(1.15) !important;
-          }
-          .map-zoom-14 .map-tactical-dark-labels-layer .leaflet-tile,
-          .map-zoom-15 .map-tactical-dark-labels-layer .leaflet-tile,
-          .map-zoom-16 .map-tactical-dark-labels-layer .leaflet-tile,
-          .map-zoom-17 .map-tactical-dark-labels-layer .leaflet-tile,
-          .map-zoom-18 .map-tactical-dark-labels-layer .leaflet-tile {
-            filter: brightness(1.2) contrast(1.2) !important;
+            transition: none !important;
           }
 
           .tactical-day-mode {
@@ -6110,8 +6103,12 @@ export default function AdventureMap() {
               style={{ width: '100%', height: '100%', background: '#0b0c0d' }}
               zoomControl={false}
               className="z-0"
+              zoomSnap={0.5}
+              zoomDelta={0.5}
+              wheelPxPerZoomLevel={120}
+              wheelDebounceTime={40}
             >
-
+              <TacticalDarkZoomFilter />
               <MapController center={mapCenter} zoom={mapZoom} bounds={mapBounds || undefined} isSidebarMinimized={isSidebarMinimized} />
               <MapEventsHandler active={isTracing} onMapClick={(latlng) => {
                 setRoutePoints(prev => [...prev, [latlng.lat, latlng.lng]]);
@@ -6123,7 +6120,7 @@ export default function AdventureMap() {
                 }} 
                 onZoomChange={(zoom) => {
                   setMapZoom(zoom);
-                }}
+                }} 
                 onCenterChange={(center) => {
                   setMapCenter(center);
                 }}
@@ -6142,6 +6139,8 @@ export default function AdventureMap() {
                         attribution='&copy; CARTO'
                         url={getCartoTileUrl("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png")}
                         className="map-tactical-day-base"
+                        updateWhenZooming={false}
+                        keepBuffer={3}
                       />
                       <TileLayer
                         key="tile-layer-tactical-labels-light"
@@ -6149,6 +6148,8 @@ export default function AdventureMap() {
                         url={getCartoTileUrl("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png")}
                         className="map-contrast-labels-layer-light map-tactical-day-labels"
                         zIndex={10}
+                        updateWhenZooming={false}
+                        keepBuffer={3}
                       />
                     </>
                   ) : (
@@ -6158,6 +6159,8 @@ export default function AdventureMap() {
                         attribution='&copy; CARTO'
                         url={getCartoTileUrl("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png")}
                         className="map-tactical-dark-base-layer"
+                        updateWhenZooming={false}
+                        keepBuffer={3}
                       />
                       <TileLayer
                         key="tile-layer-tactical-labels-dark"
@@ -6165,6 +6168,8 @@ export default function AdventureMap() {
                         url={getCartoTileUrl("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png")}
                         className="map-tactical-dark-labels-layer"
                         zIndex={10}
+                        updateWhenZooming={false}
+                        keepBuffer={3}
                       />
                     </>
                   )}
@@ -7616,8 +7621,8 @@ export default function AdventureMap() {
 
          <div className="flex flex-col bg-black/40 border border-white/10 rounded-sm overflow-hidden text-[8px] font-mono text-white/20">
             <div className="p-1 lg:p-2 border-b border-white/5 text-center hidden lg:block uppercase tracking-tighter">ZOOM</div>
-            <button onClick={() => setMapZoom(z => Math.min(z + 1, 18))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 lg:border-0"><Plus size={14} /></button>
-            <button onClick={() => setMapZoom(z => Math.max(z - 1, 3))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors"><Minus size={14} /></button>
+            <button onClick={() => setMapZoom(z => Math.min(Number((z + 0.5).toFixed(1)), 18))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 lg:border-0" title="Aumentar Zoom (+0.5)"><Plus size={14} /></button>
+            <button onClick={() => setMapZoom(z => Math.max(Number((z - 0.5).toFixed(1)), 3))} className="p-2 lg:p-3 hover:bg-white/5 hover:text-white transition-colors" title="Diminuir Zoom (-0.5)"><Minus size={14} /></button>
          </div>
               </motion.div>
             )}
